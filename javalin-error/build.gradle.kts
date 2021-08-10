@@ -4,9 +4,9 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
 
-    api(project(":javalin-context"))
+    val expressible = "1.0.4"
+    api("org.panda-lang:expressible:$expressible")
 
     val javalin = "4.0.0.RC0"
     implementation("io.javalin:javalin:$javalin")

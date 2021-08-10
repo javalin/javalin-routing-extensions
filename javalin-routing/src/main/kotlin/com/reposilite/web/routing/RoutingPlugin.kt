@@ -38,6 +38,11 @@ class RoutingPlugin<CONTEXT>(
             }
     }
 
+    fun registerRoutes(vararg routes: Set<Route<CONTEXT>>) =
+        routes.forEach {
+            this.routing.addAll(it)
+        }
+
     fun registerRoutes(vararg routes: Routes<CONTEXT>) =
         routes.forEach {
             this.routing.addAll(it.routes)

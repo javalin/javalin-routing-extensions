@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.reposilite.web
+package com.reposilite.web.mimetypes
 
-enum class MimeTypes(
+enum class ContentType(
     val extensions: String,
     val mimeType: String,
     val isHumanReadable: Boolean = false
