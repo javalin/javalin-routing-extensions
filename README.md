@@ -1,5 +1,5 @@
 # Javalin RFCs [![CI](https://github.com/reposilite-playground/javalin-rfcs/actions/workflows/gradle.yml/badge.svg)](https://github.com/reposilite-playground/javalin-rfcs/actions/workflows/gradle.yml)
-Various experimental extensions to [Javalin 4.x](https://github.com/tipsy/javalin) used in [Reposilite 3.x](https://github.com/dzikoysk/reposilite)
+Various experimental extensions to [Javalin 4.x](https://github.com/tipsy/javalin) used in [Reposilite 3.x](https://github.com/dzikoysk/reposilite). Provides basic support for Kotlin coroutines and async routes with a set of useful utilities.
 
 ```groovy
 repositories {
@@ -7,17 +7,15 @@ repositories {
 }
 
 dependencies {
-    val version = "1.0.2"
+    val version = "1.0.3"
     implementation "com.reposilite.javalin-rfcs:javalin-context:$version"
-    implementation "com.reposilite.javalin-rfcs:javalin-coroutines:$version"
-    implementation "com.reposilite.javalin-rfcs:javalin-error:$version"
-    implementation "com.reposilite.javalin-rfcs:javalin-mimetypes:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-openapi:$version"
-    implementation "com.reposilite.javalin-rfcs:javalin-routing:$version"
+    implementation "com.reposilite.javalin-rfcs:javalin-reactive-routing:$version"
 }
 ```
 
 Project also includes [panda-lang :: expressible](https://github.com/panda-lang/expressible) library as a dependency. It's mainly used to provide `Result<VALUE, ERROR>` type and associated utilities.
+
 #### Context
 
 Provides utility methods in `io.javalin.http.Context` class:
@@ -32,84 +30,81 @@ Context.contentType(ContentType)
 Context.resultAttachment(Name, ContentType, ContentLength, InputStream)
 ```
 
-#### Coroutines
-
-TODO: Coroutines support
-
-#### Error
-
 Provides generic `ErrorResponse` that supports removal of exception based error handling within app:
 ```kotlin
 ErrorResponse(Int httpCode, String message)
 ErrorResponse(HttpCode httpCode, String message)
-
 /* Methods */
-
 errorResponse(HttpCode httpCode, String message) -> Result<*, ErrorResponse>
 // [...]
 ```
 
-#### MimeTypes
-
-Provides `ContentType` enum with list of [Mozilla :: Common Types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) and properties:
-* Determining whether this type represents human readable content
+Adds `ContentType` enum with list of [Mozilla :: Common Types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) and properties:
+* Determining whether this type represents human-readable content
 * Associated extension
 
-#### OpenAPI
-
-Mirror of reimplemented OpenAPI module:
-
-* https://github.com/reposilite-playground/javalin-openapi
-
-To enable annotation processor, Swagger or ReDoc you have to add extra dependencies from repository listed above. 
-
-#### Routing
+#### Reactive Routing
 
 Experimental router plugin that supports generic route registration with custom context and multiple routes within the same endpoints. 
 
 ```kotlin
-/* General */
-
 // Custom context
 class AppContext(val context: Context)
-
-// Custom route to skip redeclaration of custom context
-class AppRoute(
-    path: String,
-    vararg methods: RouteMethod,
-    handler: AppContext.() -> Unit
-) : Route<AppContext>(path = path, methods = methods, handler = handler)
-
-/* Example Domain */
 
 // Some dependencies
 class ExampleFacade
 
 // Endpoint (domain router)
-class ExampleEndpoint(private val exampleFacade: ExampleFacade) : Routes<AppContext> {
+class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes<AppContext> {
 
-    private val index = AppRoute("/index", GET) { context.result("Index") }
+    private val async = route("/async", GET) { "Async" }
 
-    private val subIndex = AppRoute("/index/sub", GET) { context.result("Sub") }
+    private val sync = route("/sync", GET, async = false) { context.result("Sync") }
 
-    override val routes = setOf(index, subIndex)
+    override val routes = setOf(async, sync)
 
 }
 
-/* Runner */
-
 fun main() {
+    val exampleLogger = LoggerFactory.getLogger("Example")
     val exampleFacade = ExampleFacade()
     val exampleEndpoint = ExampleEndpoint(exampleFacade)
 
+    val sharedThreadPool = QueuedThreadPool(4)
+    val dispatcher = DispatcherWithShutdown(sharedThreadPool.asCoroutineDispatcher())
+    sharedThreadPool.start()
+
     Javalin
         .create { config ->
-            val routing = RoutingPlugin<AppContext> { ctx, route -> route.handler(AppContext(ctx)) }
-            routing.registerRoutes(exampleEndpoint)
-            config.registerPlugin(routing)
+            config.server { Server(sharedThreadPool) }
+
+            ReactiveRoutingPlugin<AppContext>(
+                logger = { exampleLogger },
+                dispatcher = dispatcher,
+                syncHandler = { ctx, route -> route.handler(AppContext(ctx)) },
+                asyncHandler = { ctx, route, result -> result.complete(route.handler(AppContext(ctx))) }
+            )
+            .registerRoutes(exampleEndpoint)
+            .let { config.registerPlugin(it) }
         }
-        .start()
+        .events {
+            it.serverStopping { dispatcher.prepareShutdown() }
+            it.serverStopped { dispatcher.completeShutdown() }
+        }
+        .start("127.0.0.1", 8080)
 }
 ```
 
 [~ source: RoutingExample.kt](https://github.com/reposilite-playground/javalin-rfcs/blob/main/javalin-routing/src/test/kotlin/com/reposilite/web/routing/RoutingExample.kt)
+
+#### OpenAPI
+
+Reimplemented OpenAPI module:
+
+* https://github.com/reposilite-playground/javalin-openapi
+
+To enable annotation processor, Swagger or ReDoc you have to add extra dependencies from repository listed above. 
+
+### Used by
+
+* [Reposilite](https://github.com/dzikoysk/reposilite)

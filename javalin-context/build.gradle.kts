@@ -1,4 +1,3 @@
 dependencies {
-    api(project(":javalin-error"))
-    api(project(":javalin-mimetypes"))
+    api("org.panda-lang:expressible:1.0.4")
 }
