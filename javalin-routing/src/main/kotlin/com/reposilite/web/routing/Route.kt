@@ -16,47 +16,31 @@
 
 package com.reposilite.web.routing
 
-import io.javalin.http.Handler
-import java.text.Collator
-import java.text.RuleBasedCollator
-import java.util.Locale
+enum class RouteMethod {
+    HEAD,
+    GET,
+    PUT,
+    POST,
+    DELETE,
+    AFTER,
+    BEFORE
+}
 
 open class Route<CONTEXT>(
     val path: String,
     vararg val methods: RouteMethod,
-    val handler: CONTEXT.() -> Unit
-) : Comparable<Route<*>> {
+    val async: Boolean = true,
+    val handler: suspend CONTEXT.() -> Any
+)
 
-    private companion object {
 
-        private val routesRule = RuleBasedCollator((Collator.getInstance(Locale.US) as RuleBasedCollator).rules.toString() + "& Z < '{' < '<'")
-
-    }
-
-    override fun compareTo(other: Route<*>): Int {
-        val itPaths = path.split("/")
-        val toPaths = other.path.split("/")
-        var index = 0
-
-        while (true) {
-            if (index >= itPaths.size || index >= toPaths.size) {
-                break
-            }
-
-            val itPart = itPaths[index]
-            val toPart = toPaths[index]
-
-            val result = routesRule.compare(itPart, toPart)
-
-            if (result != 0) {
-                return result
-            }
-
-            index++
-        }
-
-        return routesRule.compare(path, other.path)
-    }
-
+interface Routes<CONTEXT> {
+    val routes: Set<Route<CONTEXT>>
 }
 
+abstract class AbstractRoutes<CONTEXT> : Routes<CONTEXT> {
+
+    protected fun route(path: String, vararg methods: RouteMethod, async: Boolean = true, handler: suspend CONTEXT.() -> Any): Route<CONTEXT> =
+        Route(path, methods = methods, async, handler)
+
+}

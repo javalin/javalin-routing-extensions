@@ -17,7 +17,7 @@
 package com.reposilite.web.mimetypes
 
 enum class ContentType(
-    val extensions: String,
+    val extension: String,
     val mimeType: String,
     val isHumanReadable: Boolean = false
 ) {
@@ -27,62 +27,76 @@ enum class ContentType(
 
     /* Text */
 
-    TEXT("txt", "text/plain", true),
-    CSS("css", "text/css", true),
-    CSV("csv", "text/csv"),
-    HTM("htm", "text/html", true),
-    HTML("html", "text/html", true),
-    XML("xml", "text/plain", true),
+    TEXT_PLAIN("txt", "text/plain", true),
+    TEXT_CSS("css", "text/css", true),
+    TEXT_CSV("csv", "text/csv"),
+    TEXT_HTM("htm", "text/html", true),
+    TEXT_HTML("html", "text/html", true),
+    TEXT_XML("xml", "text/plain", true),
 
     /* Image */
 
-    ICO("ico", "image/vnd.microsoft.icon"),
-    JPEG("jpeg", "image/jpeg"),
-    JPG("jpg", "image/jpg"),
-    PNG("png", "image/png"),
-    TIF("tif", "image/tiff"),
-    TIFF("tiff", "image/tiff"),
+    IMAGE_ICO("ico", "image/vnd.microsoft.icon"),
+    IMAGE_JPEG("jpeg", "image/jpeg"),
+    IMAGE_JPG("jpg", "image/jpg"),
+    IMAGE_PNG("png", "image/png"),
+    IMAGE_TIF("tif", "image/tiff"),
+    IMAGE_TIFF("tiff", "image/tiff"),
 
     /* Font */
 
-    OTF("otf", "font/otf"),
-    TTF("ttf", "font/ttf"),
+    FONT_OTF("otf", "font/otf"),
+    FONT_TTF("ttf", "font/ttf"),
 
     /* Application */
 
-    BIN("bin", "application/octet-stream"),
-    BZ("bz", "application/x-bzip"),
-    BZ2("bz2", "application/x-bzip2"),
-    CDN("cdn", "text/plain", true),
-    GZ("gz", "application/gzip"),
-    JS("js", "application/javascript", true),
-    JSON("json", "application/json", true),
-    MPKG("mpkg", "application/vnd.apple.installer+xml"),
-    JAR("jar", "application/java-archive"),
-    POM("pom", "application/xml", true),
-    RAR("rar", "application/vnd.rar"),
-    SH("sh", "application/x-sh", true),
-    TAR("tar", "application/x-tar"),
-    XHTML("xhtml", "application/xhtml+xml", true),
-    YAML("yaml", "application/yaml", true),
-    YML("yml", "application/yaml", true),
-    ZIP("zip", "application/zip"),
-    X7Z("7z", "application/x-7z-compressed")
+    APPLICATION_OCTET_STREAM("bin", "application/octet-stream"),
+    APPLICATION_BZ("bz", "application/x-bzip"),
+    APPLICATION_BZ2("bz2", "application/x-bzip2"),
+    APPLICATION_CDN("cdn", "text/plain", true),
+    APPLICATION_GZ("gz", "application/gzip"),
+    APPLICATION_JS("js", "application/javascript", true),
+    APPLICATION_JSON("json", "application/json", true),
+    APPLICATION_MPKG("mpkg", "application/vnd.apple.installer+xml"),
+    APPLICATION_JAR("jar", "application/java-archive"),
+    APPLICATION_POM("pom", "application/xml", true),
+    APPLICATION_RAR("rar", "application/vnd.rar"),
+    APPLICATION_SH("sh", "application/x-sh", true),
+    APPLICATION_TAR("tar", "application/x-tar"),
+    APPLICATION_XHTML("xhtml", "application/xhtml+xml", true),
+    APPLICATION_YAML("yaml", "application/yaml", true),
+    APPLICATION_YML("yml", "application/yaml", true),
+    APPLICATION_ZIP("zip", "application/zip"),
+    APPLICATION_7Z("7z", "application/x-7z-compressed"),
+
+    /* Other */
+
+    MULTIPART_FORM_DATA("multipart/form-data", "multipart/form-data")
+
     ;
 
     companion object {
 
-        @JvmStatic
-        fun getContentType(extensions: String): ContentType? =
-            values().find { it.name.equals(extensions, ignoreCase = true) }
+        /* Compile time constants - useful for annotations & as raw string values */
+
+        const val PLAIN = "text/plain"
+        const val HTML = "text/html"
+        const val XML = "text/xml"
+        const val OCTET_STREAM = "application/octet-stream"
+        const val JAVASCRIPT = "application/javascript"
+        const val JSON = "application/json"
+        const val FORM_DATA = "multipart/form-data"
+
+        fun getContentType(mimeType: String): ContentType? =
+            values().find { it.mimeType.equals(mimeType, ignoreCase = true) }
 
         @JvmStatic
-        fun getContentType(extensions: String, defaultType: ContentType): ContentType =
-            values().find { it.name.equals(extensions, ignoreCase = true) } ?: defaultType
+        fun getContentTypeByExtension(extensions: String): ContentType? =
+            values().find { it.extension.equals(extensions, ignoreCase = true) }
 
         @JvmStatic
-        fun getMimeType(extensions: String, defaultType: String = BIN.mimeType) =
-            getContentType(extensions) ?: defaultType
+        fun getMimeTypeByExtension(extensions: String): String? =
+            getContentTypeByExtension(extensions)?.mimeType
 
     }
 

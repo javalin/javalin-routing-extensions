@@ -7,22 +7,18 @@ import io.javalin.http.Context
 import io.javalin.http.Handler
 
 class RoutingPlugin<CONTEXT>(
-    private val routeHandler: (Context, Route<CONTEXT>) -> Unit
+    private val syncHandler: (Context, Route<CONTEXT>) -> Unit,
+    private val asyncHandler: (Context, Route<CONTEXT>) -> Unit
 ) : Plugin, PluginLifecycleInit {
 
     private val routing: MutableSet<Route<CONTEXT>> = HashSet()
 
-    override fun init(app: Javalin) {
-    }
+    override fun init(app: Javalin) { }
 
-    override fun apply(app: Javalin) {
+    override fun apply(app: Javalin) =
         routing
-            .sorted()
-            .map { route ->
-                Pair(route, Handler {
-                    routeHandler(it, route)
-                })
-            }
+            .sortedWith(RouteComparator())
+            .map { route -> Pair(route, createHandler(route)) }
             .forEach { (route, handler) ->
                 route.methods.forEach { method ->
                     when (method) {
@@ -36,16 +32,20 @@ class RoutingPlugin<CONTEXT>(
                     }
                 }
             }
-    }
+
+    private fun createHandler(route: Route<CONTEXT>): Handler =
+        Handler {
+            if (route.async) {
+                asyncHandler(it, route)
+            } else {
+                syncHandler(it, route)
+            }
+        }
 
     fun registerRoutes(vararg routes: Set<Route<CONTEXT>>) =
-        routes.forEach {
-            this.routing.addAll(it)
-        }
+        routes.forEach { routing.addAll(it) }
 
     fun registerRoutes(vararg routes: Routes<CONTEXT>) =
-        routes.forEach {
-            this.routing.addAll(it.routes)
-        }
+        routes.forEach { routing.addAll(it.routes) }
 
 }
