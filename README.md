@@ -94,7 +94,7 @@ fun main() {
 }
 ```
 
-[~ source: RoutingExample.kt](https://github.com/reposilite-playground/javalin-rfcs/blob/main/javalin-routing/src/test/kotlin/com/reposilite/web/routing/RoutingExample.kt)
+[~ source: RoutingExample.kt](https://github.com/reposilite-playground/javalin-rfcs/blob/main/javalin-reactive-routing/src/test/kotlin/com/reposilite/web/routing/RoutingExample.kt)
 
 #### OpenAPI
 
