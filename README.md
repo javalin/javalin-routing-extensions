@@ -15,33 +15,6 @@ dependencies {
 
 Project also includes [panda-lang :: expressible](https://github.com/panda-lang/expressible) library as a dependency. It's mainly used to provide `Result<VALUE, ERROR>` type and associated utilities.
 
-#### Context
-
-Provides utility methods in `io.javalin.http.Context` class:
-
-```kotlin
-Context.error(ErrorResponse)
-Context.contentLength(Long)
-Context.encoding(Charset)
-Context.encoding(String)
-Context.contentDisposition(String)
-Context.contentType(ContentType)
-Context.resultAttachment(Name, ContentType, ContentLength, InputStream)
-```
-
-Provides generic `ErrorResponse` that supports removal of exception based error handling within app:
-```kotlin
-ErrorResponse(Int httpCode, String message)
-ErrorResponse(HttpCode httpCode, String message)
-/* Methods */
-errorResponse(HttpCode httpCode, String message) -> Result<*, ErrorResponse>
-// [...]
-```
-
-Adds `ContentType` enum with list of [Mozilla :: Common Types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) and properties:
-* Determining whether this type represents human-readable content
-* Associated extension
-
 #### Reactive Routing
 
 Experimental router plugin that supports generic route registration with custom context and multiple routes within the same endpoints. 
@@ -95,6 +68,33 @@ fun main() {
 ```
 
 [~ source: RoutingExample.kt](https://github.com/reposilite-playground/javalin-rfcs/blob/main/javalin-reactive-routing/src/test/kotlin/com/reposilite/web/routing/RoutingExample.kt)
+
+#### Context
+
+Provides utility methods in `io.javalin.http.Context` class:
+
+```kotlin
+Context.error(ErrorResponse)
+Context.contentLength(Long)
+Context.encoding(Charset)
+Context.encoding(String)
+Context.contentDisposition(String)
+Context.contentType(ContentType)
+Context.resultAttachment(Name, ContentType, ContentLength, InputStream)
+```
+
+Provides generic `ErrorResponse` that supports removal of exception based error handling within app:
+```kotlin
+ErrorResponse(Int httpCode, String message)
+ErrorResponse(HttpCode httpCode, String message)
+/* Methods */
+errorResponse(HttpCode httpCode, String message) -> Result<*, ErrorResponse>
+// [...]
+```
+
+Adds `ContentType` enum with list of [Mozilla :: Common Types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) and properties:
+* Determining whether this type represents human-readable content
+* Associated extension
 
 #### OpenAPI
 
