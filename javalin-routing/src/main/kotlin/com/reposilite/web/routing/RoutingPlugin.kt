@@ -7,7 +7,7 @@ import io.javalin.http.Context
 import io.javalin.http.Handler
 
 class RoutingPlugin<CONTEXT>(
-    private val contextInitializer: (Context) -> CONTEXT
+    private val routeHandler: (Context, Route<CONTEXT>) -> Unit
 ) : Plugin, PluginLifecycleInit {
 
     private val routing: MutableSet<Route<CONTEXT>> = HashSet()
@@ -20,7 +20,7 @@ class RoutingPlugin<CONTEXT>(
             .sorted()
             .map { route ->
                 Pair(route, Handler {
-                    route.handler(contextInitializer(it))
+                    routeHandler(it, route)
                 })
             }
             .forEach { (route, handler) ->

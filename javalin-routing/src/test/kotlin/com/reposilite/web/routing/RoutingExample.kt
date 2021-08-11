@@ -40,7 +40,7 @@ fun main() {
 
     Javalin
         .create { config ->
-            val routing = RoutingPlugin { AppContext(it) }
+            val routing = RoutingPlugin<AppContext> { ctx, route -> route.handler(AppContext(ctx)) }
             routing.registerRoutes(exampleEndpoint)
             config.registerPlugin(routing)
         }

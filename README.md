@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    val version = "1.0.0"
+    val version = "1.0.2"
     implementation "com.reposilite.javalin-rfcs:javalin-context:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-coroutines:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-error:$version"
@@ -104,7 +104,7 @@ fun main() {
 
     Javalin
         .create { config ->
-            val routing = RoutingPlugin { AppContext(it) }
+            val routing = RoutingPlugin<AppContext> { ctx, route -> route.handler(AppContext(ctx)) }
             routing.registerRoutes(exampleEndpoint)
             config.registerPlugin(routing)
         }

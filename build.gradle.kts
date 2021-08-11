@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = "com.reposilite"
-    version = "1.0.0"
+    version = "1.0.2"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "maven-publish")
@@ -28,6 +28,7 @@ allprojects {
         }
         publications {
             create<MavenPublication>("library") {
+                groupId = "$group.javalin-rfcs"
                 from(components.getByName("java"))
             }
         }

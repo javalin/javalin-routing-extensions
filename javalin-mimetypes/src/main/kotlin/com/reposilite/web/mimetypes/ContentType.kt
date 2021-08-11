@@ -73,10 +73,16 @@ enum class ContentType(
     companion object {
 
         @JvmStatic
-        fun getMimeType(extensions: String, defaultTemplate: String = TEXT.mimeType) =
-            values()
-                .find { it.name.equals(extensions, ignoreCase = true) }
-                ?: defaultTemplate
+        fun getContentType(extensions: String): ContentType? =
+            values().find { it.name.equals(extensions, ignoreCase = true) }
+
+        @JvmStatic
+        fun getContentType(extensions: String, defaultType: ContentType): ContentType =
+            values().find { it.name.equals(extensions, ignoreCase = true) } ?: defaultType
+
+        @JvmStatic
+        fun getMimeType(extensions: String, defaultType: String = BIN.mimeType) =
+            getContentType(extensions) ?: defaultType
 
     }
 
