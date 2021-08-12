@@ -54,7 +54,7 @@ class ReactiveRoutingPlugin<CONTEXT>(
 
     private fun createHandler(route: Route<CONTEXT>): Handler =
         Handler { ctx ->
-            if (route.async) {
+            if (route.async && ctx.handlerType().isHttpMethod()) {
                 val result = CompletableFuture<Any>()
 
                 scope.launch(dispatcher + coroutineName) {
