@@ -61,8 +61,8 @@ fun main() {
                 syncHandler = { ctx, route -> route.handler(AppContext(ctx)) },
                 asyncHandler = { ctx, route, _ -> route.handler(AppContext(ctx)) }
             )
-                .registerRoutes(exampleEndpoint)
-                .let { config.registerPlugin(it) }
+            .registerRoutes(exampleEndpoint)
+            .let { config.registerPlugin(it) }
         }
         .events {
             it.serverStopping { dispatcher.prepareShutdown() }
