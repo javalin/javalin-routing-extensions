@@ -1,6 +1,8 @@
 dependencies {
+    api(project(":javalin-context"))
+
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
-    api("org.panda-lang:expressible:1.0.4")
+    api("org.panda-lang:expressible:1.0.6")
 
     val logback = "1.2.5"
     testImplementation("ch.qos.logback:logback-core:$logback")

@@ -18,6 +18,7 @@ package com.reposilite.web.http
 
 import io.javalin.http.Context
 import org.eclipse.jetty.server.HttpOutput
+import panda.std.Result
 import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.Charset
@@ -42,6 +43,21 @@ fun Context.contentDisposition(disposition: String): Context =
 
 fun Context.contentType(contentType: ContentType): Context =
     contentType(contentType.mimeType)
+
+fun Context.response(result: Any): Context =
+    also {
+        when (result) {
+            is Result<*, *> ->
+                result.consume(
+                    { value -> response(value) },
+                    { error -> response(error) }
+                )
+            is ErrorResponse -> json(result).status(result.status)
+            is InputStream -> result(result)
+            is String -> result(result)
+            else -> json(result)
+        }
+    }
 
 fun Context.resultAttachment(name: String, contentType: ContentType, contentLength: Long, data: InputStream): Context {
     if (method() != "HEAD") {

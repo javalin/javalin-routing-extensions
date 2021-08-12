@@ -8,7 +8,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.thread.QueuedThreadPool
-import org.slf4j.LoggerFactory
 import java.lang.Thread.sleep
 
 // Custom context
@@ -20,7 +19,7 @@ class ExampleFacade
 // Endpoint (domain router)
 class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes<AppContext>() {
 
-    private val sync = route("/sync", GET, async = false) { context.result(blockingDelay("Sync")) }
+    private val sync = route("/sync", GET, async = false) { blockingDelay("Sync") }
 
     private val blockingAsync = route("/async-blocking", GET) { blockingDelay("Blocking Async") }
 
@@ -35,7 +34,6 @@ private suspend fun nonBlockingDelay(message: String): String = delay(100L).let 
 private suspend fun blockingDelay(message: String): String =  sleep(100L).let { message }
 
 fun main() {
-    val exampleLogger = LoggerFactory.getLogger("Example")
     val exampleFacade = ExampleFacade()
     val exampleEndpoint = ExampleEndpoint(exampleFacade)
 
@@ -48,10 +46,10 @@ fun main() {
             config.server { Server(sharedThreadPool) }
 
             ReactiveRoutingPlugin<AppContext>(
-                logger = { exampleLogger },
+                errorConsumer = { name, throwable -> println("$name: ${throwable.message}") },
                 dispatcher = dispatcher,
                 syncHandler = { ctx, route -> route.handler(AppContext(ctx)) },
-                asyncHandler = { ctx, route, result -> result.complete(route.handler(AppContext(ctx))) }
+                asyncHandler = { ctx, route, _ -> route.handler(AppContext(ctx)) }
             )
             .registerRoutes(exampleEndpoint)
             .let { config.registerPlugin(it) }
