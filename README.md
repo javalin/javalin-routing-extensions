@@ -27,18 +27,23 @@ class AppContext(val context: Context)
 class ExampleFacade
 
 // Endpoint (domain router)
-class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes<AppContext> {
+class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes<AppContext>() {
 
-    private val async = route("/async", GET) { "Async" }
+    private val sync = route("/sync", GET, async = false) { blockingDelay("Sync") }
 
-    private val sync = route("/sync", GET, async = false) { context.result("Sync") }
+    private val blockingAsync = route("/async-blocking", GET) { blockingDelay("Blocking Async") }
 
-    override val routes = setOf(async, sync)
+    private val nonBlockingAsync = route("/async", GET) { nonBlockingDelay("Non-blocking Async") }
+
+    override val routes = setOf(sync, blockingAsync, nonBlockingAsync)
 
 }
 
+private suspend fun nonBlockingDelay(message: String): String = delay(100L).let { message }
+@Suppress("BlockingMethodInNonBlockingContext")
+private suspend fun blockingDelay(message: String): String =  sleep(100L).let { message }
+
 fun main() {
-    val exampleLogger = LoggerFactory.getLogger("Example")
     val exampleFacade = ExampleFacade()
     val exampleEndpoint = ExampleEndpoint(exampleFacade)
 
@@ -51,13 +56,13 @@ fun main() {
             config.server { Server(sharedThreadPool) }
 
             ReactiveRoutingPlugin<AppContext>(
-                logger = { exampleLogger },
+                errorConsumer = { name, throwable -> println("$name: ${throwable.message}") },
                 dispatcher = dispatcher,
                 syncHandler = { ctx, route -> route.handler(AppContext(ctx)) },
-                asyncHandler = { ctx, route, result -> result.complete(route.handler(AppContext(ctx))) }
+                asyncHandler = { ctx, route, _ -> route.handler(AppContext(ctx)) }
             )
-            .registerRoutes(exampleEndpoint)
-            .let { config.registerPlugin(it) }
+                .registerRoutes(exampleEndpoint)
+                .let { config.registerPlugin(it) }
         }
         .events {
             it.serverStopping { dispatcher.prepareShutdown() }
