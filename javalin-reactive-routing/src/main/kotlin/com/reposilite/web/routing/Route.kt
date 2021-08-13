@@ -26,21 +26,21 @@ enum class RouteMethod {
     BEFORE
 }
 
-open class Route<CONTEXT>(
+open class Route<CONTEXT, RESPONSE : Any>(
     val path: String,
     vararg val methods: RouteMethod,
     val async: Boolean = true,
-    val handler: suspend CONTEXT.() -> Any
+    val handler: suspend CONTEXT.() -> RESPONSE
 )
 
 
-interface Routes<CONTEXT> {
-    val routes: Set<Route<CONTEXT>>
+interface Routes<CONTEXT, RESPONSE : Any> {
+    val routes: Set<Route<CONTEXT, RESPONSE>>
 }
 
-abstract class AbstractRoutes<CONTEXT> : Routes<CONTEXT> {
+abstract class AbstractRoutes<CONTEXT, RESPONSE : Any> : Routes<CONTEXT, RESPONSE> {
 
-    protected fun route(path: String, vararg methods: RouteMethod, async: Boolean = true, handler: suspend CONTEXT.() -> Any): Route<CONTEXT> =
+    protected fun route(path: String, vararg methods: RouteMethod, async: Boolean = true, handler: suspend CONTEXT.() -> RESPONSE): Route<CONTEXT, RESPONSE> =
         Route(path, methods = methods, async, handler)
 
 }

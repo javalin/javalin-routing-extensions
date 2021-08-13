@@ -32,7 +32,7 @@ enum class ContentType(
     TEXT_CSV("csv", "text/csv"),
     TEXT_HTM("htm", "text/html", true),
     TEXT_HTML("html", "text/html", true),
-    TEXT_XML("xml", "text/plain", true),
+    TEXT_XML("xml", "text/xml", true),
 
     /* Image */
 

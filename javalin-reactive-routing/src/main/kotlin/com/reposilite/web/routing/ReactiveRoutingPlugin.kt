@@ -1,7 +1,6 @@
 package com.reposilite.web.routing
 
 import com.reposilite.web.coroutines.JavalinCoroutineScope
-import com.reposilite.web.http.response
 import io.javalin.Javalin
 import io.javalin.core.plugin.Plugin
 import io.javalin.core.plugin.PluginLifecycleInit
@@ -18,18 +17,18 @@ import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-class ReactiveRoutingPlugin<CONTEXT>(
+class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
     private val errorConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
     name: String = "javalin-rfc-scope:reactive-routing",
     parentContext: CoroutineContext = EmptyCoroutineContext,
     exceptionHandler: CoroutineExceptionHandler = DefaultUncaughtExceptionHandler(errorConsumer),
     private val coroutineName: CoroutineName = CoroutineName(name),
     private val dispatcher: CoroutineDispatcher,
-    private val syncHandler: suspend (Context, Route<CONTEXT>) -> Any,
-    private val asyncHandler: suspend (Context, Route<CONTEXT>, CompletableFuture<Any>) -> Any
+    private val syncHandler: suspend (Context, Route<CONTEXT, RESPONSE>) -> RESPONSE,
+    private val asyncHandler: suspend (Context, Route<CONTEXT, RESPONSE>, CompletableFuture<RESPONSE>) -> RESPONSE
 ) : Plugin, PluginLifecycleInit {
 
-    private val routing: MutableSet<Route<CONTEXT>> = HashSet()
+    private val routing: MutableSet<Route<CONTEXT, RESPONSE>> = HashSet()
     private val scope = JavalinCoroutineScope(parentContext, exceptionHandler)
 
     override fun init(app: Javalin) { }
@@ -52,29 +51,25 @@ class ReactiveRoutingPlugin<CONTEXT>(
                 }
             }
 
-    private fun createHandler(route: Route<CONTEXT>): Handler =
+    private fun createHandler(route: Route<CONTEXT, RESPONSE>) =
         Handler { ctx ->
             if (route.async && ctx.handlerType().isHttpMethod()) {
-                val result = CompletableFuture<Any>()
+                val result = CompletableFuture<RESPONSE>()
 
                 scope.launch(dispatcher + coroutineName) {
-                    result.complete(asyncHandler(ctx, route, result))
+                    asyncHandler(ctx, route, result)
                 }
 
-                ctx.future(result) { response ->
-                    response?.run { ctx.response(response) }
-                }
-            } else {
-                runBlocking {
-                    ctx.response(syncHandler(ctx, route))
-                }
+                ctx.future(result) { /* Disable default processing with empty body */ }
+            } else runBlocking {
+                syncHandler(ctx, route)
             }
         }
 
-    fun registerRoutes(routes: Set<Route<CONTEXT>>): ReactiveRoutingPlugin<CONTEXT> =
+    fun registerRoutes(routes: Set<Route<CONTEXT, RESPONSE>>): ReactiveRoutingPlugin<CONTEXT, RESPONSE> =
         also { routing.addAll(routes) }
 
-    fun registerRoutes(routes: Routes<CONTEXT>): ReactiveRoutingPlugin<CONTEXT> =
+    fun registerRoutes(routes: Routes<CONTEXT, RESPONSE>): ReactiveRoutingPlugin<CONTEXT, RESPONSE> =
         also { routing.addAll(routes.routes) }
 
 }
