@@ -27,7 +27,7 @@ class AppContext(val context: Context)
 class ExampleFacade
 
 // Endpoint (domain router)
-class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes<AppContext>() {
+class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes<AppContext, Unit>() {
 
     private val sync = route("/sync", GET, async = false) { blockingDelay("Sync") }
 
@@ -55,7 +55,7 @@ fun main() {
         .create { config ->
             config.server { Server(sharedThreadPool) }
 
-            ReactiveRoutingPlugin<AppContext>(
+            ReactiveRoutingPlugin<AppContext, Unit>(
                 errorConsumer = { name, throwable -> println("$name: ${throwable.message}") },
                 dispatcher = dispatcher,
                 syncHandler = { ctx, route -> route.handler(AppContext(ctx)) },
