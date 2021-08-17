@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    val version = "1.0.6"
+    val version = "1.0.7"
     implementation "com.reposilite.javalin-rfcs:javalin-context:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-reactive-routing:$version"
 }
@@ -84,7 +84,6 @@ Context.contentLength(Long)
 Context.encoding(Charset)
 Context.encoding(String)
 Context.contentDisposition(String)
-Context.contentType(ContentType)
 Context.resultAttachment(Name, ContentType, ContentLength, InputStream)
 ```
 
@@ -97,10 +96,6 @@ errorResponse(HttpCode httpCode, String message) -> Result<*, ErrorResponse>
 // [...]
 ```
 
-Adds `ContentType` enum with list of [Mozilla :: Common Types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) and properties:
-* Determining whether this type represents human-readable content
-* Associated extension
-
 #### OpenAPI
 
 Reimplemented OpenAPI module:
@@ -108,6 +103,7 @@ Reimplemented OpenAPI module:
 * https://github.com/reposilite-playground/javalin-openapi
 
 To enable annotation processor, Swagger or ReDoc you have to add extra dependencies from repository listed above. 
+
 
 ### Used by
 

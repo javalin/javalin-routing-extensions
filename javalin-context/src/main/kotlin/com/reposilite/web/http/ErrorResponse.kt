@@ -34,5 +34,5 @@ fun <V> errorResponse(code: HttpCode, message: String): Result<V, ErrorResponse>
 fun aggregatedError(code: HttpCode, errors: Collection<ErrorResponse>): ErrorResponse =
     ErrorResponse(
         code,
-        code.asString() + " - Aggregated error" + lineSeparator() + errors.joinToString { lineSeparator() }
+        "$code - Aggregated error" + lineSeparator() + errors.joinToString { lineSeparator() }
     )

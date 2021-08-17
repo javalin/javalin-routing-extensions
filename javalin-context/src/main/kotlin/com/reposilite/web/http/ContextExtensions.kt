@@ -16,6 +16,7 @@
 
 package com.reposilite.web.http
 
+import io.javalin.http.ContentType
 import io.javalin.http.Context
 import org.eclipse.jetty.server.HttpOutput
 import panda.std.Result
@@ -40,9 +41,6 @@ fun Context.encoding(encoding: String): Context =
 
 fun Context.contentDisposition(disposition: String): Context =
     header("Content-Disposition", disposition)
-
-fun Context.contentType(contentType: ContentType): Context =
-    contentType(contentType.mimeType)
 
 fun Context.response(result: Any): Context =
     also {
