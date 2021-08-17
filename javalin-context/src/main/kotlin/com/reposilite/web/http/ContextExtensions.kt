@@ -55,6 +55,7 @@ fun Context.response(result: Any): Context =
             is ErrorResponse -> json(result).status(result.status)
             is InputStream -> result(result)
             is String -> result(result)
+            is Unit -> {}
             else -> json(result)
         }
     }
