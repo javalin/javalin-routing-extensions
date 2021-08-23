@@ -42,6 +42,8 @@ fun Context.encoding(encoding: String): Context =
 fun Context.contentDisposition(disposition: String): Context =
     header("Content-Disposition", disposition)
 
+data class HtmlResponse(val content: String)
+
 fun Context.response(result: Any): Context =
     also {
         when (result) {
@@ -51,6 +53,7 @@ fun Context.response(result: Any): Context =
                     { error -> response(error) }
                 )
             is ErrorResponse -> json(result).status(result.status)
+            is HtmlResponse -> html(result.content)
             is InputStream -> result(result)
             is String -> result(result)
             is Unit -> {}
