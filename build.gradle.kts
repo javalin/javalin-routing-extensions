@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = "com.reposilite"
-    version = "1.0.8"
+    version = "1.0.9"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "maven-publish")
@@ -36,7 +36,7 @@ allprojects {
 
     dependencies {
         implementation(kotlin("stdlib"))
-        implementation("io.javalin:javalin:4.0.0.RC1")
+        implementation("io.javalin:javalin:4.0.0.RC2")
     }
 
     java {

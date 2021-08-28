@@ -55,12 +55,15 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
         Handler { ctx ->
             if (route.async && ctx.handlerType().isHttpMethod()) {
                 val result = CompletableFuture<RESPONSE>()
+                ctx.future(result) { /* Disable default processing with empty body */ }
 
                 scope.launch(dispatcher + coroutineName) {
-                    asyncHandler(ctx, route, result)
+                    runCatching {
+                        asyncHandler(ctx, route, result)
+                    }.onFailure {
+                        result.completeExceptionally(it)
+                    }
                 }
-
-                ctx.future(result) { /* Disable default processing with empty body */ }
             } else runBlocking {
                 syncHandler(ctx, route)
             }

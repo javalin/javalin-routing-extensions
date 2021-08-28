@@ -3,7 +3,6 @@ package io.ktor.server.engine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
-import java.io.IOException
 import kotlin.coroutines.CoroutineContext
 
 typealias CoroutineNameRepresentation = Any
@@ -17,7 +16,6 @@ class DefaultUncaughtExceptionHandler(
     override fun handleException(context: CoroutineContext, exception: Throwable) {
         when (exception) {
             is CancellationException -> return
-            is IOException -> return
             else -> {
                 val coroutineName = context[CoroutineName] ?: context.toString()
                 errorConsumer(coroutineName, exception)
