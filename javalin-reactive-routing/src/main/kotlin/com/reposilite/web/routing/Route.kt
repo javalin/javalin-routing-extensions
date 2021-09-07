@@ -18,6 +18,8 @@ package com.reposilite.web.routing
 
 enum class RouteMethod {
     HEAD,
+    PATCH,
+    OPTIONS,
     GET,
     PUT,
     POST,

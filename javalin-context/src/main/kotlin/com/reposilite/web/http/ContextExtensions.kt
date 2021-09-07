@@ -24,9 +24,9 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.Charset
 
-/**
- * Extends Javalin's context with a support for [ErrorResponse] results
- */
+fun Context.acceptsBody(): Boolean =
+    method() != "HEAD" && method() != "OPTIONS"
+
 fun Context.error(error: ErrorResponse): Context =
     status(error.status).json(error)
 
@@ -42,10 +42,16 @@ fun Context.encoding(encoding: String): Context =
 fun Context.contentDisposition(disposition: String): Context =
     header("Content-Disposition", disposition)
 
+object EmptyBody
+
 data class HtmlResponse(val content: String)
 
 fun Context.response(result: Any): Context =
     also {
+        if (acceptsBody().not()) {
+            return@also
+        }
+
         when (result) {
             is Result<*, *> ->
                 result.consume(
@@ -56,13 +62,14 @@ fun Context.response(result: Any): Context =
             is HtmlResponse -> html(result.content)
             is InputStream -> result(result)
             is String -> result(result)
-            is Unit -> {}
+            is EmptyBody, Unit -> {}
+            is Context -> {}
             else -> json(result)
         }
     }
 
 fun Context.resultAttachment(name: String, contentType: ContentType, contentLength: Long, data: InputStream): Context {
-    if (method() != "HEAD") {
+    if (acceptsBody()) {
         data.transferLargeTo(res.outputStream)
     }
     else {
