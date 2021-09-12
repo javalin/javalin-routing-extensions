@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = "com.reposilite"
-    version = "1.0.10"
+    version = "4.0.11"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "maven-publish")
@@ -35,8 +35,12 @@ allprojects {
     }
 
     dependencies {
-        implementation(kotlin("stdlib"))
+        implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.21")
         implementation("io.javalin:javalin:4.0.0.RC3")
+
+        val expressible = "1.0.15"
+        api("org.panda-lang:expressible:$expressible")
+        implementation("org.panda-lang:expressible-kt:$expressible")
     }
 
     java {

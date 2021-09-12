@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    val version = "1.0.9"
+    val version = "4.0.11"
     implementation "com.reposilite.javalin-rfcs:javalin-context:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-reactive-routing:$version"
 }
@@ -44,31 +44,25 @@ private suspend fun nonBlockingDelay(message: String): String = delay(100L).let 
 private suspend fun blockingDelay(message: String): String =  sleep(100L).let { message }
 
 fun main() {
-    val exampleFacade = ExampleFacade()
-    val exampleEndpoint = ExampleEndpoint(exampleFacade)
-
-    val sharedThreadPool = QueuedThreadPool(4)
-    val dispatcher = DispatcherWithShutdown(sharedThreadPool.asCoroutineDispatcher())
-    sharedThreadPool.start()
+    val exampleEndpoint = ExampleEndpoint(ExampleFacade())
+    val dispatcher = ExclusiveDispatcher(Executors.newCachedThreadPool())
 
     Javalin
         .create { config ->
-            config.server { Server(sharedThreadPool) }
-
             ReactiveRoutingPlugin<AppContext, Unit>(
                 errorConsumer = { name, throwable -> println("$name: ${throwable.message}") },
                 dispatcher = dispatcher,
                 syncHandler = { ctx, route -> route.handler(AppContext(ctx)) },
                 asyncHandler = { ctx, route, _ -> route.handler(AppContext(ctx)) }
             )
-            .registerRoutes(exampleEndpoint)
-            .let { config.registerPlugin(it) }
+                .registerRoutes(exampleEndpoint)
+                .let { config.registerPlugin(it) }
         }
         .events {
             it.serverStopping { dispatcher.prepareShutdown() }
             it.serverStopped { dispatcher.completeShutdown() }
         }
-        .start("127.0.0.1", 8080)
+        .start("127.0.0.1", 8080) 
 }
 ```
 
@@ -76,25 +70,7 @@ fun main() {
 
 #### Context
 
-Provides utility methods in `io.javalin.http.Context` class:
-
-```kotlin
-Context.error(ErrorResponse)
-Context.contentLength(Long)
-Context.encoding(Charset)
-Context.encoding(String)
-Context.contentDisposition(String)
-Context.resultAttachment(Name, ContentType, ContentLength, InputStream)
-```
-
-Provides generic `ErrorResponse` that supports removal of exception based error handling within app:
-```kotlin
-ErrorResponse(Int httpCode, String message)
-ErrorResponse(HttpCode httpCode, String message)
-/* Methods */
-errorResponse(HttpCode httpCode, String message) -> Result<*, ErrorResponse>
-// [...]
-```
+Provides set of utility methods in `io.javalin.http.Context` class.
 
 #### OpenAPI
 

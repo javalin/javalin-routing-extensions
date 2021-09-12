@@ -16,7 +16,10 @@
 package com.reposilite.web.http
 
 import io.javalin.http.HttpCode
+import io.javalin.http.HttpCode.NOT_FOUND
+import io.javalin.http.HttpCode.UNAUTHORIZED
 import panda.std.Result
+import panda.std.asError
 import java.lang.System.lineSeparator
 
 data class ErrorResponse(val status: Int, val message: String) {
@@ -36,3 +39,19 @@ fun aggregatedError(code: HttpCode, errors: Collection<ErrorResponse>): ErrorRes
         code,
         "$code - Aggregated error" + lineSeparator() + errors.joinToString { lineSeparator() }
     )
+
+private const val NOT_FOUND_MESSAGE = "Not found"
+
+fun <V> notFoundError(message: String = NOT_FOUND_MESSAGE): Result<V, ErrorResponse> =
+    notFound(message).asError()
+
+fun notFound(message: String = NOT_FOUND_MESSAGE): ErrorResponse =
+    ErrorResponse(NOT_FOUND, message)
+
+private const val UNAUTHORIZED_MESSAGE = "Unauthorized access request"
+
+fun <V> unauthorizedError(message: String = UNAUTHORIZED_MESSAGE): Result<V, ErrorResponse> =
+    unauthorized(message).asError()
+
+fun unauthorized(message: String = UNAUTHORIZED_MESSAGE): ErrorResponse =
+    ErrorResponse(UNAUTHORIZED, message)

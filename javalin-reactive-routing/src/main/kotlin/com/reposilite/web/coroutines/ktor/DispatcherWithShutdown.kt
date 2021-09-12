@@ -1,21 +1,28 @@
-package io.ktor.util
+package com.reposilite.web.coroutines.ktor
 
 /*
  * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-import io.ktor.util.DispatcherWithShutdown.ShutdownPhase.Completed
-import io.ktor.util.DispatcherWithShutdown.ShutdownPhase.Graceful
-import io.ktor.util.DispatcherWithShutdown.ShutdownPhase.None
-import kotlinx.coroutines.*
-import java.util.concurrent.*
-import kotlin.coroutines.*
+import com.reposilite.web.coroutines.ktor.DispatcherWithShutdown.ShutdownPhase.Completed
+import com.reposilite.web.coroutines.ktor.DispatcherWithShutdown.ShutdownPhase.Graceful
+import com.reposilite.web.coroutines.ktor.DispatcherWithShutdown.ShutdownPhase.None
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Runnable
+import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Specialized dispatcher useful for graceful shutdown
  */
 class DispatcherWithShutdown(delegate: CoroutineDispatcher) : CoroutineDispatcher() {
+
     private var delegate: CoroutineDispatcher? = delegate
+
+    private enum class ShutdownPhase {
+        None, Graceful, Completed
+    }
 
     @Volatile
     private var shutdownPhase = None
@@ -69,7 +76,4 @@ class DispatcherWithShutdown(delegate: CoroutineDispatcher) : CoroutineDispatche
         }
     }
 
-    private enum class ShutdownPhase {
-        None, Graceful, Completed
-    }
 }

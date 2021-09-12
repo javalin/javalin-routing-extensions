@@ -18,17 +18,50 @@ package com.reposilite.web.http
 
 import io.javalin.http.ContentType
 import io.javalin.http.Context
-import org.eclipse.jetty.server.HttpOutput
+import io.javalin.http.HttpCode
 import panda.std.Result
 import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.Charset
 
+object EmptyBody
+
+data class HtmlResponse(val content: String)
+
+fun Context.response(result: Any): Context =
+    also {
+        if (!acceptsBody() || !output().isProbablyOpen()) {
+            return@also
+        }
+
+        when (result) {
+            is EmptyBody, Unit -> return@also
+            is Context -> return@also
+            is Result<*, *> -> {
+                result.consume(
+                    { value -> response(value) },
+                    { error -> response(error) }
+                )
+                return@also
+            }
+        }
+
+        clearContentLength()
+
+        when (result) {
+            is ErrorResponse -> error(result)
+            is HtmlResponse -> html(result.content)
+            is InputStream -> result(result)
+            is String -> result(result)
+            else -> json(result)
+        }
+    }
+
 fun Context.acceptsBody(): Boolean =
     method() != "HEAD" && method() != "OPTIONS"
 
-fun Context.error(error: ErrorResponse): Context =
-    status(error.status).json(error)
+fun Context.clearContentLength(): Context =
+    also { contentLength(-1) }
 
 fun Context.contentLength(length: Long): Context =
     also { res.setContentLengthLong(length) }
@@ -41,32 +74,6 @@ fun Context.encoding(encoding: String): Context =
 
 fun Context.contentDisposition(disposition: String): Context =
     header("Content-Disposition", disposition)
-
-object EmptyBody
-
-data class HtmlResponse(val content: String)
-
-fun Context.response(result: Any): Context =
-    also {
-        if (acceptsBody().not()) {
-            return@also
-        }
-
-        when (result) {
-            is Result<*, *> ->
-                result.consume(
-                    { value -> response(value) },
-                    { error -> response(error) }
-                )
-            is ErrorResponse -> json(result).status(result.status)
-            is HtmlResponse -> html(result.content)
-            is InputStream -> result(result)
-            is String -> result(result)
-            is EmptyBody, Unit -> {}
-            is Context -> {}
-            else -> json(result)
-        }
-    }
 
 fun Context.resultAttachment(name: String, contentType: ContentType, contentLength: Long, data: InputStream): Context {
     if (acceptsBody()) {
@@ -86,15 +93,17 @@ fun Context.resultAttachment(name: String, contentType: ContentType, contentLeng
     return this
 }
 
-fun InputStream.transferLargeTo(outputStream: OutputStream): Boolean =
-    if (outputStream.isProbablyOpen()) {
-        this.copyTo(outputStream)
-        true
-    }
-    else false
+fun Context.uri(): String =
+    req.requestURI
 
-fun OutputStream.isProbablyOpen(): Boolean =
-    when (this) {
-        is HttpOutput -> !isClosed
-        else -> true
-    }
+fun Context.output(): OutputStream =
+    res.outputStream
+
+fun Context.error(error: ErrorResponse): Context =
+    error(error.status, error)
+
+fun Context.error(status: HttpCode, error: Any): Context =
+    error(status.status, error)
+
+fun Context.error(status: Int, error: Any): Context =
+    status(status).json(error)

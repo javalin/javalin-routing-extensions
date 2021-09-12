@@ -1,35 +1,33 @@
 package com.reposilite.web.routing
 
 import com.reposilite.web.coroutines.JavalinCoroutineScope
+import com.reposilite.web.coroutines.ktor.CoroutineNameRepresentation
+import com.reposilite.web.coroutines.ktor.DefaultUncaughtExceptionHandler
 import io.javalin.Javalin
 import io.javalin.core.plugin.Plugin
 import io.javalin.core.plugin.PluginLifecycleInit
 import io.javalin.http.Context
 import io.javalin.http.Handler
-import io.ktor.server.engine.CoroutineNameRepresentation
-import io.ktor.server.engine.DefaultUncaughtExceptionHandler
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CompletableFuture
-import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
 class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
-    private val errorConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
     name: String = "javalin-rfc-scope:reactive-routing",
-    parentContext: CoroutineContext = EmptyCoroutineContext,
-    exceptionHandler: CoroutineExceptionHandler = DefaultUncaughtExceptionHandler(errorConsumer),
-    private val coroutineName: CoroutineName = CoroutineName(name),
+    private val coroutinesEnabled: Boolean = true,
+    errorConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
     private val dispatcher: CoroutineDispatcher,
     private val syncHandler: suspend (Context, Route<CONTEXT, RESPONSE>) -> RESPONSE,
     private val asyncHandler: suspend (Context, Route<CONTEXT, RESPONSE>, CompletableFuture<RESPONSE>) -> RESPONSE
 ) : Plugin, PluginLifecycleInit {
 
+    private val coroutineName: CoroutineName = CoroutineName(name)
     private val routing: MutableSet<Route<CONTEXT, RESPONSE>> = HashSet()
-    private val scope = JavalinCoroutineScope(parentContext, exceptionHandler)
+    private val exceptionHandler = DefaultUncaughtExceptionHandler(errorConsumer)
+    private val scope = JavalinCoroutineScope(EmptyCoroutineContext, exceptionHandler)
 
     override fun init(app: Javalin) { }
 
@@ -55,7 +53,7 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
 
     private fun createHandler(route: Route<CONTEXT, RESPONSE>) =
         Handler { ctx ->
-            if (route.async && ctx.handlerType().isHttpMethod()) {
+            if (coroutinesEnabled && route.async && ctx.handlerType().isHttpMethod()) {
                 val result = CompletableFuture<RESPONSE>()
                 ctx.future(result) { /* Disable default processing with empty body */ }
 
