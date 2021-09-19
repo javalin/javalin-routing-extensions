@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.EmptyCoroutineContext
 
 class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
@@ -31,6 +32,8 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
     private val routing: MutableSet<Route<CONTEXT, RESPONSE>> = HashSet()
     private val exceptionHandler = DefaultUncaughtExceptionHandler(errorConsumer)
     private val scope = JavalinCoroutineScope(EmptyCoroutineContext, exceptionHandler)
+    private val id = AtomicLong()
+    private val finished = AtomicLong()
 
     override fun init(app: Javalin) { }
 
@@ -56,6 +59,8 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
 
     private fun createHandler(route: Route<CONTEXT, RESPONSE>) =
         Handler { ctx ->
+            id.incrementAndGet()
+
             if (coroutinesEnabled && route.async && ctx.handlerType().isHttpMethod()) {
                 val result = CompletableFuture<RESPONSE>()
                 ctx.future(result) { /* Disable default processing with empty body */ }
@@ -66,6 +71,7 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
                     }.onFailure {
                         result.completeExceptionally(it)
                     }
+                    finished.incrementAndGet()
                 }
             } else {
                 runBlocking {
@@ -77,7 +83,11 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
                         syncHandler(ctx, route)
                     }
 
-                    anyResponse.invokeOnCompletion { parent.complete() }
+                    anyResponse.invokeOnCompletion {
+                        parent.complete()
+                        finished.incrementAndGet()
+                    }
+
                     anyResponse.await()
                 }
             }
@@ -88,5 +98,11 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
 
     fun registerRoutes(routes: Routes<CONTEXT, RESPONSE>): ReactiveRoutingPlugin<CONTEXT, RESPONSE> =
         also { routing.addAll(routes.routes) }
+
+    fun countFinishedTasks(): Long =
+        finished.get()
+
+    fun countExecutedTasks(): Long =
+        id.get()
 
 }
