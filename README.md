@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    val version = "4.0.12"
+    val version = "4.0.13"
     implementation "com.reposilite.javalin-rfcs:javalin-context:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-reactive-routing:$version"
 }
