@@ -16,6 +16,9 @@
 
 package com.reposilite.web.http
 
+import com.reposilite.web.isProbablyOpen
+import com.reposilite.web.silentClose
+import com.reposilite.web.transferLargeTo
 import io.javalin.http.ContentType
 import io.javalin.http.Context
 import io.javalin.http.HttpCode
@@ -76,11 +79,12 @@ fun Context.contentDisposition(disposition: String): Context =
     header("Content-Disposition", disposition)
 
 fun Context.resultAttachment(name: String, contentType: ContentType, contentLength: Long, data: InputStream): Context {
-    if (acceptsBody()) {
-        data.transferLargeTo(res.outputStream)
-    }
-    else {
-        data.close()
+    try {
+        if (acceptsBody()) {
+            data.transferLargeTo(res.outputStream)
+        }
+    } finally {
+        data.silentClose()
     }
 
     if (!contentType.isHumanReadable) {
