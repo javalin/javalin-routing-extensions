@@ -21,6 +21,7 @@ import com.reposilite.web.silentClose
 import io.javalin.http.ContentType
 import io.javalin.http.Context
 import io.javalin.http.HttpCode
+import org.eclipse.jetty.io.EofException
 import panda.std.Result
 import java.io.InputStream
 import java.io.OutputStream
@@ -91,6 +92,8 @@ fun Context.resultAttachment(name: String, contentType: ContentType, contentLeng
     if (acceptsBody() && res.outputStream.isProbablyOpen()) {
         try {
             data.copyTo(res.outputStream)
+        } catch (eof: EofException) {
+            // ignore, client closed connection
         }
         finally {
             data.silentClose()
