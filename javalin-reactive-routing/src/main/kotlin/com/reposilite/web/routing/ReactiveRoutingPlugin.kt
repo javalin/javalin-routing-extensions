@@ -61,7 +61,7 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
         Handler { ctx ->
             id.incrementAndGet()
 
-            if (coroutinesEnabled && route.async && ctx.handlerType().isHttpMethod()) {
+            if (coroutinesEnabled && route.async) {
                 val result = CompletableFuture<RESPONSE>()
                 ctx.future(result) { /* Disable default processing with empty body */ }
 
