@@ -36,9 +36,9 @@ allprojects {
 
     dependencies {
         implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.21")
-        implementation("io.javalin:javalin:4.0.0.RC3")
+        implementation("io.javalin:javalin:4.0.1")
 
-        val expressible = "1.0.15"
+        val expressible = "1.0.17"
         api("org.panda-lang:expressible:$expressible")
         implementation("org.panda-lang:expressible-kt:$expressible")
     }
