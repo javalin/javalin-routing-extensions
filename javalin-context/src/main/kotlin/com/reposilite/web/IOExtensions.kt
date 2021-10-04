@@ -10,7 +10,7 @@ fun OutputStream.isProbablyOpen(): Boolean =
         else -> true
     }
 
-fun Closeable.silentClose() =
+fun Closeable?.silentClose() =
     runCatching {
-        this.close()
+        this?.close()
     }

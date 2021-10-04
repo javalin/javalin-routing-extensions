@@ -33,10 +33,6 @@ data class HtmlResponse(val content: String)
 
 fun Context.response(result: Any): Context =
     also {
-        if (!acceptsBody() || !output().isProbablyOpen()) {
-            return@also
-        }
-
         when (result) {
             is EmptyBody, Unit -> return@also
             is Context -> return@also
@@ -47,6 +43,14 @@ fun Context.response(result: Any): Context =
                 )
                 return@also
             }
+        }
+
+        if (!acceptsBody() || !output().isProbablyOpen()) {
+            if (result is InputStream) {
+                result.silentClose()
+            }
+
+            return@also
         }
 
         clearContentLength()
@@ -78,30 +82,31 @@ fun Context.encoding(encoding: String): Context =
 fun Context.contentDisposition(disposition: String): Context =
     header("Content-Disposition", disposition)
 
-fun Context.resultAttachment(name: String, contentType: ContentType, contentLength: Long, data: InputStream): Context {
-    contentType(contentType)
+fun Context.resultAttachment(name: String, contentType: ContentType, contentLength: Long, data: InputStream): Context =
+    try {
+        contentType(contentType)
 
-    if (contentLength > 0) {
-        contentLength(contentLength)
-    }
-
-    if (!contentType.isHumanReadable) {
-        contentDisposition(""""attachment; filename="$name" """)
-    }
-
-    if (acceptsBody() && res.outputStream.isProbablyOpen()) {
-        try {
-            data.copyTo(res.outputStream)
-        } catch (eof: EofException) {
-            // ignore, client closed connection
+        if (contentLength > 0) {
+            contentLength(contentLength)
         }
-        finally {
-            data.silentClose()
-        }
-    }
 
-    return this
-}
+        if (!contentType.isHumanReadable) {
+            contentDisposition(""""attachment; filename="$name" """)
+        }
+
+        if (acceptsBody() && res.outputStream.isProbablyOpen()) {
+            try {
+                data.copyTo(res.outputStream)
+            } catch (eof: EofException) {
+                // ignore, client closed connection
+            }
+        }
+
+        this
+    }
+    finally {
+        data.silentClose()
+    }
 
 fun Context.uri(): String =
     req.requestURI
