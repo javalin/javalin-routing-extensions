@@ -10,9 +10,6 @@ import io.javalin.http.Context
 import io.javalin.http.Handler
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CompletableFuture
@@ -75,21 +72,9 @@ class ReactiveRoutingPlugin<CONTEXT, RESPONSE : Any>(
                 }
             } else {
                 runBlocking {
-                    // Umm... I'm stuck step-coroutine, pls help me
-                    // ~ https://github.com/Kotlin/kotlinx.coroutines/issues/1578
-                    val parent = SupervisorJob(coroutineContext[Job])
-
-                    val anyResponse = async(parent) {
-                        syncHandler(ctx, route)
-                    }
-
-                    anyResponse.invokeOnCompletion {
-                        parent.complete()
-                        finished.incrementAndGet()
-                    }
-
-                    anyResponse.await()
+                    syncHandler(ctx, route)
                 }
+                finished.incrementAndGet()
             }
         }
 
