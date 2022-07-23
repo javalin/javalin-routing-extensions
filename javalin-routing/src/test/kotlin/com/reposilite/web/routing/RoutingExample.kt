@@ -26,7 +26,7 @@ fun main() {
     Javalin.create { configuration ->
         RoutingPlugin<AppContext, Unit> { ctx, route -> route.handler(AppContext(ctx)) }
             .registerRoutes(ExampleEndpoint(ExampleFacade()))
-            .also { configuration.registerPlugin(it) }
+            .also { configuration.plugins.register(it) }
     }
     .start(8080)
 }

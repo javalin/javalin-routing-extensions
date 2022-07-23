@@ -1,5 +1,5 @@
 # Javalin RFCs [![CI](https://github.com/reposilite-playground/javalin-rfcs/actions/workflows/gradle.yml/badge.svg)](https://github.com/reposilite-playground/javalin-rfcs/actions/workflows/gradle.yml)
-Various experimental extensions to [Javalin 4.x](https://github.com/tipsy/javalin) used in [Reposilite 3.x](https://github.com/dzikoysk/reposilite). Provides basic support for Kotlin coroutines and async routes with a set of useful utilities.
+Various experimental extensions to [Javalin 5.x](https://github.com/tipsy/javalin) used in [Reposilite 3.x](https://github.com/dzikoysk/reposilite). Provides basic support for Kotlin coroutines and async routes with a set of useful utilities.
 
 ```groovy
 repositories {
@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    val version = "4.1.0"
+    val version = "5.0.0-SNAPSHOT"
     implementation "com.reposilite.javalin-rfcs:javalin-context:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-routing:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-coroutines:$version"
