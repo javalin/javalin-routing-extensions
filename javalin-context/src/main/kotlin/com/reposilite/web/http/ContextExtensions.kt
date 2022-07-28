@@ -20,6 +20,8 @@ import com.reposilite.web.isProbablyOpen
 import com.reposilite.web.silentClose
 import io.javalin.http.ContentType
 import io.javalin.http.Context
+import io.javalin.http.HandlerType.HEAD
+import io.javalin.http.HandlerType.OPTIONS
 import io.javalin.http.HttpCode
 import panda.std.Result
 import java.io.InputStream
@@ -64,7 +66,7 @@ fun Context.response(result: Any): Context =
     }
 
 fun Context.acceptsBody(): Boolean =
-    method() != "HEAD" && method() != "OPTIONS"
+    method() != HEAD && method() != OPTIONS
 
 fun Context.clearContentLength(): Context =
     also { contentLength(-1) }
