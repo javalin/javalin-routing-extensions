@@ -72,13 +72,13 @@ fun Context.clearContentLength(): Context =
     also { contentLength(-1) }
 
 fun Context.contentLength(length: Long): Context =
-    also { res.setContentLengthLong(length) }
+    also { res().setContentLengthLong(length) }
 
 fun Context.encoding(encoding: Charset): Context =
     encoding(encoding.name())
 
 fun Context.encoding(encoding: String): Context =
-    also { res.characterEncoding = encoding }
+    also { res().characterEncoding = encoding }
 
 fun Context.contentDisposition(disposition: String): Context =
     header("Content-Disposition", disposition)
@@ -98,10 +98,10 @@ fun Context.resultAttachment(name: String, contentType: ContentType, contentLeng
 }
 
 fun Context.uri(): String =
-    req.requestURI
+    path()
 
 fun Context.output(): OutputStream =
-    res.outputStream
+    res().outputStream
 
 fun Context.error(error: ErrorResponse): Context =
     error(error.status, error)
