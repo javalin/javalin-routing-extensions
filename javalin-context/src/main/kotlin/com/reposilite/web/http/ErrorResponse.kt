@@ -42,32 +42,32 @@ fun aggregatedError(status: HttpStatus, errors: Collection<ErrorResponse>): Erro
         "$status - Aggregated error" + lineSeparator() + errors.joinToString { lineSeparator() }
     )
 
-fun HttpStatus.toErrorResponse(message: String?): ErrorResponse =
+fun HttpStatus.toErrorResponse(message: String? = null): ErrorResponse =
     ErrorResponse(this, message ?: this.message)
 
-fun <V> HttpStatus.toErrorResult(message: String?): Result<V, ErrorResponse> =
+fun <V> HttpStatus.toErrorResult(message: String? = null): Result<V, ErrorResponse> =
     toErrorResponse(message).asError()
 
-fun <V> notFoundError(message: String?): Result<V, ErrorResponse> =
+fun <V> notFoundError(message: String? = null): Result<V, ErrorResponse> =
     notFound(message).asError()
 
-fun notFound(message: String?): ErrorResponse =
+fun notFound(message: String? = null): ErrorResponse =
     NOT_FOUND.toErrorResponse(message)
 
-fun <V> unauthorizedError(message: String?): Result<V, ErrorResponse> =
+fun <V> unauthorizedError(message: String? = null): Result<V, ErrorResponse> =
     unauthorized(message).asError()
 
-fun unauthorized(message: String?): ErrorResponse =
+fun unauthorized(message: String? = null): ErrorResponse =
     UNAUTHORIZED.toErrorResponse(message)
 
-fun <V> badRequestError(message: String?): Result<V, ErrorResponse> =
+fun <V> badRequestError(message: String? = null): Result<V, ErrorResponse> =
     badRequest(message).asError()
 
-fun badRequest(message: String?): ErrorResponse =
+fun badRequest(message: String? = null): ErrorResponse =
     BAD_REQUEST.toErrorResponse(message)
 
-fun internalServer(message: String?): ErrorResponse =
+fun internalServer(message: String? = null): ErrorResponse =
     INTERNAL_SERVER_ERROR.toErrorResponse(message)
 
-fun <V> internalServerError(message: String?): Result<V, ErrorResponse> =
+fun <V> internalServerError(message: String? = null): Result<V, ErrorResponse> =
     internalServer(message).asError()
