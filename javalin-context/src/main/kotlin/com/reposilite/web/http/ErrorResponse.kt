@@ -15,43 +15,59 @@
  */
 package com.reposilite.web.http
 
-import io.javalin.http.HttpCode
-import io.javalin.http.HttpCode.NOT_FOUND
-import io.javalin.http.HttpCode.UNAUTHORIZED
+import io.javalin.http.HttpStatus
+import io.javalin.http.HttpStatus.BAD_REQUEST
+import io.javalin.http.HttpStatus.INTERNAL_SERVER_ERROR
+import io.javalin.http.HttpStatus.NOT_FOUND
+import io.javalin.http.HttpStatus.UNAUTHORIZED
 import panda.std.Result
 import panda.std.asError
 import java.lang.System.lineSeparator
 
 data class ErrorResponse(val status: Int, val message: String) {
 
-    constructor(code: HttpCode, message: String) : this(code.status, message)
+    constructor(code: HttpStatus, message: String) : this(code.code, message)
 
     fun updateMessage(transform: (String) -> String): ErrorResponse =
         ErrorResponse(status, transform(message))
 
 }
 
-fun <V> errorResponse(code: HttpCode, message: String): Result<V, ErrorResponse> =
-    Result.error(ErrorResponse(code.status, message))
+fun <V> errorResponse(status: HttpStatus, message: String): Result<V, ErrorResponse> =
+    Result.error(ErrorResponse(status.code, message))
 
-fun aggregatedError(code: HttpCode, errors: Collection<ErrorResponse>): ErrorResponse =
+fun aggregatedError(status: HttpStatus, errors: Collection<ErrorResponse>): ErrorResponse =
     ErrorResponse(
-        code,
-        "$code - Aggregated error" + lineSeparator() + errors.joinToString { lineSeparator() }
+        status,
+        "$status - Aggregated error" + lineSeparator() + errors.joinToString { lineSeparator() }
     )
 
-private const val NOT_FOUND_MESSAGE = "Not found"
+fun HttpStatus.toErrorResponse(message: String?): ErrorResponse =
+    ErrorResponse(this, message ?: this.message)
 
-fun <V> notFoundError(message: String = NOT_FOUND_MESSAGE): Result<V, ErrorResponse> =
+fun <V> HttpStatus.toErrorResult(message: String?): Result<V, ErrorResponse> =
+    toErrorResponse(message).asError()
+
+fun <V> notFoundError(message: String?): Result<V, ErrorResponse> =
     notFound(message).asError()
 
-fun notFound(message: String = NOT_FOUND_MESSAGE): ErrorResponse =
-    ErrorResponse(NOT_FOUND, message)
+fun notFound(message: String?): ErrorResponse =
+    NOT_FOUND.toErrorResponse(message)
 
-private const val UNAUTHORIZED_MESSAGE = "Unauthorized access request"
-
-fun <V> unauthorizedError(message: String = UNAUTHORIZED_MESSAGE): Result<V, ErrorResponse> =
+fun <V> unauthorizedError(message: String?): Result<V, ErrorResponse> =
     unauthorized(message).asError()
 
-fun unauthorized(message: String = UNAUTHORIZED_MESSAGE): ErrorResponse =
-    ErrorResponse(UNAUTHORIZED, message)
+fun unauthorized(message: String?): ErrorResponse =
+    UNAUTHORIZED.toErrorResponse(message)
+
+fun <V> badRequestError(message: String?): Result<V, ErrorResponse> =
+    badRequest(message).asError()
+
+fun badRequest(message: String?): ErrorResponse =
+    BAD_REQUEST.toErrorResponse(message)
+
+fun internalServer(message: String?): ErrorResponse =
+    INTERNAL_SERVER_ERROR.toErrorResponse(message)
+
+fun <V> internalServerError(message: String?): Result<V, ErrorResponse> =
+    internalServer(message).asError()

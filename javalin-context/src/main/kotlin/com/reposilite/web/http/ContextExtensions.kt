@@ -22,7 +22,7 @@ import io.javalin.http.ContentType
 import io.javalin.http.Context
 import io.javalin.http.HandlerType.HEAD
 import io.javalin.http.HandlerType.OPTIONS
-import io.javalin.http.HttpCode
+import io.javalin.http.HttpStatus
 import panda.std.Result
 import java.io.InputStream
 import java.io.OutputStream
@@ -106,8 +106,8 @@ fun Context.output(): OutputStream =
 fun Context.error(error: ErrorResponse): Context =
     error(error.status, error)
 
-fun Context.error(status: HttpCode, error: Any): Context =
-    error(status.status, error)
+fun Context.error(status: HttpStatus, error: Any): Context =
+    error(status.code, error)
 
 fun Context.error(status: Int, error: Any): Context =
     status(status).json(error)

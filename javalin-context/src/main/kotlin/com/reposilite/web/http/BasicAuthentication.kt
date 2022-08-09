@@ -1,6 +1,5 @@
 package com.reposilite.web.http
 
-import io.javalin.http.HttpCode.UNAUTHORIZED
 import io.javalin.security.BasicAuthCredentials
 import panda.std.Result
 import panda.std.asSuccess
@@ -13,13 +12,13 @@ fun extractFromHeaders(headers: Map<String, String>): Result<BasicAuthCredential
 
 fun extractFromHeader(authorizationHeader: String?): Result<BasicAuthCredentials, ErrorResponse> {
     if (authorizationHeader == null) {
-        return errorResponse(UNAUTHORIZED, "Invalid authorization credentials")
+        return unauthorizedError("Invalid authorization credentials")
     }
 
     val method = when {
         authorizationHeader.startsWith("Basic") -> "Basic" // Standard basic auth
         authorizationHeader.startsWith("xBasic") -> "xBasic" // Basic auth for browsers to avoid built-in auth popup
-        else -> return errorResponse(UNAUTHORIZED, "Invalid authorization credentials")
+        else -> return unauthorizedError("Invalid authorization credentials")
     }
 
     return extractFromBase64(authorizationHeader.substring(method.length).trim())
@@ -33,4 +32,4 @@ fun extractFromString(credentials: String): Result<BasicAuthCredentials, ErrorRe
         .split(":", limit = 2)
         .takeIf { it.size == 2 }
         ?.let { (username, password) -> BasicAuthCredentials(username, password).asSuccess() }
-        ?: errorResponse(UNAUTHORIZED, "Invalid authorization credentials")
+        ?: unauthorizedError("Invalid authorization credentials")
