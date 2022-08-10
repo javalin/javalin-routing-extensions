@@ -16,7 +16,7 @@ dependencies {
 
 Project also includes [panda-lang :: expressible](https://github.com/panda-lang/expressible) library as a dependency. It's mainly used to provide `Result<VALUE, ERROR>` type and associated utilities.
 
-#### Reactive Routing
+#### Routing
 
 Experimental router plugin that supports generic route registration with custom context and multiple routes within the same endpoints. 
 
@@ -28,7 +28,43 @@ class AppContext(val context: Context)
 class ExampleFacade
 
 // Endpoint (domain router)
-class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes<AppContext, Unit>() {
+class ExampleEndpoint(private val exampleFacade: ExampleFacade) : StandardRoutes<AppContext, Unit>() {
+
+    private val routeA = route("/a", GET) { context.response("A") }
+
+    private val routeB = route("/b", GET) { context.response("B") }
+
+    override val routes = setOf(routeA, routeB)
+
+}
+
+fun main() {
+    Javalin.create { configuration ->
+        RoutingPlugin<StandardRoute<AppContext, Unit>> { ctx, route -> route.handler(AppContext(ctx)) }
+            .registerRoutes(ExampleEndpoint(ExampleFacade()))
+            .also { configuration.plugins.register(it) }
+    }
+        .start(8080)
+}
+```
+
+[~ source: RoutingExample.kt](https://github.com/reposilite-playground/javalin-rfcs/blob/main/javalin-reactive-routing/src/test/kotlin/com/reposilite/web/routing/RoutingExample.kt)
+
+#### Coroutines
+
+```kotlin
+// Custom context
+class ExampleContext(val context: Context) {
+    suspend fun nonBlockingDelay(message: String): String = delay(2000L).let { message }
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun blockingDelay(message: String): String = sleep(2000L).let { message }
+}
+
+// Some dependencies
+class ExampleService
+
+// Endpoint (domain router)
+class ExampleEndpoint(private val exampleService: ExampleService) : AsyncRoutes<ExampleContext, String>() {
 
     private val sync = route("/sync", GET, async = false) { blockingDelay("Sync") }
 
@@ -40,34 +76,32 @@ class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes
 
 }
 
-private suspend fun nonBlockingDelay(message: String): String = delay(100L).let { message }
-@Suppress("BlockingMethodInNonBlockingContext")
-private suspend fun blockingDelay(message: String): String =  sleep(100L).let { message }
-
 fun main() {
-    val exampleEndpoint = ExampleEndpoint(ExampleFacade())
+    val exampleEndpoint = ExampleEndpoint(ExampleService())
+
     val dispatcher = ExclusiveDispatcher(Executors.newCachedThreadPool())
+    val coroutinesServlet = CoroutinesServlet<ExampleContext, String>(
+        errorConsumer = { name, throwable -> println("$name: ${throwable.message}") },
+        dispatcher = dispatcher,
+        syncHandler = { ctx, route -> route.handler(ExampleContext(ctx)) },
+        asyncHandler = { ctx, route, _ -> route.handler(ExampleContext(ctx)) },
+        responseConsumer = { ctx, response -> ctx.contextResolver().defaultFutureCallback(ctx, response) }
+    )
 
     Javalin
         .create { config ->
-            ReactiveRoutingPlugin<AppContext, Unit>(
-                errorConsumer = { name, throwable -> println("$name: ${throwable.message}") },
-                dispatcher = dispatcher,
-                syncHandler = { ctx, route -> route.handler(AppContext(ctx)) },
-                asyncHandler = { ctx, route, _ -> route.handler(AppContext(ctx)) }
-            )
+            RoutingPlugin<AsyncRoute<ExampleContext, String>> { ctx, route -> coroutinesServlet.handle(ctx, route) }
                 .registerRoutes(exampleEndpoint)
-                .let { config.registerPlugin(it) }
+                .let { config.plugins.register(it) }
         }
         .events {
             it.serverStopping { dispatcher.prepareShutdown() }
             it.serverStopped { dispatcher.completeShutdown() }
         }
-        .start("127.0.0.1", 8080) 
+        .start("127.0.0.1", 8080)
 }
 ```
 
-[~ source: RoutingExample.kt](https://github.com/reposilite-playground/javalin-rfcs/blob/main/javalin-reactive-routing/src/test/kotlin/com/reposilite/web/routing/RoutingExample.kt)
 
 #### Context
 

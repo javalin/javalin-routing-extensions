@@ -6,11 +6,11 @@ import io.javalin.http.Handler
 import io.javalin.plugin.Plugin
 import io.javalin.plugin.PluginLifecycleInit
 
-class RoutingPlugin<CONTEXT, RESPONSE : Any>(
-    private val handler: (Context, Route<CONTEXT, RESPONSE>) -> RESPONSE
+class RoutingPlugin<ROUTE : Route>(
+    private val handler: (Context, ROUTE) -> Unit
 ) : Plugin, PluginLifecycleInit {
 
-    private val routing: MutableSet<Route<CONTEXT, RESPONSE>> = HashSet()
+    private val routing: MutableSet<ROUTE> = HashSet()
 
     override fun init(app: Javalin) { }
 
@@ -34,13 +34,13 @@ class RoutingPlugin<CONTEXT, RESPONSE : Any>(
                 }
             }
 
-    private fun createHandler(route: Route<CONTEXT, RESPONSE>) =
+    private fun createHandler(route: ROUTE) =
         Handler { handler(it, route) }
 
-    fun registerRoutes(routes: Set<Route<CONTEXT, RESPONSE>>): RoutingPlugin<CONTEXT, RESPONSE> =
+    fun registerRoutes(routes: Set<ROUTE>): RoutingPlugin<ROUTE> =
         also { routing.addAll(routes) }
 
-    fun registerRoutes(routes: Routes<CONTEXT, RESPONSE>): RoutingPlugin<CONTEXT, RESPONSE> =
+    fun registerRoutes(routes: Routes<ROUTE>): RoutingPlugin<ROUTE> =
         also { routing.addAll(routes.routes) }
 
 }

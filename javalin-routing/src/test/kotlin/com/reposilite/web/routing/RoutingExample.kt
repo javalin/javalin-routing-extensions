@@ -12,7 +12,7 @@ class AppContext(val context: Context)
 class ExampleFacade
 
 // Endpoint (domain router)
-class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes<AppContext, Unit>() {
+class ExampleEndpoint(private val exampleFacade: ExampleFacade) : StandardRoutes<AppContext, Unit>() {
 
     private val routeA = route("/a", GET) { context.response("A") }
 
@@ -24,7 +24,7 @@ class ExampleEndpoint(private val exampleFacade: ExampleFacade) : AbstractRoutes
 
 fun main() {
     Javalin.create { configuration ->
-        RoutingPlugin<AppContext, Unit> { ctx, route -> route.handler(AppContext(ctx)) }
+        RoutingPlugin<StandardRoute<AppContext, Unit>> { ctx, route -> route.handler(AppContext(ctx)) }
             .registerRoutes(ExampleEndpoint(ExampleFacade()))
             .also { configuration.plugins.register(it) }
     }

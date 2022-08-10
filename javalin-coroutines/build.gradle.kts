@@ -2,8 +2,7 @@ dependencies {
     api(project(":javalin-context"))
     api(project(":javalin-routing"))
 
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt")
-    implementation("org.eclipse.jetty:jetty-server:9.4.43.v20210629")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
     val logback = "1.2.5"
     testImplementation("ch.qos.logback:logback-core:$logback")
