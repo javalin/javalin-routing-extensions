@@ -32,17 +32,20 @@ open class CoroutinesServlet<CONTEXT, RESPONSE>(
 
         when {
             coroutinesEnabled && route.async -> {
-                val result = CompletableFuture<RESPONSE>()
-                ctx.future(result) { /* Disable default processing with empty body */ }
+                ctx.future {
+                    val result = CompletableFuture<RESPONSE>()
 
-                scope.launch(dispatcher + coroutineName) {
-                    runCatching { asyncHandler(ctx, route, result) }
-                        .map {
-                            responseConsumer?.invoke(ctx, it)
-                            result.complete(it)
-                        }
-                        .onFailure { result.completeExceptionally(it) }
-                    finished.incrementAndGet()
+                    scope.launch(dispatcher + coroutineName) {
+                        runCatching { asyncHandler(ctx, route, result) }
+                            .map {
+                                responseConsumer?.invoke(ctx, it)
+                                result.complete(it)
+                            }
+                            .onFailure { result.completeExceptionally(it) }
+                        finished.incrementAndGet()
+                    }
+
+                    result
                 }
             }
             else -> runBlocking {
