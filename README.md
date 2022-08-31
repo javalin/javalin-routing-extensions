@@ -8,7 +8,6 @@ repositories {
 
 dependencies {
     val version = "5.0.0-SNAPSHOT"
-    implementation "com.reposilite.javalin-rfcs:javalin-context:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-routing:$version"
     implementation "com.reposilite.javalin-rfcs:javalin-coroutines:$version"
 }
@@ -102,11 +101,6 @@ fun main() {
 }
 ```
 
-
-#### Context
-
-Provides set of utility methods in `io.javalin.http.Context` class.
-
 #### OpenAPI
 
 Reimplemented OpenAPI module:
@@ -114,7 +108,6 @@ Reimplemented OpenAPI module:
 * https://github.com/reposilite-playground/javalin-openapi
 
 To enable annotation processor, Swagger or ReDoc you have to add extra dependencies from repository listed above. 
-
 
 ### Used by
 

@@ -44,7 +44,7 @@ fun main() {
         dispatcher = dispatcher,
         syncHandler = { ctx, route -> route.handler(ExampleContext(ctx)) },
         asyncHandler = { ctx, route, _ -> route.handler(ExampleContext(ctx)) },
-        responseConsumer = { ctx, response -> ctx.contextResolver().defaultFutureCallback(ctx, response) }
+        responseConsumer = { ctx, response -> ctx.result(response) }
     )
 
     Javalin
