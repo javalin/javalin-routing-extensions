@@ -1,9 +1,9 @@
-# Javalin RFCs [![CI](https://github.com/reposilite-playground/javalin-rfcs/actions/workflows/gradle.yml/badge.svg)](https://github.com/reposilite-playground/javalin-rfcs/actions/workflows/gradle.yml)
+# Javalin Routing Plugin [![CI](https://github.com/reposilite-playground/javalin-rfcs/actions/workflows/gradle.yml/badge.svg)](https://github.com/reposilite-playground/javalin-rfcs/actions/workflows/gradle.yml)
 Various experimental extensions to [Javalin 5.x](https://github.com/tipsy/javalin) used in [Reposilite 3.x](https://github.com/dzikoysk/reposilite). Provides basic support for Kotlin coroutines and async routes with a set of useful utilities.
 
 ```groovy
 repositories {
-    maven { url 'https://repo.panda-lang.org/releases' }
+    maven { url 'https://maven.reposilite.com/releases' }
 }
 
 dependencies {
@@ -100,14 +100,6 @@ fun main() {
         .start("127.0.0.1", 8080)
 }
 ```
-
-#### OpenAPI
-
-Reimplemented OpenAPI module:
-
-* https://github.com/reposilite-playground/javalin-openapi
-
-To enable annotation processor, Swagger or ReDoc you have to add extra dependencies from repository listed above. 
 
 ### Used by
 
