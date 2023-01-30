@@ -1,26 +1,23 @@
 plugins {
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.8.0"
     `maven-publish`
 }
 
 allprojects {
-    group = "com.reposilite"
-    version = "5.0.0-SNAPSHOT"
+    group = "io.javalin.community.routing"
+    version = "5.3.2-SNAPSHOT"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "maven-publish")
 
     repositories {
         mavenCentral()
-        maven { url = uri("https://repo.panda-lang.org/releases") }
-        maven { url = uri("https://repo.panda-lang.org/snapshots") }
     }
 
     dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.10")
-        implementation("io.javalin:javalin:5.0.0-SNAPSHOT")
+        implementation("io.javalin:javalin:5.3.2")
 
-        val expressible = "1.1.20"
+        val expressible = "1.3.0"
         api("org.panda-lang:expressible:$expressible")
         implementation("org.panda-lang:expressible-kt:$expressible")
     }
@@ -34,14 +31,13 @@ allprojects {
                 }
                 name = "panda-repository"
                 url = when (version.toString().endsWith("-SNAPSHOT")) {
-                    true -> uri("https://repo.panda-lang.org/snapshots")
-                    else -> uri("https://repo.panda-lang.org/releases")
+                    true -> uri("https://maven.reposilite.com/snapshots")
+                    else -> uri("https://maven.reposilite.com/releases")
                 }
             }
         }
         publications {
             create<MavenPublication>("library") {
-                groupId = "$group.javalin-rfcs"
                 from(components.getByName("java"))
             }
         }

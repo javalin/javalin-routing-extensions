@@ -1,6 +1,11 @@
-rootProject.name = "javalin-rfcs"
+rootProject.name = "javalin-routing-extensions"
 
 include(
-    "javalin-coroutines",
-    "javalin-routing"
+    "routing-core",
+    "routing-annotations",
+    "routing-annotations:specification",
+    "routing-annotations:annotation-processor",
+    "routing-annotations:javalin-plugin",
+    "routing-dsl",
+    "routing-coroutines",
 )
