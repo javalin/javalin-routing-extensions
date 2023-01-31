@@ -4,15 +4,19 @@ import java.text.Collator
 import java.text.RuleBasedCollator
 import java.util.Locale
 
-internal class RouteComparator : Comparator<Route> {
+internal class RouteComparator : Comparator<Pathed> {
 
     private companion object {
 
-        private val routesRule = RuleBasedCollator((Collator.getInstance(Locale.US) as RuleBasedCollator).rules.toString() + "& Z < '{' < '<'")
+        private val routesRule = RuleBasedCollator(
+            (Collator.getInstance(Locale.US) as RuleBasedCollator)
+                .rules
+                .toString() + "& Z < '{' < '<'"
+        )
 
     }
 
-    override fun compare(route: Route, other: Route): Int {
+    override fun compare(route: Pathed, other: Pathed): Int {
         val itPaths = route.path.split("/")
         val toPaths = other.path.split("/")
         var index = 0

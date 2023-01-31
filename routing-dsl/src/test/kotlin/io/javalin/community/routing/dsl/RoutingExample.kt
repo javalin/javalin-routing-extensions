@@ -1,8 +1,9 @@
-package io.javalin.community.routing
+package io.javalin.community.routing.dsl
 
 import io.javalin.community.routing.RouteMethod.GET
-import io.javalin.Javalin
 import io.javalin.http.Context
+
+// TODO - Port property-dsl to the new DSL api
 
 // Custom context
 class AppContext(val context: Context)
@@ -22,10 +23,10 @@ class ExampleEndpoint(private val exampleFacade: ExampleFacade) : StandardRoutes
 }
 
 fun main() {
-    Javalin.create { configuration ->
-        RoutingPlugin<StandardRoute<AppContext, Unit>> { ctx, route -> route.handler(AppContext(ctx)) }
-            .registerRoutes(ExampleEndpoint(ExampleFacade()))
-            .also { configuration.plugins.register(it) }
-    }
-    .start(8080)
+//    Javalin.create { configuration ->
+//        RoutingPlugin<StandardRoute<AppContext, Unit>> { ctx, route -> route.handler(AppContext(ctx)) }
+//            .registerRoutes(ExampleEndpoint(ExampleFacade()))
+//            .also { configuration.plugins.register(it) }
+//    }
+//    .start(8080)
 }
