@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.8.0"
     `maven-publish`
+    kotlin("kapt") version "1.8.0"
 }
 
 allprojects {
@@ -58,10 +59,15 @@ allprojects {
 }
 
 subprojects {
+    apply(plugin = "org.jetbrains.kotlin.kapt")
+
     dependencies {
         val javalin = "5.3.2"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
+        testImplementation("io.javalin:javalin:$javalin")
+        kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$javalin")
+        testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalin")
 
         val jackson = "2.14.0"
         testImplementation("com.fasterxml.jackson.core:jackson-databind:$jackson")

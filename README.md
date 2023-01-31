@@ -86,10 +86,50 @@ You can find base implementation of custom DSL definition here: [InPlaceExample.
 Property based implementation of DSL allows you to easily define routes in multiple sources,
 outside the main setup scope.
 This approach is very similar to Spring Boot's `@RestController` annotation, 
-but it also supports custom DSL, it's fully type-safe and reflection-free - 
-so you're in full control of your routes and execution flow.
+but it also supports your custom type-safe DSL, and 
+you're in full control of your execution flow.
 
 ```kotlin
+// Some dependencies
+class ExampleService {
+    fun save(animal: String) = println("Saved animal: $animal")
+}
+
+// Utility representation of custom routing in your application
+abstract class ExampleRouting : Routes<CustomScope, Unit>
+
+// Endpoint (domain router)
+class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouting() {
+
+    @OpenApi(
+        path = "/animal/{name}",
+        methods = [HttpMethod.GET]
+    )
+    private val findAnimalByName = route("/animal/<name>", GET) {
+        result(pathParam("name"))
+    }
+
+    @OpenApi(
+        path = "/animal/{name}",
+        methods = [HttpMethod.POST]
+    )
+    private val saveAnimal = route("/animal/{name}", POST) {
+        exampleService.save(pathParam("name"))
+    }
+
+    override fun routes() = setOf(findAnimalByName, saveAnimal)
+
+}
+
+fun main() {
+    // prepare dependencies
+    val exampleService = ExampleService()
+
+    // setup & launch application
+    Javalin
+        .create { it.routing(CustomDsl, AnimalEndpoints(exampleService) /*, provide more classes with endpoints */) }
+        .start(8080)
+}
 ```
 
 

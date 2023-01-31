@@ -37,3 +37,16 @@ data class RouteEntry<CONTEXT, RESPONSE>(
     override val path: String,
     val handler: CONTEXT.() -> RESPONSE
 ) : Pathed
+
+fun interface Routes<CONTEXT, RESPONSE> {
+
+    fun routes(): Collection<RouteEntry<CONTEXT, RESPONSE>>
+
+    fun route(path: String, method: RouteMethod, handler: CONTEXT.() -> RESPONSE): RouteEntry<CONTEXT, RESPONSE> =
+        RouteEntry(
+            path = path,
+            method = method,
+            handler = handler
+        )
+
+}

@@ -1,32 +1,50 @@
 package io.javalin.community.routing.dsl
 
+import io.javalin.Javalin
 import io.javalin.community.routing.RouteMethod.GET
-import io.javalin.http.Context
-
-// TODO - Port property-dsl to the new DSL api
-
-// Custom context
-class AppContext(val context: Context)
+import io.javalin.community.routing.RouteMethod.POST
+import io.javalin.community.routing.Routes
+import io.javalin.community.routing.dsl.CustomDsl.CustomScope
+import io.javalin.openapi.HttpMethod
+import io.javalin.openapi.OpenApi
 
 // Some dependencies
-class ExampleFacade
+class ExampleService {
+    fun save(animal: String) = println("Saved animal: $animal")
+}
+
+// Utility representation of custom routing in your application
+abstract class ExampleRouting : Routes<CustomScope, Unit>
 
 // Endpoint (domain router)
-class ExampleEndpoint(private val exampleFacade: ExampleFacade) : StandardRoutes<AppContext, Unit>() {
+class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouting() {
 
-    private val routeA = route("/a", GET) { context.result("A") }
+    @OpenApi(
+        path = "/animal/{name}",
+        methods = [HttpMethod.GET]
+    )
+    private val findAnimalByName = route("/animal/<name>", GET) {
+        result(pathParam("name"))
+    }
 
-    private val routeB = route("/b", GET) { context.result("B") }
+    @OpenApi(
+        path = "/animal/{name}",
+        methods = [HttpMethod.POST]
+    )
+    private val saveAnimal = route("/animal/<name>", POST) {
+        exampleService.save(pathParam("name"))
+    }
 
-    override val routes = setOf(routeA, routeB)
+    override fun routes() = setOf(findAnimalByName, saveAnimal)
 
 }
 
 fun main() {
-//    Javalin.create { configuration ->
-//        RoutingPlugin<StandardRoute<AppContext, Unit>> { ctx, route -> route.handler(AppContext(ctx)) }
-//            .registerRoutes(ExampleEndpoint(ExampleFacade()))
-//            .also { configuration.plugins.register(it) }
-//    }
-//    .start(8080)
+    // prepare dependencies
+    val exampleService = ExampleService()
+
+    // setup & launch application
+    Javalin
+        .create { it.routing(CustomDsl, AnimalEndpoints(exampleService) /*, provide more classes with endpoints */) }
+        .start(8080)
 }
