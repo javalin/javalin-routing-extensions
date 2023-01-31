@@ -23,8 +23,8 @@ Javalin Routing Extensions is currently under development and not yet available 
 You can use the following repository to access the latest snapshot version from Snapshots repository
 
 ```kotlin
-maven {
-    url("https://maven.reposilite.com/snapshots")
+repositories {
+    maven("https://maven.reposilite.com/snapshots")
 }
 ```
 
@@ -63,11 +63,11 @@ fun main() {
         config.routing(CustomDsl) {
             before {
                 // `endpointHandlerPath` comes from Context class
-                result("Called endpoint: ${endpointHandlerPath()}")
+                result("Called endpoint: ${matchedPath()}")
             }
             get("/") {
                 // `helloWorld` comes from CustomScope class
-                result("Hello ${helloWorld()}")
+                result(helloWorld())
             }
             get<PandaPath> { path ->
                 // support for type-safe paths
@@ -96,7 +96,7 @@ class ExampleService {
 }
 
 // Utility representation of custom routing in your application
-abstract class ExampleRouting : Routes<CustomScope, Unit>
+abstract class ExampleRouting : DslRoutes<DslRoute<CustomScope, Unit>, CustomScope, Unit>
 
 // Endpoint (domain router)
 class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouting() {
@@ -113,7 +113,7 @@ class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouti
         path = "/animal/{name}",
         methods = [HttpMethod.POST]
     )
-    private val saveAnimal = route("/animal/{name}", POST) {
+    private val saveAnimal = route("/animal/<name>", POST) {
         exampleService.save(pathParam("name"))
     }
 

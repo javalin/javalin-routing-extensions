@@ -12,10 +12,14 @@ interface DefaultContextScope {
     val ctx: Context
 }
 
-open class DefaultContextScopeConfiguration<CONTEXT : DefaultContextScope, RESPONSE : Any> : RoutingConfiguration<CONTEXT, RESPONSE>() {
+open class DefaultContextScopeConfiguration<
+    ROUTE : DslRoute<CONTEXT, RESPONSE>,
+    CONTEXT : DefaultContextScope,
+    RESPONSE : Any
+> : RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>() {
 
     @OptIn(ExperimentalStdlibApi::class)
-    inline fun <CONTEXT : DefaultContextScope, RESPONSE : Any, reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.method(
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.method(
         method: RouteMethod,
         crossinline handler: (CONTEXT, PATH) -> RESPONSE
     ) {
@@ -56,31 +60,31 @@ open class DefaultContextScopeConfiguration<CONTEXT : DefaultContextScope, RESPO
         }
     }
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.get(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.get(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.GET, handler)
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.post(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.post(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.POST, handler)
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.put(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.put(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.PUT, handler)
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.delete(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.delete(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.DELETE, handler)
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.patch(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.patch(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.PATCH, handler)
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.head(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.head(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.HEAD, handler)
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.options(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.options(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.OPTIONS, handler)
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.before(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.before(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.BEFORE, handler)
 
-    inline fun <reified PATH : Any> RoutingConfiguration<CONTEXT, RESPONSE>.after(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
+    inline fun <reified PATH : Any> RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>.after(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
         method(RouteMethod.AFTER, handler)
 
 }

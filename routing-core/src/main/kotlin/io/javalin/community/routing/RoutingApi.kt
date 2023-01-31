@@ -32,21 +32,6 @@ interface Routed {
     val path: String
 }
 
-data class Route<CONTEXT, RESPONSE>(
-    val method: RouteMethod,
-    override val path: String,
-    val handler: CONTEXT.() -> RESPONSE
-) : Routed
-
-fun interface Routes<CONTEXT, RESPONSE> {
-
-    fun routes(): Collection<Route<CONTEXT, RESPONSE>>
-
-    fun route(path: String, method: RouteMethod, handler: CONTEXT.() -> RESPONSE): Route<CONTEXT, RESPONSE> =
-        Route(
-            path = path,
-            method = method,
-            handler = handler
-        )
-
+fun interface Routes<ROUTE : Routed, CONTEXT, RESPONSE> {
+    fun routes(): Collection<ROUTE>
 }

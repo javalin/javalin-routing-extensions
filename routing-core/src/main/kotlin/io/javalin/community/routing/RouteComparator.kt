@@ -4,7 +4,10 @@ import java.text.Collator
 import java.text.RuleBasedCollator
 import java.util.Locale
 
-internal class RouteComparator : Comparator<Routed> {
+fun <ROUTE : Routed> List<ROUTE>.sortRoutes(): List<ROUTE> =
+    sortedWith(RouteComparator())
+
+open class RouteComparator : Comparator<Routed> {
 
     private companion object {
 

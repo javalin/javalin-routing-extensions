@@ -1,16 +1,15 @@
 package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
-import io.javalin.community.routing.HandlerFactory
 import io.javalin.community.routing.dsl.CustomDsl.CustomScope
 import io.javalin.community.routing.dsl.CustomDsl.CustomRoutingConfiguration
 import io.javalin.http.Context
 import io.javalin.http.Handler
 
-object CustomDsl : RoutingDsl<CustomRoutingConfiguration, CustomScope, Unit> {
+object CustomDsl : RoutingDsl<CustomRoutingConfiguration, DslRoute<CustomScope, Unit>, CustomScope, Unit> {
 
     // This is custom configuration class that will be used to register routes
-    open class CustomRoutingConfiguration : DefaultContextScopeConfiguration<CustomScope, Unit>()
+    open class CustomRoutingConfiguration : DefaultContextScopeConfiguration<DslRoute<CustomScope, Unit>, CustomScope, Unit>()
 
     // This is custom scope that will be used in the handlers
     class CustomScope(
@@ -19,10 +18,10 @@ object CustomDsl : RoutingDsl<CustomRoutingConfiguration, CustomScope, Unit> {
         fun helloWorld(): String = "Hello ${ctx.endpointHandlerPath()}"
     }
 
-    override fun createConfigurationSupplier(): ConfigurationSupplier<CustomRoutingConfiguration, CustomScope, Unit> =
+    override fun createConfigurationSupplier(): ConfigurationSupplier<CustomRoutingConfiguration, DslRoute<CustomScope, Unit>, CustomScope, Unit> =
         ConfigurationSupplier{ CustomRoutingConfiguration() }
 
-    override fun createHandlerFactory(): HandlerFactory<CustomScope, Unit> =
+    override fun createHandlerFactory(): HandlerFactory<DslRoute<CustomScope, Unit>> =
         HandlerFactory { route ->
             Handler {
                 route.handler.invoke(CustomScope(it))
@@ -39,11 +38,11 @@ fun main() {
         config.routing(CustomDsl) {
             before {
                 // `endpointHandlerPath` comes from Context class
-                result("Called endpoint: ${endpointHandlerPath()}")
+                result("Called endpoint: ${matchedPath()}")
             }
             get("/") {
                 // `helloWorld` comes from CustomScope class
-                result("Hello ${helloWorld()}")
+                result(helloWorld())
             }
             get<PandaPath> { path ->
                 // support for type-safe paths

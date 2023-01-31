@@ -6,7 +6,6 @@ import io.javalin.community.routing.coroutines.CoroutinesServlet
 import io.javalin.community.routing.coroutines.ExclusiveDispatcher
 import io.javalin.community.routing.RouteMethod.GET
 import io.javalin.Javalin
-import io.javalin.config.contextResolver
 import io.javalin.http.Context
 import kotlinx.coroutines.delay
 import java.lang.Thread.sleep

@@ -3,7 +3,6 @@ package io.javalin.community.routing.dsl
 import io.javalin.Javalin
 import io.javalin.community.routing.RouteMethod.GET
 import io.javalin.community.routing.RouteMethod.POST
-import io.javalin.community.routing.Routes
 import io.javalin.community.routing.dsl.CustomDsl.CustomScope
 import io.javalin.openapi.HttpMethod
 import io.javalin.openapi.OpenApi
@@ -14,7 +13,7 @@ class ExampleService {
 }
 
 // Utility representation of custom routing in your application
-abstract class ExampleRouting : Routes<CustomScope, Unit>
+abstract class ExampleRouting : DslRoutes<DslRoute<CustomScope, Unit>, CustomScope, Unit>
 
 // Endpoint (domain router)
 class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouting() {

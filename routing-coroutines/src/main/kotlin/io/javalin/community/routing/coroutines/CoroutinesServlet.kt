@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.EmptyCoroutineContext
 
 open class CoroutinesServlet<CONTEXT, RESPONSE>(
-    name: String = "javalin-rfc-scope:reactive-routing",
+    name: String = "javalin-reactive-routing",
     protected val coroutinesEnabled: Boolean = true,
     errorConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
     protected val dispatcher: CoroutineDispatcher,
