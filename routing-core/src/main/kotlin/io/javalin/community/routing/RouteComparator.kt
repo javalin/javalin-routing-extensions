@@ -4,7 +4,7 @@ import java.text.Collator
 import java.text.RuleBasedCollator
 import java.util.Locale
 
-internal class RouteComparator : Comparator<Pathed> {
+internal class RouteComparator : Comparator<Routed> {
 
     private companion object {
 
@@ -16,7 +16,7 @@ internal class RouteComparator : Comparator<Pathed> {
 
     }
 
-    override fun compare(route: Pathed, other: Pathed): Int {
+    override fun compare(route: Routed, other: Routed): Int {
         val itPaths = route.path.split("/")
         val toPaths = other.path.split("/")
         var index = 0

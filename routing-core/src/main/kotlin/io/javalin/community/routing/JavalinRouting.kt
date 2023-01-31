@@ -13,11 +13,11 @@ import io.javalin.community.routing.RouteMethod.PUT
 import io.javalin.http.Handler
 
 fun interface HandlerFactory<CONTEXT, RESPONSE> {
-    fun createHandler(route: RouteEntry<CONTEXT, RESPONSE>): Handler
+    fun createHandler(route: Route<CONTEXT, RESPONSE>): Handler
 }
 
 fun <CONTEXT, RESPONSE> Javalin.registerRoutes(
-    routes: List<RouteEntry<CONTEXT, RESPONSE>>,
+    routes: List<Route<CONTEXT, RESPONSE>>,
     handlerFactory: HandlerFactory<CONTEXT, RESPONSE>
 ) {
     routes

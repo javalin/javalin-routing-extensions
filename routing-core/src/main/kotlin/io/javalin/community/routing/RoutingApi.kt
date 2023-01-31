@@ -28,22 +28,22 @@ enum class RouteMethod {
     BEFORE
 }
 
-interface Pathed {
+interface Routed {
     val path: String
 }
 
-data class RouteEntry<CONTEXT, RESPONSE>(
+data class Route<CONTEXT, RESPONSE>(
     val method: RouteMethod,
     override val path: String,
     val handler: CONTEXT.() -> RESPONSE
-) : Pathed
+) : Routed
 
 fun interface Routes<CONTEXT, RESPONSE> {
 
-    fun routes(): Collection<RouteEntry<CONTEXT, RESPONSE>>
+    fun routes(): Collection<Route<CONTEXT, RESPONSE>>
 
-    fun route(path: String, method: RouteMethod, handler: CONTEXT.() -> RESPONSE): RouteEntry<CONTEXT, RESPONSE> =
-        RouteEntry(
+    fun route(path: String, method: RouteMethod, handler: CONTEXT.() -> RESPONSE): Route<CONTEXT, RESPONSE> =
+        Route(
             path = path,
             method = method,
             handler = handler

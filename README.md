@@ -132,6 +132,9 @@ fun main() {
 }
 ```
 
+This example is based on previous in-place example, 
+you check its source code here: 
+[PropertyDslExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-dsl/src/test/kotlin/io/javalin/community/routing/dsl/PropertyDslExample.kt)
 
 ### Coroutines
 

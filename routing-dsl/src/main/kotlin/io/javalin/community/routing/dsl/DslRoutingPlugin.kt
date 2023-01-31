@@ -1,7 +1,7 @@
 package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
-import io.javalin.community.routing.RouteEntry
+import io.javalin.community.routing.Route
 import io.javalin.community.routing.Routes
 import io.javalin.community.routing.registerRoutes
 import io.javalin.config.JavalinConfig
@@ -11,7 +11,7 @@ class DslRoutingPlugin<CONFIG : RoutingConfiguration<CONTEXT, RESPONSE>, CONTEXT
     private val routingDsl: RoutingDsl<CONFIG, CONTEXT, RESPONSE>
 ) : Plugin {
 
-    private val routes = mutableListOf<RouteEntry<CONTEXT, RESPONSE>>()
+    private val routes = mutableListOf<Route<CONTEXT, RESPONSE>>()
 
     override fun apply(app: Javalin) {
         app.registerRoutes(routes, routingDsl.createHandlerFactory())

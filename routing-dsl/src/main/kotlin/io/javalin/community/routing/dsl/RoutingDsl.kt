@@ -1,7 +1,7 @@
 package io.javalin.community.routing.dsl
 
 import io.javalin.community.routing.HandlerFactory
-import io.javalin.community.routing.RouteEntry
+import io.javalin.community.routing.Route
 import io.javalin.community.routing.RouteMethod
 
 interface RoutingDsl<CONFIG : RoutingConfiguration<CONTEXT, RESPONSE>, CONTEXT, RESPONSE : Any> {
@@ -18,7 +18,7 @@ fun interface ConfigurationSupplier<CONFIG : RoutingConfiguration<CONTEXT, RESPO
 
 open class RoutingConfiguration<CONTEXT, RESPONSE : Any> {
 
-    internal val routes = mutableSetOf<RouteEntry<CONTEXT, RESPONSE>>()
+    internal val routes = mutableSetOf<Route<CONTEXT, RESPONSE>>()
 
     fun get(path: String, handler: CONTEXT.() -> RESPONSE) = addRoute(RouteMethod.GET, path, handler)
     fun post(path: String, handler: CONTEXT.() -> RESPONSE) = addRoute(RouteMethod.POST, path, handler)
@@ -31,7 +31,7 @@ open class RoutingConfiguration<CONTEXT, RESPONSE : Any> {
     fun after(path: String = "", handler: CONTEXT.() -> RESPONSE) = addRoute(RouteMethod.AFTER, path, handler)
 
     fun addRoute(method: RouteMethod, path: String, handler: CONTEXT.() -> RESPONSE) {
-        routes.add(RouteEntry(method, path, handler))
+        routes.add(Route(method, path, handler))
     }
 
 }
