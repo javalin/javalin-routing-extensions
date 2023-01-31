@@ -7,5 +7,5 @@ include(
     "routing-annotations:annotation-processor",
     "routing-annotations:javalin-plugin",
     "routing-dsl",
-    "routing-coroutines",
+    // "routing-coroutines",
 )

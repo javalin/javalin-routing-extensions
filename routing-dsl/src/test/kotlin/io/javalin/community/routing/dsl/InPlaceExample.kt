@@ -15,17 +15,8 @@ object CustomDsl : RoutingDsl<CustomRoutingConfiguration, CustomScope, Unit> {
     // This is custom scope that will be used in the handlers
     class CustomScope(
         override val ctx: Context,
-        private val customContext: CustomContext
-    ): DefaultContextScope, Context by ctx, CustomContext by customContext
-
-    // This is custom context that will be used in the handlers
-    interface CustomContext {
-        fun helloWorld(): String
-    }
-
-    // Implementation of the custom context
-    private class CustomContextImpl(private val ctx: Context) : CustomContext {
-        override fun helloWorld(): String = "Hello ${ctx.endpointHandlerPath()}"
+    ): DefaultContextScope, Context by ctx {
+        fun helloWorld(): String = "Hello ${ctx.endpointHandlerPath()}"
     }
 
     override fun createConfigurationSupplier(): ConfigurationSupplier<CustomRoutingConfiguration, CustomScope, Unit> =
@@ -34,7 +25,7 @@ object CustomDsl : RoutingDsl<CustomRoutingConfiguration, CustomScope, Unit> {
     override fun createHandlerFactory(): HandlerFactory<CustomScope, Unit> =
         HandlerFactory { route ->
             Handler {
-                route.handler.invoke(CustomScope(it, CustomContextImpl(it)))
+                route.handler.invoke(CustomScope(it))
             }
         }
 
@@ -47,12 +38,15 @@ fun main() {
     Javalin.create { config ->
         config.routing(CustomDsl) {
             before {
-                println("Called endpoint: ${endpointHandlerPath()}")
+                // `endpointHandlerPath` comes from Context class
+                result("Called endpoint: ${endpointHandlerPath()}")
             }
             get("/") {
+                // `helloWorld` comes from CustomScope class
                 result("Hello ${helloWorld()}")
             }
             get<PandaPath> { path ->
+                // support for type-safe paths
                 result(path.age.toString())
             }
         }
