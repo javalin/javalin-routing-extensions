@@ -16,18 +16,6 @@
 
 package io.javalin.community.routing
 
-enum class RouteMethod {
-    HEAD,
-    PATCH,
-    OPTIONS,
-    GET,
-    PUT,
-    POST,
-    DELETE,
-    AFTER,
-    BEFORE
-}
-
 interface Routed {
     val path: String
 }

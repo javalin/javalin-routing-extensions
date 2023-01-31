@@ -4,19 +4,19 @@ import io.javalin.community.routing.RouteMethod
 import io.javalin.community.routing.Routed
 import io.javalin.community.routing.Routes
 
-class AsyncRoute<CONTEXT, RESPONSE>(
+class ReactiveRoute<CONTEXT, RESPONSE : Any>(
     override val path: String,
     val method: RouteMethod,
     val async: Boolean = true,
     val handler: suspend CONTEXT.() -> RESPONSE
 ) : Routed
 
-abstract class AsyncRoutes<CONTEXT, RESPONSE> : Routes<AsyncRoute<CONTEXT, RESPONSE>> {
+abstract class ReactiveRoutes<ROUTE : ReactiveRoute<CONTEXT, RESPONSE>, CONTEXT, RESPONSE : Any> : Routes<ROUTE, CONTEXT, RESPONSE> {
 
-    fun route(path: String, vararg methods: RouteMethod, async: Boolean = true, handler: suspend CONTEXT.() -> RESPONSE): AsyncRoute<CONTEXT, RESPONSE> =
-        AsyncRoute(
+    fun reactiveRoute(path: String, method: RouteMethod, async: Boolean = true, handler: suspend CONTEXT.() -> RESPONSE): ReactiveRoute<CONTEXT, RESPONSE> =
+        ReactiveRoute(
             path = path,
-            methods = methods,
+            method = method,
             async = async,
             handler = handler
         )

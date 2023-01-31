@@ -138,7 +138,57 @@ you check its source code here:
 
 ### Coroutines
 
+**Experimental**: This module is more like a reference on how to use coroutines with Javalin.
+The production-readiness of this module is unknown, especially in complex scenarios. 
+
+The coroutines module provides works like `DSL :: Properties` module,
+but it uses coroutines to provide asynchronous execution of endpoints.
+
+
 ```kotlin
+// Custom scope used by routing DSL
+class CustomScope(val ctx: Context) : Context by ctx {
+    // blocks thread using reactive `delay` function
+    suspend fun nonBlockingDelay(message: String): String = delay(2000L).let { message }
+}
+
+// Utility class representing group of reactive routes
+abstract class ExampleRoutes : ReactiveRoutes<ReactiveRoute<CustomScope, Unit>, CustomScope, Unit>()
+
+// Endpoint (domain router)
+class ExampleEndpoint(private val exampleService: ExampleService) : ExampleRoutes() {
+    
+    // you can use suspend functions in coroutines context 
+    // and as long as they're truly reactive, they won't freeze it
+    private val nonBlockingAsync = reactiveRoute("/async", GET) {
+        result(nonBlockingDelay("Non-blocking Async"))
+    }
+
+    override fun routes() = setOf(nonBlockingAsync)
+
+}
+    
+fun main() {
+    // prepare dependencies
+    val exampleService = ExampleService()
+
+    // create coroutines servlet with single-threaded executor
+    val coroutinesServlet = DefaultContextCoroutinesServlet(
+        executorService = Executors.newSingleThreadExecutor(),
+        contextFactory = { CustomScope(it) },
+    )
+
+    // setup Javalin with reactive routing
+    Javalin
+        .create { config ->
+            config.reactiveRouting(coroutinesServlet, ExampleEndpoint(exampleService))
+        }
+        .events {
+            it.serverStopping { coroutinesServlet.prepareShutdown() }
+            it.serverStopped { coroutinesServlet.completeShutdown() }
+        }
+        .start("127.0.0.1", 8080)
+}
 ```
 
 ### Core

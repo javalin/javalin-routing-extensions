@@ -1,60 +1,88 @@
 package io.javalin.community.routing
 
-import io.javalin.community.routing.coroutines.AsyncRoute
-import io.javalin.community.routing.coroutines.AsyncRoutes
-import io.javalin.community.routing.coroutines.CoroutinesServlet
-import io.javalin.community.routing.coroutines.ExclusiveDispatcher
+import io.javalin.community.routing.coroutines.ReactiveRoutes
 import io.javalin.community.routing.RouteMethod.GET
 import io.javalin.Javalin
+import io.javalin.community.routing.coroutines.DefaultContextCoroutinesServlet
+import io.javalin.community.routing.coroutines.ReactiveRoute
+import io.javalin.community.routing.coroutines.reactiveRouting
 import io.javalin.http.Context
 import kotlinx.coroutines.delay
 import java.lang.Thread.sleep
 import java.util.concurrent.Executors
-
-// Custom context
-class ExampleContext(val context: Context) {
-    suspend fun nonBlockingDelay(message: String): String = delay(2000L).let { message }
-    @Suppress("BlockingMethodInNonBlockingContext")
-    suspend fun blockingDelay(message: String): String = sleep(2000L).let { message }
-}
+import java.util.concurrent.atomic.AtomicInteger
 
 // Some dependencies
-class ExampleService
+class ExampleService {
+    val streamId = AtomicInteger(0)
+}
+
+// Custom scope used by routing DSL
+class CustomScope(val ctx: Context) : Context by ctx {
+
+    // blocks thread using reactive `delay` function
+    suspend fun nonBlockingDelay(message: String): String = delay(2000L).let { message }
+
+    // truly blocks thread using blocking JVM `sleep` function
+    fun blockingDelay(message: String): String = sleep(2000L).let { message }
+
+}
+
+// Utility class representing group of reactive routes
+abstract class ExampleRoutes : ReactiveRoutes<ReactiveRoute<CustomScope, Unit>, CustomScope, Unit>()
 
 // Endpoint (domain router)
-class ExampleEndpoint(private val exampleService: ExampleService) : AsyncRoutes<ExampleContext, String>() {
+class ExampleEndpoint(private val exampleService: ExampleService) : ExampleRoutes() {
 
-    private val sync = route("/sync", GET, async = false) { blockingDelay("Sync") }
+    // you can use suspend functions in coroutines context
+    // and as long as they're truly reactive, they won't freeze it
+    private val nonBlockingAsync = reactiveRoute("/async", GET) {
+        result(nonBlockingDelay("Non-blocking Async"))
+    }
 
-    private val blockingAsync = route("/async-blocking", GET) { blockingDelay("Blocking Async") }
+    // using truly-blocking functions in coroutines context will freeze thread anyway
+    private val blockingAsync = reactiveRoute("/async-blocking", GET) {
+        result(blockingDelay("Blocking Async"))
+    }
 
-    private val nonBlockingAsync = route("/async", GET) { nonBlockingDelay("Non-blocking Async") }
+    // you can also use async = false, to run coroutine in sync context (runBlocking)
+    private val sync = reactiveRoute("/sync", GET, async = false) {
+        result(blockingDelay("Sync"))
+    }
 
-    override val routes = setOf(sync, blockingAsync, nonBlockingAsync)
+    // you can visit /stream in browser and see that despite single-threaded executor,
+    // you can make multiple concurrent requests and each request is handled
+    private val stream = reactiveRoute("/stream", GET) {
+        val id = exampleService.streamId.incrementAndGet()
+
+        while (true) {
+            println("${Thread.currentThread().name} | $id")
+            delay(1000L)
+        }
+    }
+
+    override fun routes() = setOf(sync, blockingAsync, nonBlockingAsync, stream)
 
 }
 
 fun main() {
-    val exampleEndpoint = ExampleEndpoint(ExampleService())
+    // prepare dependencies
+    val exampleService = ExampleService()
 
-    val dispatcher = ExclusiveDispatcher(Executors.newCachedThreadPool())
-    val coroutinesServlet = CoroutinesServlet<ExampleContext, String>(
-        errorConsumer = { name, throwable -> println("$name: ${throwable.message}") },
-        dispatcher = dispatcher,
-        syncHandler = { ctx, route -> route.handler(ExampleContext(ctx)) },
-        asyncHandler = { ctx, route, _ -> route.handler(ExampleContext(ctx)) },
-        responseConsumer = { ctx, response -> ctx.result(response) }
+    // create coroutines servlet with single-threaded executor
+    val coroutinesServlet = DefaultContextCoroutinesServlet(
+        executorService = Executors.newSingleThreadExecutor(),
+        contextFactory = { CustomScope(it) },
     )
 
+    // setup Javalin with reactive routing
     Javalin
         .create { config ->
-            RoutingPlugin<AsyncRoute<ExampleContext, String>> { ctx, route -> coroutinesServlet.handle(ctx, route) }
-                .registerRoutes(exampleEndpoint)
-                .let { config.plugins.register(it) }
+            config.reactiveRouting(coroutinesServlet, ExampleEndpoint(exampleService))
         }
         .events {
-            it.serverStopping { dispatcher.prepareShutdown() }
-            it.serverStopped { dispatcher.completeShutdown() }
+            it.serverStopping { coroutinesServlet.prepareShutdown() }
+            it.serverStopped { coroutinesServlet.completeShutdown() }
         }
         .start("127.0.0.1", 8080)
 }

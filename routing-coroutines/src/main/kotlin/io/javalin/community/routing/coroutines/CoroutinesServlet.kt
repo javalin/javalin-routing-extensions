@@ -11,23 +11,23 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.EmptyCoroutineContext
 
-open class CoroutinesServlet<CONTEXT, RESPONSE>(
+open class CoroutinesServlet<CONTEXT, RESPONSE : Any>(
     name: String = "javalin-reactive-routing",
-    protected val coroutinesEnabled: Boolean = true,
-    errorConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
+    private val coroutinesEnabled: Boolean = true,
     protected val dispatcher: CoroutineDispatcher,
-    protected val syncHandler: suspend (Context, AsyncRoute<CONTEXT, RESPONSE>) -> RESPONSE,
-    protected val asyncHandler: suspend (Context, AsyncRoute<CONTEXT, RESPONSE>, CompletableFuture<RESPONSE>) -> RESPONSE,
-    protected val responseConsumer: (suspend (Context, RESPONSE) -> Unit)? = null
+    protected val syncHandler: suspend (Context, ReactiveRoute<CONTEXT, RESPONSE>) -> RESPONSE,
+    protected val asyncHandler: suspend (Context, ReactiveRoute<CONTEXT, RESPONSE>, CompletableFuture<RESPONSE>) -> RESPONSE,
+    private val responseConsumer: (suspend (Context, RESPONSE) -> Unit)? = null,
+    errorConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
 ) {
 
-    protected val coroutineName: CoroutineName = CoroutineName(name)
-    protected val exceptionHandler = DefaultUncaughtExceptionHandler(errorConsumer)
-    protected val scope = JavalinCoroutineScope(EmptyCoroutineContext, exceptionHandler)
-    protected val id = AtomicLong()
-    protected val finished = AtomicLong()
+    private val coroutineName: CoroutineName = CoroutineName(name)
+    private val exceptionHandler = DefaultUncaughtExceptionHandler(errorConsumer)
+    private val scope = JavalinCoroutineScope(EmptyCoroutineContext, exceptionHandler)
+    private val id = AtomicLong()
+    private val finished = AtomicLong()
 
-    fun handle(ctx: Context, route: AsyncRoute<CONTEXT, RESPONSE>) {
+    fun handle(ctx: Context, route: ReactiveRoute<CONTEXT, RESPONSE>) {
         id.incrementAndGet()
 
         when {

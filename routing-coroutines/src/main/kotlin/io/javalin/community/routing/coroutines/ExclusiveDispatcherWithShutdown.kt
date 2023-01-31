@@ -7,7 +7,12 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.ExecutorService
 import kotlin.coroutines.CoroutineContext
 
-open class ExclusiveDispatcher(private val executorService: ExecutorService) : CoroutineDispatcher() {
+interface GracefullyShutdownableDispatcher {
+    fun prepareShutdown()
+    fun completeShutdown()
+}
+
+open class ExclusiveDispatcherWithShutdown(private val executorService: ExecutorService) : CoroutineDispatcher(), GracefullyShutdownableDispatcher {
 
     private val dispatcher = DispatcherWithShutdown(executorService.asCoroutineDispatcher())
 
@@ -17,12 +22,12 @@ open class ExclusiveDispatcher(private val executorService: ExecutorService) : C
     override fun isDispatchNeeded(context: CoroutineContext): Boolean =
         dispatcher.isDispatchNeeded(context)
 
-    fun prepareShutdown() {
+    override fun prepareShutdown() {
         dispatcher.prepareShutdown()
         executorService.shutdown()
     }
 
-    fun completeShutdown() {
+    override fun completeShutdown() {
         dispatcher.completeShutdown()
         executorService.shutdownNow()
     }

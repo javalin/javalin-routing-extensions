@@ -1,15 +1,7 @@
 package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
-import io.javalin.community.routing.RouteMethod.AFTER
-import io.javalin.community.routing.RouteMethod.BEFORE
-import io.javalin.community.routing.RouteMethod.DELETE
-import io.javalin.community.routing.RouteMethod.GET
-import io.javalin.community.routing.RouteMethod.HEAD
-import io.javalin.community.routing.RouteMethod.OPTIONS
-import io.javalin.community.routing.RouteMethod.PATCH
-import io.javalin.community.routing.RouteMethod.POST
-import io.javalin.community.routing.RouteMethod.PUT
+import io.javalin.community.routing.route
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig
 import io.javalin.plugin.Plugin
@@ -29,19 +21,7 @@ class DslRoutingPlugin<
         routes
             .sortRoutes()
             .map { route -> route to routingDsl.createHandlerFactory().createHandler(route) }
-            .forEach { (route, handler) ->
-                when (route.method) {
-                    HEAD -> app.head(route.path, handler)
-                    PATCH -> app.patch(route.path, handler)
-                    OPTIONS -> app.options(route.path, handler)
-                    GET -> app.get(route.path, handler)
-                    PUT -> app.put(route.path, handler)
-                    POST -> app.post(route.path, handler)
-                    DELETE -> app.delete(route.path, handler)
-                    AFTER -> app.after(route.path, handler)
-                    BEFORE -> app.before(route.path, handler)
-                }
-            }
+            .forEach { (route, handler) -> app.route(route.method, route.path, handler) }
     }
 
     fun routing(init: CONFIG.() -> Unit) {
