@@ -5,40 +5,64 @@ package io.javalin.community.routing.annotations
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS)
-annotation class Endpoints(val path: String = "")
+annotation class Endpoints(val value: String = "")
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Get(val path: String = "", val async: Boolean = false)
+annotation class Get(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Post(val path: String = "", val async: Boolean = false)
+annotation class Post(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Put(val path: String = "", val async: Boolean = false)
+annotation class Put(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Delete(val path: String = "", val async: Boolean = false)
+annotation class Delete(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Patch(val path: String = "", val async: Boolean = false)
+annotation class Patch(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Head(val path: String = "", val async: Boolean = false)
+annotation class Head(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Options(val path: String = "", val async: Boolean = false)
+annotation class Options(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Before(val path: String = "", val async: Boolean = false)
+annotation class Before(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class After(val path: String = "", val async: Boolean = false)
+annotation class After(val value: String = "", val async: Boolean = false)
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Body
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Param(val value: String = "")
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Header(val value: String = "")
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Query(val value: String = "")
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Form(val value: String = "")
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Cookie(val value: String = "")

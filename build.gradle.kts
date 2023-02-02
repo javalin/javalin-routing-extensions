@@ -73,6 +73,9 @@ subprojects {
         testImplementation("com.fasterxml.jackson.core:jackson-databind:$jackson")
         testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson")
 
+        val unirest = "3.14.1"
+        testImplementation("com.konghq:unirest-java:$unirest")
+
         val junit = "5.8.2"
         testImplementation("org.junit.jupiter:junit-jupiter-params:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")

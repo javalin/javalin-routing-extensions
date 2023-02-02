@@ -39,10 +39,89 @@ dependencies {
 
 ## Usage
 
+This chapter provides short preview of each module.
+For more details, please refer to the documentation or full example of each module.
+First of all, not each module is available for Java users, take a look on the table below to check requirements:
+
+
+| Module                                         | Languages    | Reflections                                              |
+|------------------------------------------------|--------------|----------------------------------------------------------|
+| [Annotations](#annotations)                    | Java, Kotlin | Yes _(as long as we won't provide annotation processor)_ |
+| [DSL In-place](#dsl)<br>[DSL Properties](#dsl) | Kotlin       | Optional                                                 |
+| [Coroutines](#coroutines)                      | Kotlin       | No                                                       |
+| [Core](#core)                                  | Java, Kotlin | No                                                       |
+
 ### Annotations
 
-```kotlin
+This module provides set of annotations to simplify routing setup & basic http operations.
+This is probably the most common approach to routing in Java world,
+some people may even say that it's the only one.
+Take a look on the example below to see how it looks like:
+
+```java
+// register endpoints with prefix
+@Endpoints("/api")
+static final class ExampleEndpoints {
+
+    private final ExampleService exampleService;
+
+    // pass dependencies required to handle requests
+    public ExampleEndpoints(ExampleService exampleService) {
+        this.exampleService = exampleService;
+    }
+
+    // describe http method and path with annotation
+    @Post("/hello")
+    // use parameters to extract data from request
+    void saveExample(Context context, @Nullable @Header(AUTHORIZATION) String authorization, @Body ExampleDto entity) {
+        if (authorization == null) {
+            context.status(401);
+            return;
+        }
+        context.result(Objects.toString(exampleService.saveExample(entity)));
+    }
+
+    // you can combine it with OpenApi plugin
+    @OpenApi(
+            path = "/hello/{name}",
+            methods = { GET },
+            summary = "Find example by name",
+            pathParams = { @OpenApiParam(name = "name", description = "Name of example to find") },
+            responses = { @OpenApiResponse(status = "200", description = "Example found", content = @OpenApiContent(from = ExampleDto.class)) }
+    )
+    @Get("/hello/{name}")
+    void findExample(Context context, @Param String name) {
+        context.result(exampleService.findExampleByName(name));
+    }
+
+}
+
+public static void main(String[] args) {
+    Javalin.create(config -> {
+        // prepare dependencies
+        ExampleEndpoints exampleEndpoints = new ExampleEndpoints(new ExampleService());
+
+        // register endpoints
+        AnnotationsRoutingPlugin routingPlugin = new AnnotationsRoutingPlugin();
+        routingPlugin.registerEndpoints(exampleEndpoints);
+        config.plugins.register(routingPlugin);
+    }).start(7000);
+}
 ```
+
+Unfortunately, this approach requires some reflections under the hood to make work at this moment, 
+but **we're working on annotation processor to remove this requirement.**
+
+Another thing you can notice is that we're creating endpoint class instance using constructor, 
+not built-in DI framework.
+This is because in general we consider this as a good practice - 
+not only because you're in full control over the execution flow, 
+but also because it forces you to make concious decision about the scope of your dependencies & architecture.
+
+If you don't really care about it and you're just looking for a tool that will get the job done,
+you can use literally any DI framework you want that is available for Java/Kotlin.
+We may recommend Dagger2, because it verifies your code at compile time,
+so it's safer than heavy reflection-based alternatives.
 
 ### DSL
 
