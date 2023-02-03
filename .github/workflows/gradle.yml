@@ -28,3 +28,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
+          files: >
+            ./routing-core/build/jacoco/test.exec,
+            ./routing-dsl/build/jacoco/test.exec,
+            ./routing-coroutines/build/jacoco/test.exec,
+            ./routing-annotations/routing-annotations/build/jacoco/test.exec
