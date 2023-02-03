@@ -138,25 +138,20 @@ subprojects {
 
     tasks.test {
         useJUnitPlatform()
+        finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+    }
+
+    tasks.jacocoTestReport {
+        dependsOn(tasks.test) // tests are required to run before generating the report
+
+        reports {
+            xml.required.set(false)
+            csv.required.set(false)
+            html.required.set(true)
+        }
     }
 }
 
 jacoco {
     toolVersion = "0.8.8"
-}
-
-tasks.jacocoTestReport {
-    reports {
-        xml.required.set(false)
-        csv.required.set(false)
-        html.required.set(true)
-    }
-}
-
-tasks.test {
-    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
-}
-
-tasks.jacocoTestReport {
-    dependsOn(tasks.test) // tests are required to run before generating the report
 }
