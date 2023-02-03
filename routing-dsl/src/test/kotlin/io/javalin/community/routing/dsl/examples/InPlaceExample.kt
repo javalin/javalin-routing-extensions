@@ -1,8 +1,16 @@
-package io.javalin.community.routing.dsl
+package io.javalin.community.routing.dsl.examples
 
 import io.javalin.Javalin
-import io.javalin.community.routing.dsl.CustomDsl.CustomScope
-import io.javalin.community.routing.dsl.CustomDsl.CustomRoutingConfiguration
+import io.javalin.community.routing.dsl.ConfigurationSupplier
+import io.javalin.community.routing.dsl.DefaultContextScope
+import io.javalin.community.routing.dsl.DefaultContextScopeConfiguration
+import io.javalin.community.routing.dsl.DslRoute
+import io.javalin.community.routing.dsl.HandlerFactory
+import io.javalin.community.routing.dsl.Path
+import io.javalin.community.routing.dsl.RoutingDsl
+import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
+import io.javalin.community.routing.dsl.examples.CustomDsl.CustomRoutingConfiguration
+import io.javalin.community.routing.dsl.routing
 import io.javalin.http.Context
 import io.javalin.http.Handler
 

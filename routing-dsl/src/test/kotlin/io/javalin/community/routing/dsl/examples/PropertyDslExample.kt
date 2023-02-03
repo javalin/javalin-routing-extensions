@@ -1,9 +1,12 @@
-package io.javalin.community.routing.dsl
+package io.javalin.community.routing.dsl.examples
 
 import io.javalin.Javalin
 import io.javalin.community.routing.RouteMethod.GET
 import io.javalin.community.routing.RouteMethod.POST
-import io.javalin.community.routing.dsl.CustomDsl.CustomScope
+import io.javalin.community.routing.dsl.DslRoute
+import io.javalin.community.routing.dsl.DslRoutes
+import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
+import io.javalin.community.routing.dsl.routing
 import io.javalin.openapi.HttpMethod
 import io.javalin.openapi.OpenApi
 

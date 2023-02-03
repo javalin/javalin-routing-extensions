@@ -159,7 +159,7 @@ fun main() {
 ```
 
 Because of the extensible nature of DSL, you may adjust it to your needs!
-You can find base implementation of custom DSL definition here: [InPlaceExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-dsl/src/test/kotlin/io/javalin/community/routing/dsl/InPlaceExample.kt)
+You can find base implementation of custom DSL definition here: [InPlaceExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-dsl/src/test/kotlin/io/javalin/community/routing/dsl/examples/InPlaceExample.kt)
 
 #### Properties
 
@@ -214,7 +214,7 @@ fun main() {
 
 This example is based on previous in-place example, 
 you can check its source code here: 
-[PropertyDslExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-dsl/src/test/kotlin/io/javalin/community/routing/dsl/PropertyDslExample.kt)
+[PropertyDslExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-dsl/src/test/kotlin/io/javalin/community/routing/dsl/examples/PropertyDslExample.kt)
 
 ### Coroutines
 

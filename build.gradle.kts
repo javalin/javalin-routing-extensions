@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm") version "1.8.0"
     `maven-publish`
     kotlin("kapt") version "1.8.0"
+    jacoco
 }
 
 description = "Javalin Routing Extensions Parent | Parent project for Javalin Routing Extensions"
@@ -11,6 +12,7 @@ description = "Javalin Routing Extensions Parent | Parent project for Javalin Ro
 allprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "maven-publish")
+    apply(plugin = "jacoco")
 
     group = "io.javalin.community.routing"
     version = "5.3.2-alpha.1-SNAPSHOT"
@@ -137,4 +139,24 @@ subprojects {
     tasks.test {
         useJUnitPlatform()
     }
+}
+
+jacoco {
+    toolVersion = "0.8.8"
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(false)
+        csv.required.set(false)
+        html.required.set(true)
+    }
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test) // tests are required to run before generating the report
 }
