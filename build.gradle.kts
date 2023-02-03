@@ -6,6 +6,8 @@ plugins {
     kotlin("kapt") version "1.8.0"
 }
 
+description = "Javalin Routing Extensions Parent | Parent project for Javalin Routing Extensions"
+
 allprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "maven-publish")
@@ -31,11 +33,46 @@ allprojects {
                 }
             }
         }
-        publications {
-            create<MavenPublication>("library") {
-                from(components.getByName("java"))
+    }
+
+    afterEvaluate {
+        description
+            ?.takeIf { it.isNotEmpty() }
+            ?.split("|")
+            ?.let { (projectName, projectDescription) ->
+                publishing {
+                    publications {
+                        create<MavenPublication>("library") {
+                            pom {
+                                name.set(projectName)
+                                description.set(projectDescription)
+                                url.set("https://github.com/javalin/javalin-routing-extensions")
+
+                                licenses {
+                                    license {
+                                        name.set("The Apache License, Version 2.0")
+                                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                                    }
+                                }
+                                developers {
+                                    developer {
+                                        id.set("dzikoysk")
+                                        name.set("dzikoysk")
+                                        email.set("dzikoysk@dzikoysk.net")
+                                    }
+                                }
+                                scm {
+                                    connection.set("scm:git:git://github.com/javalin/javalin-routing-extensions.git")
+                                    developerConnection.set("scm:git:ssh://github.com/javalin/javalin-routing-extensions.git")
+                                    url.set("https://github.com/javalin/javalin-routing-extensions.git")
+                                }
+                            }
+
+                            from(components.getByName("java"))
+                        }
+                    }
+                }
             }
-        }
     }
 
     java {
