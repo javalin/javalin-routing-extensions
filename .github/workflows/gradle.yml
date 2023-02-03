@@ -29,7 +29,7 @@ jobs:
           fail_ci_if_error: false
           verbose: true
           files: >
-            ./routing-core/build/jacoco/test.exec,
-            ./routing-dsl/build/jacoco/test.exec,
-            ./routing-coroutines/build/jacoco/test.exec,
-            ./routing-annotations/routing-annotations/build/jacoco/test.exec
+            ./routing-core/build/reports/jacoco/test/jacocoTestReport.xml,
+            ./routing-dsl/build/reports/jacoco/test/jacocoTestReport.xml,
+            ./routing-coroutines/build/reports/jacoco/test/jacocoTestReport.xml,
+            ./routing-annotations/routing-annotations/build/reports/jacoco/test/jacocoTestReport.xml
