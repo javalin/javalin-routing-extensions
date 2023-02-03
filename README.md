@@ -101,7 +101,7 @@ static final class ExampleEndpoints {
 
 public static void main(String[] args) {
     Javalin.create(config -> {
-        // prepare dependencies
+        // prepare dependencies - manually, or using DI framework
         ExampleEndpoints exampleEndpoints = new ExampleEndpoints(new ExampleService());
 
         // register endpoints
@@ -126,7 +126,7 @@ you can use literally any DI framework you want that is available for Java/Kotli
 We may recommend Dagger2, because it verifies your code at compile time,
 so it's safer than heavy reflection-based alternatives.
 
-Full example: [AnnotationsRoutingExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-annotations/javalin-plugin/src/test/java/io/javalin/community/routing/annotations/example/AnnotationsRoutingExample.java)
+Full example: [AnnotationsRoutingExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-annotations/routing-annotations/src/test/java/io/javalin/community/routing/annotations/example/AnnotationsRoutingExample.java)
 
 ### DSL
 
