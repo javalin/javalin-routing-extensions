@@ -4,6 +4,7 @@ import io.javalin.Javalin
 import io.javalin.community.routing.dsl.ConfigurationSupplier
 import io.javalin.community.routing.dsl.DefaultContextScope
 import io.javalin.community.routing.dsl.DefaultContextScopeConfiguration
+import io.javalin.community.routing.dsl.DefaultDsl.DefaultScope
 import io.javalin.community.routing.dsl.DslRoute
 import io.javalin.community.routing.dsl.HandlerFactory
 import io.javalin.community.routing.dsl.Path
@@ -20,9 +21,7 @@ object CustomDsl : RoutingDsl<CustomRoutingConfiguration, DslRoute<CustomScope, 
     open class CustomRoutingConfiguration : DefaultContextScopeConfiguration<DslRoute<CustomScope, Unit>, CustomScope, Unit>()
 
     // This is custom scope that will be used in the handlers
-    class CustomScope(
-        override val ctx: Context,
-    ): DefaultContextScope, Context by ctx {
+    class CustomScope(ctx: Context) : DefaultScope(ctx) {
         fun helloWorld(): String = "Hello ${ctx.endpointHandlerPath()}"
     }
 

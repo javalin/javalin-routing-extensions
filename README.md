@@ -11,7 +11,6 @@
             <img src="https://maven.reposilite.com/api/badge/latest/snapshots/io/javalin/community/routing/javalin-routing-extensions?color=A97BFF&name=Snapshot" alt="Version / Snapshot">
         </a>
     </p>
-    <hr/>
 </div>
 
 Javalin is very flexible and allows you to extend it in many ways. 

@@ -97,7 +97,7 @@ allprojects {
             languageVersion = "1.7"
             freeCompilerArgs = listOf(
                 "-Xjvm-default=all", // For generating default methods in interfaces
-                // "-Xcontext-receivers"
+                // "-Xcontext-receivers" not yet :<
             )
         }
     }
@@ -110,13 +110,14 @@ subprojects {
         val javalin = "5.3.2"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
-        testImplementation("io.javalin:javalin:$javalin")
+        testImplementation("io.javalin:javalin-testtools:$javalin")
         kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$javalin")
         testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalin")
 
         val jackson = "2.14.0"
         testImplementation("com.fasterxml.jackson.core:jackson-databind:$jackson")
         testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson")
+        testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson")
 
         val unirest = "3.14.1"
         testImplementation("com.konghq:unirest-java:$unirest")

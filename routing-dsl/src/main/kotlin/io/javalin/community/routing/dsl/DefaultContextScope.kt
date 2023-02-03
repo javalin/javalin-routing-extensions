@@ -6,11 +6,15 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.javaType
 
-annotation class Path(val path: String)
-
 interface DefaultContextScope {
     val ctx: Context
 }
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.CLASS)
+annotation class Path(
+    val path: String
+)
 
 open class DefaultContextScopeConfiguration<
     ROUTE : DslRoute<CONTEXT, RESPONSE>,

@@ -1,6 +1,7 @@
 package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
+import io.javalin.community.routing.dsl.DefaultDsl.DefaultConfiguration
 import io.javalin.community.routing.route
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig
@@ -48,6 +49,9 @@ fun <
     }
 }
 
+fun JavalinConfig.routing(vararg routes: DefaultRoutes) =
+    routing(DefaultDsl, *routes)
+
 fun <
     CONFIG : RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>,
     ROUTE : DslRoute<CONTEXT, RESPONSE>,
@@ -61,3 +65,6 @@ fun <
     dslPlugin.routing(init)
     plugins.register(dslPlugin)
 }
+
+fun JavalinConfig.routing(init: DefaultConfiguration.() -> Unit) =
+    routing(DefaultDsl, init)

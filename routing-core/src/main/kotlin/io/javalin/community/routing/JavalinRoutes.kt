@@ -4,7 +4,7 @@ import io.javalin.Javalin
 import io.javalin.http.Handler
 import io.javalin.security.RouteRole
 
-enum class RouteMethod {
+enum class RouteMethod(val isHttpMethod: Boolean = true) {
     HEAD,
     PATCH,
     OPTIONS,
@@ -12,8 +12,8 @@ enum class RouteMethod {
     PUT,
     POST,
     DELETE,
-    AFTER,
-    BEFORE
+    AFTER(isHttpMethod = false),
+    BEFORE(isHttpMethod = false)
 }
 
 fun Javalin.route(method: RouteMethod, path: String, handler: Handler, vararg roles: RouteRole) {
