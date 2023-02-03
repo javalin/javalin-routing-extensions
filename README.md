@@ -1,8 +1,4 @@
-# Javalin Routing Extensions Plugin [![CI](https://github.com/javalin/javalin-routing-extensions/actions/workflows/gradle.yml/badge.svg)](https://github.com/javalin/javalin-routing-extensions/actions/workflows/gradle.yml)
-
-## ** Work in progress **
-
----
+# Javalin Routing Extensions Plugin [![CI](https://github.com/javalin/javalin-routing-extensions/actions/workflows/gradle.yml/badge.svg)](https://github.com/javalin/javalin-routing-extensions/actions/workflows/gradle.yml) [![Version / Snapshot](https://maven.reposilite.com/api/badge/latest/snapshots/io/javalin/community/routing/javalin-routing-extensions?color=A97BFF&name=Snapshot)](https://maven.reposilite.com/#/snapshots/io/javalin/community/routing)
 
 Javalin is very flexible and allows you to extend it in many ways. 
 This repository contains a set of extensions for Javalin routing system following some of the most popular patterns.
@@ -217,7 +213,7 @@ fun main() {
 ```
 
 This example is based on previous in-place example, 
-you check its source code here: 
+you can check its source code here: 
 [PropertyDslExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-dsl/src/test/kotlin/io/javalin/community/routing/dsl/PropertyDslExample.kt)
 
 ### Coroutines

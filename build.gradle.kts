@@ -83,6 +83,12 @@ allprojects {
         withSourcesJar()
     }
 
+    tasks.withType<JavaCompile> {
+        options.compilerArgs = listOf(
+            "-parameters"
+        )
+    }
+
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
             jvmTarget = "11"
@@ -118,6 +124,9 @@ subprojects {
         testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$junit")
         testImplementation("org.assertj:assertj-core:3.24.1")
+
+        val assertj = "3.23.1"
+        testImplementation("org.assertj:assertj-core:$assertj")
 
         val logback = "1.4.0"
         testImplementation("ch.qos.logback:logback-core:$logback")
