@@ -11,7 +11,7 @@ allprojects {
     apply(plugin = "maven-publish")
 
     group = "io.javalin.community.routing"
-    version = "5.3.2-SNAPSHOT"
+    version = "5.3.2-alpha.1-SNAPSHOT"
 
     repositories {
         mavenCentral()
@@ -24,7 +24,7 @@ allprojects {
                     username = property("mavenUser") as String
                     password = property("mavenPassword") as String
                 }
-                name = "panda-repository"
+                name = "reposilite-repository"
                 url = when (version.toString().endsWith("-SNAPSHOT")) {
                     true -> uri("https://maven.reposilite.com/snapshots")
                     else -> uri("https://maven.reposilite.com/releases")

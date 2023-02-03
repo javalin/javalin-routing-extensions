@@ -32,8 +32,11 @@ Each module is distributed as a separate artifact:
 
 ```kotlin
 dependencies {
-    val javalinRoutingExtensions = "5.3.2-SNAPSHOT"
-    // TODO
+    val javalinRoutingExtensions = "5.3.2-alpha.1-SNAPSHOT"
+    implementation("io.javalin.community.routing:routing-core:$javalinRoutingExtensions")
+    implementation("io.javalin.community.routing:routing-annotations:$javalinRoutingExtensions")
+    implementation("io.javalin.community.routing:routing-dsl:$javalinRoutingExtensions")
+    implementation("io.javalin.community.routing:routing-coroutines:$javalinRoutingExtensions")
 }
 ```
 
@@ -122,6 +125,8 @@ If you don't really care about it and you're just looking for a tool that will g
 you can use literally any DI framework you want that is available for Java/Kotlin.
 We may recommend Dagger2, because it verifies your code at compile time,
 so it's safer than heavy reflection-based alternatives.
+
+Full example: [AnnotationsRoutingExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-annotations/javalin-plugin/src/test/java/io/javalin/community/routing/annotations/example/AnnotationsRoutingExample.java)
 
 ### DSL
 
