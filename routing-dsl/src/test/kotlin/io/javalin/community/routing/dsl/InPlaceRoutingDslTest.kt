@@ -8,6 +8,8 @@ import io.javalin.testtools.TestConfig
 import kong.unirest.Unirest.get
 import kong.unirest.Unirest.request
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable
 import org.junit.jupiter.api.Test
 
 class InPlaceRoutingDslTest : TestSpecification() {
@@ -27,8 +29,9 @@ class InPlaceRoutingDslTest : TestSpecification() {
                 head("/head") { header("test", "head") }
                 options("/options") { header("test", "options") }
             }
-        }
-    , TestConfig(captureLogs = false)) { _, client ->
+        },
+        defaultConfig
+    ) { _, client ->
         // when: a request is made to the http route
         RouteMethod.values()
             .filter { it.isHttpMethod }
@@ -56,16 +59,17 @@ class InPlaceRoutingDslTest : TestSpecification() {
     }
 
     @Path("/path/{name}")
-    data class TestPath(val name: String)
+    class ValidPath(val name: String)
 
     @Test
     fun `should properly handle class based routes`() = JavalinTest.test(
         // given: a javalin app with routes defined using the dsl
-        Javalin.create {
-            it.routing {
-                get<TestPath> { result(it.name)}
+        Javalin.create { config ->
+            config.routing {
+                get<ValidPath> { result(it.name) }
             }
-        }
+        },
+        defaultConfig
     ) { _, client ->
         // when: a request is made to the http route with a path parameter
         val response = get("${client.origin}/path/panda").asString()
@@ -73,5 +77,47 @@ class InPlaceRoutingDslTest : TestSpecification() {
         // then: the response contains properly mapped path parameter
         assertThat(response.body).isEqualTo("panda")
     }
+
+    class MissingAnnotationPath(val name: String)
+
+    @Test
+    fun `should throw exception when class based route is invalid`() {
+        // given: a javalin app with routes defined using the dsl
+        val app = ThrowingCallable {
+            Javalin.create {
+                it.routing {
+                    // when: a route is defined with path without @Path annotation
+                    get<MissingAnnotationPath> { }
+                }
+            }
+        }
+
+        // then: an exception is thrown
+        assertThatThrownBy(app)
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("@Path annotation not found")
+    }
+
+    @Path("/path/{typo}")
+    class InvalidParameterPath(val invalid: String)
+
+    @Test
+    fun `should throw exception when path parameter doesn't match constructor parameter`() {
+        // given: a javalin app with routes defined using the dsl
+        val app = ThrowingCallable {
+            Javalin.create {
+                it.routing {
+                    // when: a route is defined with invalid @Path annotation
+                    get<InvalidParameterPath> { }
+                }
+            }
+        }
+
+        // then: an exception is thrown
+        assertThatThrownBy(app)
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Path parameter 'invalid' not found in ")
+    }
+
 
 }

@@ -2,6 +2,7 @@ package io.javalin.community.routing.dsl
 
 import io.javalin.community.routing.RouteMethod
 import io.javalin.http.Context
+import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.javaType
@@ -31,22 +32,27 @@ open class DefaultContextScopeConfiguration<
             ?.path
             ?: throw IllegalArgumentException("@Path annotation not found")
 
-        val primaryConstructor = PATH::class
-            .takeIf { it.isData }
-            ?.primaryConstructor
-            ?: throw IllegalArgumentException("Path must be a data class with primary constructor")
+        val primaryConstructor = PATH::class.primaryConstructor
 
-        // todo: compare parameters in path and constructor to fail at startup in case of typo
+        primaryConstructor
+            ?.parameters
+            ?.forEach {
+                require(path.contains("{${it.name}") || path.contains("<${it.name}>")) {
+                    "Path parameter '${it.name}' not found in path $path (path type: ${PATH::class})"
+                }
+            }
 
         val standardHandler: CONTEXT.() -> RESPONSE = {
             val pathInstance = primaryConstructor
-                .parameters.associateWith {
+                ?.parameters
+                ?.associateWith {
                     ctx.pathParamAsClass(
                         it.name ?: throw IllegalStateException("Unknown parameter name in class ${PATH::class}"),
                         it.type.javaType as Class<*>
                     ).get()
                 }
-                .let { primaryConstructor.callBy(it) }
+                ?.let { primaryConstructor.callBy(it) }
+                ?: PATH::class.createInstance()
 
             handler(this, pathInstance)
         }
