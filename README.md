@@ -19,7 +19,7 @@ Each approach has pros and cons, so you should choose the one that fits your nee
 
 1. [Installation](#installation)
 2. [Usage](#usage)
-    1. [Annotations](#annotations)
+    1. [Annotated](#annotated)
     2. [DSL](#dsl)
         1. [In-place](#in-place)
         2. [Properties](#properties)
@@ -43,7 +43,7 @@ Each module is distributed as a separate artifact:
 dependencies {
     val javalinRoutingExtensions = "5.3.2-alpha.1-SNAPSHOT"
     implementation("io.javalin.community.routing:routing-core:$javalinRoutingExtensions")
-    implementation("io.javalin.community.routing:routing-annotations:$javalinRoutingExtensions")
+    implementation("io.javalin.community.routing:routing-annotated:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-dsl:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-coroutines:$javalinRoutingExtensions")
 }
@@ -58,12 +58,12 @@ First of all, not each module is available for Java users, take a look on the ta
 
 | Module                                         | Languages    | Reflections                                              |
 |------------------------------------------------|--------------|----------------------------------------------------------|
-| [Annotations](#annotations)                    | Java, Kotlin | Yes _(as long as we won't provide annotation processor)_ |
+| [Annotated](#annotated)                        | Java, Kotlin | Yes _(as long as we won't provide annotation processor)_ |
 | [DSL In-place](#dsl)<br>[DSL Properties](#dsl) | Kotlin       | Optional                                                 |
 | [Coroutines](#coroutines)                      | Kotlin       | No                                                       |
 | [Core](#core)                                  | Java, Kotlin | No                                                       |
 
-### Annotations
+### Annotated
 
 This module provides set of annotations to simplify routing setup & basic http operations.
 This is probably the most common approach to routing in Java world,
@@ -135,7 +135,7 @@ you can use literally any DI framework you want that is available for Java/Kotli
 We may recommend Dagger2, because it verifies your code at compile time,
 so it's safer than heavy reflection-based alternatives.
 
-Full example: [AnnotationsRoutingExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-annotations/routing-annotations/src/test/java/io/javalin/community/routing/annotations/example/AnnotationsRoutingExample.java)
+Full example: [AnnotationsRoutingExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-annotations/routing-annotated/src/test/java/io/javalin/community/routing/annotations/example/AnnotatatedRoutingExample.java)
 
 ### DSL
 

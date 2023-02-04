@@ -10,6 +10,7 @@ import kong.unirest.Unirest.request
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 
 class AnnotatedRoutingTest {
 
@@ -193,5 +194,19 @@ class AnnotatedRoutingTest {
             val response = Unirest.get("${client.origin}/test/abc").asString()
             assertThat(response.status).isEqualTo(400)
         }
+
+    @Test
+    fun `should skip methods in endpoint class that are not annotated`() {
+        assertDoesNotThrow {
+            Javalin.create {
+                it.registerAnnotatedEndpoints(
+                    @Endpoints
+                    object {
+                        fun regularMethod() {}
+                    }
+                )
+            }
+        }
+    }
 
 }

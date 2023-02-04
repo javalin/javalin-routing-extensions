@@ -21,7 +21,7 @@ import java.util.Objects;
 import static io.javalin.http.Header.AUTHORIZATION;
 import static io.javalin.openapi.HttpMethod.GET;
 
-public final class AnnotationsRoutingExample {
+public final class AnnotatedRoutingExample {
 
     // some dependencies
     static final class ExampleService {
