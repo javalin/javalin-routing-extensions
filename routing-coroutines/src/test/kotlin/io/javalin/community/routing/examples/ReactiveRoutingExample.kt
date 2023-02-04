@@ -1,4 +1,4 @@
-package io.javalin.community.routing
+package io.javalin.community.routing.examples
 
 import io.javalin.community.routing.coroutines.ReactiveRoutes
 import io.javalin.community.routing.Route.GET
