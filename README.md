@@ -289,3 +289,7 @@ fun main() {
 The core module contains shared components for the other modules.
 The most important functionality is the `RouteComparator` 
 which is used to sort given set of routes in the correct order by associated route path. 
+
+### Other examples
+
+* [Reposilite](https://github.com/dzikoysk/reposilite) - real world app using Javalin with property-based DSL routing
