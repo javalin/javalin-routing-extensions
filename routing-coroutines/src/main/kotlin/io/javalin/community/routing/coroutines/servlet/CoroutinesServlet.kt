@@ -1,7 +1,6 @@
-package io.javalin.community.routing.coroutines
+package io.javalin.community.routing.coroutines.servlet
 
-import io.javalin.community.routing.coroutines.ktor.CoroutineNameRepresentation
-import io.javalin.community.routing.coroutines.ktor.DefaultUncaughtExceptionHandler
+import io.javalin.community.routing.coroutines.ReactiveRoute
 import io.javalin.http.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
@@ -11,6 +10,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.EmptyCoroutineContext
 
+typealias CoroutineNameRepresentation = Any
+
 open class CoroutinesServlet<CONTEXT, RESPONSE : Any>(
     name: String = "javalin-reactive-routing",
     private val coroutinesEnabled: Boolean = true,
@@ -18,11 +19,11 @@ open class CoroutinesServlet<CONTEXT, RESPONSE : Any>(
     protected val syncHandler: suspend (Context, ReactiveRoute<CONTEXT, RESPONSE>) -> RESPONSE,
     protected val asyncHandler: suspend (Context, ReactiveRoute<CONTEXT, RESPONSE>, CompletableFuture<RESPONSE>) -> RESPONSE,
     private val responseConsumer: (suspend (Context, RESPONSE) -> Unit)? = null,
-    errorConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
+    uncaughtExceptionConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
 ) {
 
     private val coroutineName: CoroutineName = CoroutineName(name)
-    private val exceptionHandler = DefaultUncaughtExceptionHandler(errorConsumer)
+    private val exceptionHandler = DefaultUncaughtExceptionHandler(uncaughtExceptionConsumer)
     private val scope = JavalinCoroutineScope(EmptyCoroutineContext, exceptionHandler)
     private val id = AtomicLong()
     private val finished = AtomicLong()

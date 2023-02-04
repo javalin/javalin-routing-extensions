@@ -1,17 +1,15 @@
-package io.javalin.community.routing.coroutines.ktor
+package io.javalin.community.routing.coroutines.servlet
 
-/*
- * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
- */
-
-import io.javalin.community.routing.coroutines.ktor.DispatcherWithShutdown.ShutdownPhase.Completed
-import io.javalin.community.routing.coroutines.ktor.DispatcherWithShutdown.ShutdownPhase.Graceful
-import io.javalin.community.routing.coroutines.ktor.DispatcherWithShutdown.ShutdownPhase.None
+import io.javalin.community.routing.coroutines.servlet.DispatcherWithShutdown.ShutdownPhase.Completed
+import io.javalin.community.routing.coroutines.servlet.DispatcherWithShutdown.ShutdownPhase.Graceful
+import io.javalin.community.routing.coroutines.servlet.DispatcherWithShutdown.ShutdownPhase.None
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Runnable
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import kotlin.coroutines.CoroutineContext
+
+// Source: Ktor
 
 /**
  * Specialized dispatcher useful for graceful shutdown

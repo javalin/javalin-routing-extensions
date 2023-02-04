@@ -1,4 +1,4 @@
-package io.javalin.community.routing.coroutines
+package io.javalin.community.routing.coroutines.servlet
 
 import io.javalin.http.Context
 import java.util.concurrent.ExecutorService
@@ -11,7 +11,11 @@ class DefaultContextCoroutinesServlet<CONTEXT>(
     dispatcher = ExclusiveDispatcherWithShutdown(executorService),
     syncHandler = { ctx, route -> route.handler(contextFactory(ctx)) },
     asyncHandler = { ctx, route, _ -> route.handler(contextFactory(ctx)) },
-    errorConsumer = { _, throwable -> throwable.printStackTrace() }
+    uncaughtExceptionConsumer = { _, throwable ->
+        System.err.println("Uncaught exception in coroutine")
+        throwable.printStackTrace()
+        throw throwable
+    }
 ), GracefullyShutdownableDispatcher {
 
     override fun prepareShutdown() {

@@ -1,6 +1,7 @@
 package io.javalin.community.routing.coroutines
 
 import io.javalin.Javalin
+import io.javalin.community.routing.coroutines.servlet.CoroutinesServlet
 import io.javalin.community.routing.route
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig

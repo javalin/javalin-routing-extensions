@@ -1,17 +1,15 @@
-package io.javalin.community.routing.coroutines.ktor
+package io.javalin.community.routing.coroutines.servlet
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlin.coroutines.CoroutineContext
-
-typealias CoroutineNameRepresentation = Any
+import kotlin.coroutines.CoroutineContext.Key
 
 class DefaultUncaughtExceptionHandler(
-    private val errorConsumer: (CoroutineNameRepresentation, Throwable) -> Unit
+    private val errorConsumer: (Any, Throwable) -> Unit,
+    override val key: Key<*> = CoroutineExceptionHandler
 ) : CoroutineExceptionHandler {
-
-    override val key: CoroutineContext.Key<*> = CoroutineExceptionHandler.Key
 
     override fun handleException(context: CoroutineContext, exception: Throwable) {
         when (exception) {

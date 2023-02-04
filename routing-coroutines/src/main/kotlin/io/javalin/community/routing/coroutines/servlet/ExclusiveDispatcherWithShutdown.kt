@@ -1,6 +1,5 @@
-package io.javalin.community.routing.coroutines
+package io.javalin.community.routing.coroutines.servlet
 
-import io.javalin.community.routing.coroutines.ktor.DispatcherWithShutdown
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.asCoroutineDispatcher

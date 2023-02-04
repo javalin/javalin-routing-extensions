@@ -3,7 +3,7 @@ package io.javalin.community.routing.examples
 import io.javalin.community.routing.coroutines.ReactiveRoutes
 import io.javalin.community.routing.Route.GET
 import io.javalin.Javalin
-import io.javalin.community.routing.coroutines.DefaultContextCoroutinesServlet
+import io.javalin.community.routing.coroutines.servlet.DefaultContextCoroutinesServlet
 import io.javalin.community.routing.coroutines.ReactiveRoute
 import io.javalin.community.routing.coroutines.reactiveRouting
 import io.javalin.http.Context

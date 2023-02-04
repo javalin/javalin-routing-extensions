@@ -1,4 +1,4 @@
-package io.javalin.community.routing.coroutines
+package io.javalin.community.routing.coroutines.servlet
 
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
