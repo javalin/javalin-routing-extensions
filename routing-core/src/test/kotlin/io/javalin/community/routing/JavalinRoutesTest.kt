@@ -11,7 +11,7 @@ class JavalinRoutesTest {
     @Test
     fun `should properly register handler by given enum`() {
         // given: a list of routes
-        val routes = RouteMethod.values()
+        val routes = Route.values()
             .map { it to Handler { ctx -> ctx.result(it.name) } }
 
         // when: routes are registered

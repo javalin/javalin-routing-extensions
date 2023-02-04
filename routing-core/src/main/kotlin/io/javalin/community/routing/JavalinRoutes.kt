@@ -4,7 +4,7 @@ import io.javalin.Javalin
 import io.javalin.http.Handler
 import io.javalin.security.RouteRole
 
-enum class RouteMethod(val isHttpMethod: Boolean = true) {
+enum class Route(val isHttpMethod: Boolean = true) {
     HEAD,
     PATCH,
     OPTIONS,
@@ -16,16 +16,16 @@ enum class RouteMethod(val isHttpMethod: Boolean = true) {
     BEFORE(isHttpMethod = false)
 }
 
-fun Javalin.route(method: RouteMethod, path: String, handler: Handler, vararg roles: RouteRole) {
-    when (method) {
-        RouteMethod.HEAD -> head(path, handler, *roles)
-        RouteMethod.PATCH -> patch(path, handler, *roles)
-        RouteMethod.OPTIONS -> options(path, handler, *roles)
-        RouteMethod.GET -> get(path, handler, *roles)
-        RouteMethod.PUT -> put(path, handler, *roles)
-        RouteMethod.POST -> post(path, handler, *roles)
-        RouteMethod.DELETE -> delete(path, handler, *roles)
-        RouteMethod.AFTER -> after(path, handler)
-        RouteMethod.BEFORE -> before(path, handler)
+fun Javalin.route(route: Route, path: String, handler: Handler, vararg roles: RouteRole) {
+    when (route) {
+        Route.HEAD -> head(path, handler, *roles)
+        Route.PATCH -> patch(path, handler, *roles)
+        Route.OPTIONS -> options(path, handler, *roles)
+        Route.GET -> get(path, handler, *roles)
+        Route.PUT -> put(path, handler, *roles)
+        Route.POST -> post(path, handler, *roles)
+        Route.DELETE -> delete(path, handler, *roles)
+        Route.AFTER -> after(path, handler)
+        Route.BEFORE -> before(path, handler)
     }
 }

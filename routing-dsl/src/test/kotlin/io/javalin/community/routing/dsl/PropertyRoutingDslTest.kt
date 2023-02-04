@@ -1,7 +1,7 @@
 package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
-import io.javalin.community.routing.RouteMethod.GET
+import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.dsl.specification.TestSpecification
 import io.javalin.testtools.JavalinTest
 import org.assertj.core.api.Assertions.assertThat

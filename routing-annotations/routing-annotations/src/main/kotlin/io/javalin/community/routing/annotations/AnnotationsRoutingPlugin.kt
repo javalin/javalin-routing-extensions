@@ -4,6 +4,7 @@ import io.javalin.Javalin
 import io.javalin.community.routing.dsl.DslRoute
 import io.javalin.community.routing.route
 import io.javalin.community.routing.sortRoutes
+import io.javalin.config.JavalinConfig
 import io.javalin.http.Context
 import io.javalin.http.Handler
 import io.javalin.plugin.Plugin
@@ -28,4 +29,10 @@ class AnnotationsRoutingPlugin : Plugin {
         routes.addAll(detectedRoutes)
     }
 
+}
+
+fun JavalinConfig.registerAnnotatedEndpoints(vararg endpoints: Any) {
+    val plugin = AnnotationsRoutingPlugin()
+    plugin.registerEndpoints(*endpoints)
+    this.plugins.register(plugin)
 }

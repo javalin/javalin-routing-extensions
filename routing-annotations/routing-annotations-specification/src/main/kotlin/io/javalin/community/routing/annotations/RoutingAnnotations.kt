@@ -37,11 +37,11 @@ annotation class Options(val value: String = "", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class Before(val value: String = "", val async: Boolean = false)
+annotation class Before(val value: String = "*", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class After(val value: String = "", val async: Boolean = false)
+annotation class After(val value: String = "*", val async: Boolean = false)
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.VALUE_PARAMETER)

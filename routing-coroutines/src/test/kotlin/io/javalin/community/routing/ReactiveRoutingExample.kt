@@ -1,7 +1,7 @@
 package io.javalin.community.routing
 
 import io.javalin.community.routing.coroutines.ReactiveRoutes
-import io.javalin.community.routing.RouteMethod.GET
+import io.javalin.community.routing.Route.GET
 import io.javalin.Javalin
 import io.javalin.community.routing.coroutines.DefaultContextCoroutinesServlet
 import io.javalin.community.routing.coroutines.ReactiveRoute

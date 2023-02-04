@@ -1,10 +1,9 @@
 package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
-import io.javalin.community.routing.RouteMethod
+import io.javalin.community.routing.Route
 import io.javalin.community.routing.dsl.specification.TestSpecification
 import io.javalin.testtools.JavalinTest
-import io.javalin.testtools.TestConfig
 import kong.unirest.Unirest.get
 import kong.unirest.Unirest.request
 import org.assertj.core.api.Assertions.assertThat
@@ -33,7 +32,7 @@ class InPlaceRoutingDslTest : TestSpecification() {
         defaultConfig
     ) { _, client ->
         // when: a request is made to the http route
-        RouteMethod.values()
+        Route.values()
             .filter { it.isHttpMethod }
             .map { it.name.lowercase() }
             .map { it to request(it, "${client.origin}/$it").asEmpty() }
@@ -58,15 +57,35 @@ class InPlaceRoutingDslTest : TestSpecification() {
         }
     }
 
-    @Path("/path/{name}")
-    class ValidPath(val name: String)
+    @Path("/path")
+    class ValidPath
 
     @Test
-    fun `should properly handle class based routes`() = JavalinTest.test(
+    fun `should properly handle class based route`() = JavalinTest.test(
         // given: a javalin app with routes defined using the dsl
         Javalin.create { config ->
             config.routing {
-                get<ValidPath> { result(it.name) }
+                get<ValidPath> { result("Panda") }
+            }
+        },
+        defaultConfig
+    ) { _, client ->
+        // when: a request is made to the http route with a path parameter
+        val response = get("${client.origin}/path").asString()
+
+        // then: the response contains properly mapped path parameter
+        assertThat(response.body).isEqualTo("Panda")
+    }
+
+    @Path("/path/{name}")
+    class ValidPathWithParameter(val name: String)
+
+    @Test
+    fun `should properly handle class based route with parameter`() = JavalinTest.test(
+        // given: a javalin app with routes defined using the dsl
+        Javalin.create { config ->
+            config.routing {
+                get<ValidPathWithParameter> { result(it.name) }
             }
         },
         defaultConfig
@@ -116,8 +135,41 @@ class InPlaceRoutingDslTest : TestSpecification() {
         // then: an exception is thrown
         assertThatThrownBy(app)
             .isInstanceOf(IllegalArgumentException::class.java)
-            .hasMessageContaining("Path parameter 'invalid' not found in ")
+            .hasMessageContaining("Path parameter 'invalid' not found in")
     }
 
+    @Path("/path")
+    class ReifiedPath
+
+    @Test
+    fun `should properly map all reified variants`() = JavalinTest.test(
+        // given: a javalin app with routes defined by all available reified methods
+        Javalin.create { config ->
+            config.routing {
+                before<ReifiedPath> { result("Before ") }
+                get<ReifiedPath> { result(result() + "GET") }
+                put<ReifiedPath> { result(result() + "PUT") }
+                post<ReifiedPath> { result(result() + "POST") }
+                patch<ReifiedPath> { result(result() + "PATCH") }
+                delete<ReifiedPath> { result(result() + "DELETE") }
+                head<ReifiedPath> { result(result() + "HEAD") }
+                options<ReifiedPath> { result(result() + "OPTIONS") }
+                after<ReifiedPath> {
+                    result(result() + " After")
+                    header("test", result()!!)
+                }
+            }
+        },
+        defaultConfig
+    ) { _, client ->
+        // when: a request is made to the http route
+        Route.values()
+            .filter { it.isHttpMethod }
+            .map { it to request(it.name, "${client.origin}/path").asString() }
+            .forEach { (method, response) ->
+                // then: the response is the same as the route name
+                assertThat(response.headers.getFirst("test")).isEqualTo("Before $method After")
+            }
+    }
 
 }
