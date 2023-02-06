@@ -1,12 +1,9 @@
-fixes:
-  - "main/::"
-
 codecov:
   notify:
-    require_ci_to_pass: yes
+    require_ci_to_pass: false
 
 coverage:
-  range: 10..60
+  range: 0..0
   round: up
   precision: 2
 
