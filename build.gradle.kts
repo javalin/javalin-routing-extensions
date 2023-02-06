@@ -151,6 +151,34 @@ subprojects {
             xml.required.set(true)
             html.required.set(true)
         }
+
+        executionData(fileTree(project.buildDir).include("jacoco/*.exec"))
+        finalizedBy("jacocoTestCoverageVerification")
+    }
+
+    tasks.jacocoTestCoverageVerification {
+        violationRules {
+            rule {
+                limit {
+                    minimum = "0.0".toBigDecimal()
+                }
+            }
+            rule {
+                enabled = true
+                element = "CLASS"
+                limit {
+                    counter = "BRANCH"
+                    value = "COVEREDRATIO"
+                    minimum = "0.0".toBigDecimal()
+                }
+                limit {
+                    counter = "LINE"
+                    value = "COVEREDRATIO"
+                    minimum = "0.0".toBigDecimal()
+                }
+                excludes = listOf()
+            }
+        }
     }
 }
 

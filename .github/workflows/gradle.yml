@@ -23,7 +23,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build test
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
