@@ -152,7 +152,6 @@ subprojects {
             html.required.set(true)
         }
 
-        executionData(fileTree(project.buildDir).include("jacoco/*.exec"))
         finalizedBy("jacocoTestCoverageVerification")
     }
 
