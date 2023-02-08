@@ -2,36 +2,38 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.8.0"
-    `maven-publish`
     kotlin("kapt") version "1.8.0"
     jacoco
+    signing
+    `maven-publish`
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 description = "Javalin Routing Extensions Parent | Parent project for Javalin Routing Extensions"
 
 allprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
-    apply(plugin = "maven-publish")
     apply(plugin = "jacoco")
+    apply(plugin = "maven-publish")
+    apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "5.3.2-alpha.2-SNAPSHOT"
+    version = "5.3.2-alpha.3"
 
     repositories {
         mavenCentral()
     }
 
-    publishing {
-        repositories {
-            maven {
-                credentials {
-                    username = property("mavenUser") as String
-                    password = property("mavenPassword") as String
-                }
-                name = "reposilite-repository"
-                url = when (version.toString().endsWith("-SNAPSHOT")) {
-                    true -> uri("https://maven.reposilite.com/snapshots")
-                    else -> uri("https://maven.reposilite.com/releases")
+    if (version.toString().endsWith("-SNAPSHOT")) {
+        publishing {
+            repositories {
+                maven {
+                    credentials {
+                        username = property("mavenUser") as String
+                        password = property("mavenPassword") as String
+                    }
+                    name = "reposilite-repository"
+                    url = uri("https://maven.reposilite.com/snapshots")
                 }
             }
         }
@@ -72,6 +74,12 @@ allprojects {
 
                             from(components.getByName("java"))
                         }
+                    }
+                }
+
+                if (findProperty("signing.keyId").takeIf { it?.toString()?.trim()?.isNotEmpty() == true } != null) {
+                    signing {
+                        sign(publishing.publications.getByName("library"))
                     }
                 }
             }
@@ -184,3 +192,15 @@ subprojects {
 jacoco {
     toolVersion = "0.8.8"
 }
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            username.set(getEnvOrProperty("SONATYPE_USER", "sonatypeUser"))
+            password.set(getEnvOrProperty("SONATYPE_PASSWORD", "sonatypePassword"))
+        }
+    }
+}
+
+fun getEnvOrProperty(env: String, property: String): String? =
+    System.getenv(env) ?: findProperty(property)?.toString()

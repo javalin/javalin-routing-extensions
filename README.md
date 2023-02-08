@@ -130,10 +130,13 @@ This is because in general we consider this as a good practice -
 not only because you're in full control over the execution flow, 
 but also because it forces you to make concious decision about the scope of your dependencies & architecture.
 
-If you don't really care about it and you're just looking for a tool that will get the job done,
+If you don't really care about it, and you're just looking for a tool that will get the job done,
 you can use literally any DI framework you want that is available for Java/Kotlin.
 We may recommend Dagger2, because it verifies your code at compile time,
 so it's safer than heavy reflection-based alternatives.
+
+Keep in mind, that if you want to use named parameters in your endpoints,
+you have to pass `-parameters` flag to your compiler to preserve parameter names in bytecode.
 
 Full example: [AnnotationsRoutingExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-annotations/routing-annotated/src/test/java/io/javalin/community/routing/annotations/example/AnnotatedRoutingExample.java)
 
