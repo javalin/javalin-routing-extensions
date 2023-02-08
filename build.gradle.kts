@@ -15,7 +15,7 @@ allprojects {
     apply(plugin = "jacoco")
 
     group = "io.javalin.community.routing"
-    version = "5.3.2-alpha.1-SNAPSHOT"
+    version = "5.3.2-alpha.2-SNAPSHOT"
 
     repositories {
         mavenCentral()
