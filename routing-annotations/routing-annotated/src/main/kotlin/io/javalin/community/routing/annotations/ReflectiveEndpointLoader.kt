@@ -1,6 +1,7 @@
 package io.javalin.community.routing.annotations
 
 import io.javalin.community.routing.Route
+import io.javalin.community.routing.dsl.DefaultDslRoute
 import io.javalin.community.routing.dsl.DslRoute
 import io.javalin.http.Context
 import io.javalin.validation.Validator
@@ -40,7 +41,7 @@ object ReflectiveEndpointLoader {
             val argumentSuppliers = method.parameters
                 .map { createArgumentSupplier(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it") }
 
-            val route = DslRoute<Context, Unit>(
+            val route = DefaultDslRoute<Context, Unit>(
                 method = httpMethod,
                 path = ("/$endpointPath/$path").replace(repeatedPathSeparatorRegex, "/"),
                 handler = {
