@@ -2,13 +2,16 @@
     <h1>Javalin Routing Extensions Plugin</h1>
     <p>
         <a href="https://github.com/javalin/javalin-routing-extensions/actions/workflows/gradle.yml">
-            <img src="https://github.com/javalin/javalin-routing-extensions/actions/workflows/gradle.yml/badge.svg" alt="CI">
+            <img src="https://github.com/javalin/javalin-routing-extensions/actions/workflows/gradle.yml/badge.svg" alt="CI" />
         </a>
         <a href="https://codecov.io/gh/dzikoysk/javalin-routing-extensions">
-            <img src="https://codecov.io/gh/dzikoysk/javalin-routing-extensions/branch/main/graph/badge.svg?token=eqL206FW98" alt="Coverage">
+            <img src="https://codecov.io/gh/dzikoysk/javalin-routing-extensions/branch/main/graph/badge.svg?token=eqL206FW98" alt="Coverage" />
+        </a>
+        <a>
+            <img src="https://img.shields.io/maven-central/v/io.javalin.community.routing/routing-core" alt="Maven Central" />
         </a>
         <a href="https://maven.reposilite.com/#/snapshots/io/javalin/community/routing">
-            <img src="https://maven.reposilite.com/api/badge/latest/snapshots/io/javalin/community/routing/javalin-routing-extensions?color=A97BFF&name=Snapshot" alt="Version / Snapshot">
+            <img src="https://maven.reposilite.com/api/badge/latest/snapshots/io/javalin/community/routing/javalin-routing-extensions?color=A97BFF&name=Snapshot" alt="Version / Snapshot" />
         </a>
     </p>
 </div>
