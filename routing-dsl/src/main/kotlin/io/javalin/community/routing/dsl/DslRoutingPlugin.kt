@@ -28,7 +28,15 @@ class DslRoutingPlugin<
     fun routing(init: CONFIG.() -> Unit) {
         val routingConfiguration = routingDsl.createConfigurationSupplier().create()
         routingConfiguration.init()
-        routes.addAll(routingConfiguration.routes)
+        this.routes.addAll(routingConfiguration.routes)
+    }
+
+    fun routing(vararg routes: DslRoutes<ROUTE, CONTEXT, RESPONSE>) {
+        this.routes.addAll(routes.flatMap { it.routes() })
+    }
+
+    fun routing(vararg routes: ROUTE) {
+        this.routes.addAll(routes)
     }
 
 }

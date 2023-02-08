@@ -5,16 +5,21 @@ import io.javalin.community.routing.Routed
 import io.javalin.community.routing.Routes
 import io.javalin.http.Handler
 
-data class DslRoute<CONTEXT, RESPONSE : Any>(
-    val method: Route,
-    override val path: String,
+interface DslRoute<CONTEXT, RESPONSE : Any> : Routed {
+    val method: Route
     val handler: CONTEXT.() -> RESPONSE
-) : Routed
+}
+
+open class DefaultDslRoute<CONTEXT, RESPONSE : Any>(
+    override val method: Route,
+    override val path: String,
+    override val handler: CONTEXT.() -> RESPONSE
+) : DslRoute<CONTEXT, RESPONSE>
 
 fun interface DslRoutes<ROUTE : DslRoute<CONTEXT, RESPONSE>, CONTEXT, RESPONSE : Any> : Routes<ROUTE, CONTEXT, RESPONSE> {
 
     fun route(path: String, method: Route, handler: CONTEXT.() -> RESPONSE): DslRoute<CONTEXT, RESPONSE> =
-        DslRoute(
+        DefaultDslRoute(
             path = path,
             method = method,
             handler = handler
@@ -52,10 +57,13 @@ open class RoutingConfiguration<ROUTE : DslRoute<CONTEXT, RESPONSE>, CONTEXT, RE
     fun before(path: String = "", handler: CONTEXT.() -> RESPONSE) = addRoute(Route.BEFORE, path, handler)
     fun after(path: String = "", handler: CONTEXT.() -> RESPONSE) = addRoute(Route.AFTER, path, handler)
 
-    @Suppress("UNCHECKED_CAST")
     fun addRoute(method: Route, path: String, handler: CONTEXT.() -> RESPONSE) {
-        val route = DslRoute(method, path, handler) as ROUTE
-        routes.add(route)
+        addRoute(DefaultDslRoute(method, path, handler))
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun addRoute(route: DslRoute<CONTEXT, RESPONSE>) {
+        routes.add(route as ROUTE)
     }
 
 }

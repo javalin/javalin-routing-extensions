@@ -114,7 +114,7 @@ public static void main(String[] args) {
         ExampleEndpoints exampleEndpoints = new ExampleEndpoints(new ExampleService());
 
         // register endpoints
-        AnnotationsRoutingPlugin routingPlugin = new AnnotationsRoutingPlugin();
+        AnnotatedRoutingPlugin routingPlugin = new AnnotatedRoutingPlugin();
         routingPlugin.registerEndpoints(exampleEndpoints);
         config.plugins.register(routingPlugin);
     }).start(7000);

@@ -9,7 +9,7 @@ import io.javalin.http.Context
 import io.javalin.http.Handler
 import io.javalin.plugin.Plugin
 
-class AnnotationsRoutingPlugin : Plugin {
+class AnnotatedRoutingPlugin : Plugin {
 
     private val routes = mutableListOf<DslRoute<Context, Unit>>()
 
@@ -32,7 +32,7 @@ class AnnotationsRoutingPlugin : Plugin {
 }
 
 fun JavalinConfig.registerAnnotatedEndpoints(vararg endpoints: Any) {
-    val plugin = AnnotationsRoutingPlugin()
+    val plugin = AnnotatedRoutingPlugin()
     plugin.registerEndpoints(*endpoints)
     this.plugins.register(plugin)
 }

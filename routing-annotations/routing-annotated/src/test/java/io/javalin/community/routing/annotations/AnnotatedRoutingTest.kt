@@ -17,7 +17,7 @@ class AnnotatedRoutingTest {
     @Test
     fun `should throw exception when endpoint class is not annotated`() {
         assertThatThrownBy {
-            AnnotationsRoutingPlugin().registerEndpoints(
+            AnnotatedRoutingPlugin().registerEndpoints(
                 object {
                     @Get("/test")
                     fun test(ctx: Context) = ctx.result("test")
@@ -59,7 +59,7 @@ class AnnotatedRoutingTest {
     @Test
     fun `should throw exception if route has unsupported parameter in signature`() {
         assertThatThrownBy {
-            AnnotationsRoutingPlugin().registerEndpoints(
+            AnnotatedRoutingPlugin().registerEndpoints(
                 @Endpoints
                 object {
                     @Get("/test")

@@ -1,7 +1,7 @@
 package io.javalin.community.routing.annotations.example;
 
 import io.javalin.Javalin;
-import io.javalin.community.routing.annotations.AnnotationsRoutingPlugin;
+import io.javalin.community.routing.annotations.AnnotatedRoutingPlugin;
 import io.javalin.community.routing.annotations.Body;
 import io.javalin.community.routing.annotations.Endpoints;
 import io.javalin.community.routing.annotations.Get;
@@ -83,7 +83,7 @@ public final class AnnotatedRoutingExample {
             ExampleEndpoints exampleEndpoints = new ExampleEndpoints(new ExampleService());
 
             // register endpoints
-            AnnotationsRoutingPlugin routingPlugin = new AnnotationsRoutingPlugin();
+            AnnotatedRoutingPlugin routingPlugin = new AnnotatedRoutingPlugin();
             routingPlugin.registerEndpoints(exampleEndpoints);
             config.plugins.register(routingPlugin);
         }).start(7000);
