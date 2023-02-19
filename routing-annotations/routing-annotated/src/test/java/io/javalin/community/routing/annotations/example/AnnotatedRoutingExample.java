@@ -64,7 +64,7 @@ public final class AnnotatedRoutingExample {
 
         // you can combine it with OpenApi plugin
         @OpenApi(
-                path = "/hello/{name}",
+                path = "/api/hello/{name}",
                 methods = { GET },
                 summary = "Find example by name",
                 pathParams = { @OpenApiParam(name = "name", description = "Name of example to find") },
