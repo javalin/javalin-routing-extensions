@@ -31,20 +31,11 @@ Each approach has pros and cons, so you should choose the one that fits your nee
 
 ## Installation
 
-Javalin Routing Extensions is currently under development and not yet available on Maven Central.
-You can use the following repository to access the latest snapshot version from Snapshots repository
-
-```kotlin
-repositories {
-    maven("https://maven.reposilite.com/snapshots")
-}
-```
-
 Each module is distributed as a separate artifact:
 
 ```kotlin
 dependencies {
-    val javalinRoutingExtensions = "5.3.2-alpha.1-SNAPSHOT"
+    val javalinRoutingExtensions = "5.3.2-alpha.4"
     implementation("io.javalin.community.routing:routing-core:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-annotated:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-dsl:$javalinRoutingExtensions")
