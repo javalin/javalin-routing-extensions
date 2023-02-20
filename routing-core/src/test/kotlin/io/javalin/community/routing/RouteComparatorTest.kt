@@ -10,11 +10,11 @@ internal class RouteComparatorTest {
     ) : Routed
 
     @Test
-    fun `should sort regular paths alphabetically`() {
+    fun `should sort regular paths in descending order`() {
         // given: a list of routes
         val routes = listOf(
-            "/base/details",
             "/base",
+            "/base/details",
             "/"
         )
 
@@ -27,8 +27,8 @@ internal class RouteComparatorTest {
         // then: the routes are sorted by path length
         assertThat(sortedRoutes).containsExactly(
             "/",
+            "/base/details",
             "/base",
-            "/base/details"
         )
     }
 
@@ -37,6 +37,7 @@ internal class RouteComparatorTest {
         // given: a list of routes
         val routes = listOf(
             "/<all>",
+            "/<all>/custom/<sub>",
             "/base/details",
             "/base/{id}",
             "/"
@@ -53,6 +54,7 @@ internal class RouteComparatorTest {
             "/",
             "/base/details",
             "/base/{id}",
+            "/<all>/custom/<sub>",
             "/<all>"
         )
     }

@@ -41,7 +41,7 @@ open class RouteComparator : Comparator<Routed> {
             index++
         }
 
-        return routesRule.compare(route.path, other.path)
+        return routesRule.compare(other.path, route.path) // sort in reversed order
     }
 
 }
