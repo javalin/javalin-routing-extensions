@@ -7,12 +7,14 @@ import io.javalin.http.Handler
 
 interface DslRoute<CONTEXT, RESPONSE : Any> : Routed {
     val method: Route
+    val version: String?
     val handler: CONTEXT.() -> RESPONSE
 }
 
 open class DefaultDslRoute<CONTEXT, RESPONSE : Any>(
     override val method: Route,
     override val path: String,
+    override val version: String? = null,
     override val handler: CONTEXT.() -> RESPONSE
 ) : DslRoute<CONTEXT, RESPONSE>
 
@@ -58,7 +60,13 @@ open class RoutingConfiguration<ROUTE : DslRoute<CONTEXT, RESPONSE>, CONTEXT, RE
     fun after(path: String = "", handler: CONTEXT.() -> RESPONSE) = addRoute(Route.AFTER, path, handler)
 
     fun addRoute(method: Route, path: String, handler: CONTEXT.() -> RESPONSE) {
-        addRoute(DefaultDslRoute(method, path, handler))
+        addRoute(
+            DefaultDslRoute(
+                method = method,
+                path = path,
+                handler = handler
+            )
+        )
     }
 
     @Suppress("UNCHECKED_CAST")

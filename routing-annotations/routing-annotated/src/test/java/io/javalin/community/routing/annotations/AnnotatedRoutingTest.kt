@@ -209,4 +209,57 @@ class AnnotatedRoutingTest {
         }
     }
 
+    @Test
+    fun `should throw if two routes with the same versions are found`() {
+        assertThatThrownBy {
+            Javalin.create {
+                it.registerAnnotatedEndpoints(
+                    @Endpoints("/api/users")
+                    object {
+                        @Version("1")
+                        @Get
+                        fun findAll(ctx: Context) = ctx.result("Panda")
+                    },
+                    @Endpoints("/api/users")
+                    object {
+                        @Version("1")
+                        @Get
+                        fun test(ctx: Context) = ctx.result("Red Panda")
+                    }
+                )
+            }
+        }
+        .isInstanceOf(IllegalStateException::class.java)
+        .hasMessageContaining("Duplicated version found for the same route: GET /api/users/ (versions: [1, 1])")
+    }
+
+    @Test
+    fun `should properly serve versioned routes`() =
+        JavalinTest.test(
+            Javalin.create {
+                it.registerAnnotatedEndpoints(
+                    @Endpoints("/api/users")
+                    object {
+                        @Version("1")
+                        @Get
+                        fun findAll(ctx: Context) = ctx.result("Panda")
+                    },
+                    @Endpoints("/api/users")
+                    object {
+                        @Version("2")
+                        @Get
+                        fun test(ctx: Context) = ctx.result("Red Panda")
+                    }
+                )
+            }
+        ) { _, client ->
+            val v1 = Unirest.get("${client.origin}/api/users").header("X-API-Version", "1").asString().body
+            val v2 = Unirest.get("${client.origin}/api/users").header("X-API-Version", "2").asString().body
+            val v3 = Unirest.get("${client.origin}/api/users").header("X-API-Version", "3").asString().body
+
+            assertThat(v1).isEqualTo("Panda")
+            assertThat(v2).isEqualTo("Red Panda")
+            assertThat(v3).isEqualTo("This endpoint does not support the requested API version (3).")
+        }
+
 }

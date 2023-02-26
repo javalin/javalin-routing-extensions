@@ -44,6 +44,7 @@ object ReflectiveEndpointLoader {
             val route = DefaultDslRoute<Context, Unit>(
                 method = httpMethod,
                 path = ("/$endpointPath/$path").replace(repeatedPathSeparatorRegex, "/"),
+                version = method.getAnnotation(Version::class.java)?.value,
                 handler = {
                     val arguments = argumentSuppliers
                         .map { it(this) }

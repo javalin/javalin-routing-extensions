@@ -65,7 +65,7 @@ some people may even say that it's the only one.
 Take a look on the example below to see how it looks like:
 
 ```java
-// register endpoints with prefix
+    // register endpoints with prefix
 @Endpoints("/api")
 static final class ExampleEndpoints {
 
@@ -84,7 +84,7 @@ static final class ExampleEndpoints {
             context.status(401);
             return;
         }
-        context.result(Objects.toString(exampleService.saveExample(entity)));
+        exampleService.saveExample(entity);
     }
 
     // you can combine it with OpenApi plugin
@@ -93,18 +93,25 @@ static final class ExampleEndpoints {
             methods = { GET },
             summary = "Find example by name",
             pathParams = { @OpenApiParam(name = "name", description = "Name of example to find") },
-            responses = { @OpenApiResponse(status = "200", description = "Example found", content = @OpenApiContent(from = ExampleDto.class)) }
+            responses = { @OpenApiResponse(status = "200", description = "Example found", content = @OpenApiContent(from = ExampleDto.class)) },
+            versions = "2"
     )
+    // you can also use out-of-the-box support for versioned routes
+    @Version("2")
     @Get("/hello/{name}")
-    void findExample(Context context, @Param String name) {
-        context.result(exampleService.findExampleByName(name));
+    void findExampleV2(Context context, @Param String name) {
+        context.result(exampleService.findExampleByName(name).name);
     }
+
+    @Version("1")
+    @Get("/hello/{name}")
+    void findExampleV1(Context ctx) { ctx.result("Outdated"); }
 
 }
 
 public static void main(String[] args) {
     Javalin.create(config -> {
-        // prepare dependencies - manually, or using DI framework
+        // prepare dependencies
         ExampleEndpoints exampleEndpoints = new ExampleEndpoints(new ExampleService());
 
         // register endpoints
@@ -112,6 +119,20 @@ public static void main(String[] args) {
         routingPlugin.registerEndpoints(exampleEndpoints);
         config.plugins.register(routingPlugin);
     }).start(7000);
+
+    // test request to `saveExample` endpoint
+    HttpResponse<?> saved = Unirest.post("http://localhost:7000/api/hello")
+            .basicAuth("Panda", "passwd")
+            .body(new ExampleDto("Panda"))
+            .asEmpty();
+    System.out.println("Entity saved: " + saved.getStatusText()); // Entity saved: OK
+
+    // test request to `findExampleV2` endpoint
+    String result = Unirest.get("http://localhost:7000/api/hello/Panda")
+            .header("X-API-Version", "2")
+            .asString()
+            .getBody();
+    System.out.println("Entity: " + result); // Entity: Panda
 }
 ```
 

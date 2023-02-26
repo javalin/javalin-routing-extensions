@@ -8,15 +8,18 @@ import io.javalin.community.routing.annotations.Get;
 import io.javalin.community.routing.annotations.Header;
 import io.javalin.community.routing.annotations.Param;
 import io.javalin.community.routing.annotations.Post;
+import io.javalin.community.routing.annotations.Version;
 import io.javalin.http.Context;
 import io.javalin.openapi.OpenApi;
 import io.javalin.openapi.OpenApiContent;
 import io.javalin.openapi.OpenApiParam;
 import io.javalin.openapi.OpenApiResponse;
 import jakarta.annotation.Nullable;
+import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.javalin.http.Header.AUTHORIZATION;
 import static io.javalin.openapi.HttpMethod.GET;
@@ -25,8 +28,9 @@ public final class AnnotatedRoutingExample {
 
     // some dependencies
     static final class ExampleService {
-        String findExampleByName(String name) { return name; }
-        boolean saveExample(ExampleDto entity) { return entity != null; }
+        private final Map<String, ExampleDto> data = new HashMap<>();
+        ExampleDto findExampleByName(String name) { return data.get(name); }
+        void saveExample(ExampleDto entity) { data.put(entity.name, entity); }
     }
 
     // some entities
@@ -59,7 +63,7 @@ public final class AnnotatedRoutingExample {
                 context.status(401);
                 return;
             }
-            context.result(Objects.toString(exampleService.saveExample(entity)));
+            exampleService.saveExample(entity);
         }
 
         // you can combine it with OpenApi plugin
@@ -68,12 +72,19 @@ public final class AnnotatedRoutingExample {
                 methods = { GET },
                 summary = "Find example by name",
                 pathParams = { @OpenApiParam(name = "name", description = "Name of example to find") },
-                responses = { @OpenApiResponse(status = "200", description = "Example found", content = @OpenApiContent(from = ExampleDto.class)) }
+                responses = { @OpenApiResponse(status = "200", description = "Example found", content = @OpenApiContent(from = ExampleDto.class)) },
+                versions = "2"
         )
+        // you can also use out-of-the-box support for versioned routes
+        @Version("2")
         @Get("/hello/{name}")
-        void findExample(Context context, @Param String name) {
-            context.result(exampleService.findExampleByName(name));
+        void findExampleV2(Context context, @Param String name) {
+            context.result(exampleService.findExampleByName(name).name);
         }
+
+        @Version("1")
+        @Get("/hello/{name}")
+        void findExampleV1(Context ctx) { ctx.result("Outdated"); }
 
     }
 
@@ -89,12 +100,18 @@ public final class AnnotatedRoutingExample {
         }).start(7000);
 
         // test request to `saveExample` endpoint
-        Boolean saved = Unirest.post("http://localhost:7000/api/hello")
+        HttpResponse<?> saved = Unirest.post("http://localhost:7000/api/hello")
                 .basicAuth("Panda", "passwd")
                 .body(new ExampleDto("Panda"))
-                .asObject(Boolean.class)
+                .asEmpty();
+        System.out.println("Entity saved: " + saved.getStatusText()); // Entity saved: OK
+
+        // test request to `findExampleV2` endpoint
+        String result = Unirest.get("http://localhost:7000/api/hello/Panda")
+                .header("X-API-Version", "2")
+                .asString()
                 .getBody();
-        System.out.println("Entity saved: " + saved);
+        System.out.println("Entity: " + result); // Entity: Panda
     }
 
 }
