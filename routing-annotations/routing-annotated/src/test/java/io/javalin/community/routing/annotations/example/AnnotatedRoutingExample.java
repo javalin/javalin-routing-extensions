@@ -73,7 +73,7 @@ public final class AnnotatedRoutingExample {
                 summary = "Find example by name",
                 pathParams = { @OpenApiParam(name = "name", description = "Name of example to find") },
                 responses = { @OpenApiResponse(status = "200", description = "Example found", content = @OpenApiContent(from = ExampleDto.class)) },
-                versions = "2"
+                versions = { "default", "2" }
         )
         // you can also use out-of-the-box support for versioned routes
         @Version("2")
@@ -82,6 +82,7 @@ public final class AnnotatedRoutingExample {
             context.result(exampleService.findExampleByName(name).name);
         }
 
+        /* OpenApi [...] */
         @Version("1")
         @Get("/hello/{name}")
         void findExampleV1(Context ctx) { ctx.result("Outdated"); }

@@ -35,7 +35,7 @@ Each module is distributed as a separate artifact:
 
 ```kotlin
 dependencies {
-    val javalinRoutingExtensions = "5.3.2-alpha.4"
+    val javalinRoutingExtensions = "5.3.2-alpha.5"
     implementation("io.javalin.community.routing:routing-core:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-annotated:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-dsl:$javalinRoutingExtensions")
@@ -94,7 +94,7 @@ static final class ExampleEndpoints {
             summary = "Find example by name",
             pathParams = { @OpenApiParam(name = "name", description = "Name of example to find") },
             responses = { @OpenApiResponse(status = "200", description = "Example found", content = @OpenApiContent(from = ExampleDto.class)) },
-            versions = "2"
+            versions = { "default", "2" }
     )
     // you can also use out-of-the-box support for versioned routes
     @Version("2")
@@ -103,6 +103,7 @@ static final class ExampleEndpoints {
         context.result(exampleService.findExampleByName(name).name);
     }
 
+    /* OpenApi [...] */
     @Version("1")
     @Get("/hello/{name}")
     void findExampleV1(Context ctx) { ctx.result("Outdated"); }
