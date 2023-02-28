@@ -35,7 +35,7 @@ Each module is distributed as a separate artifact:
 
 ```kotlin
 dependencies {
-    val javalinRoutingExtensions = "5.3.2-alpha.5"
+    val javalinRoutingExtensions = "5.3.2-alpha.6"
     implementation("io.javalin.community.routing:routing-core:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-annotated:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-dsl:$javalinRoutingExtensions")
