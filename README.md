@@ -65,7 +65,7 @@ some people may even say that it's the only one.
 Take a look on the example below to see how it looks like:
 
 ```java
-    // register endpoints with prefix
+// register endpoints with prefix
 @Endpoints("/api")
 static final class ExampleEndpoints {
 
@@ -74,6 +74,12 @@ static final class ExampleEndpoints {
     // pass dependencies required to handle requests
     public ExampleEndpoints(ExampleService exampleService) {
         this.exampleService = exampleService;
+    }
+
+    // use Javalin-specific routes
+    @Before
+    void beforeEach(Context ctx) {
+        ctx.header("X-Example", "Example");
     }
 
     // describe http method and path with annotation
@@ -106,7 +112,15 @@ static final class ExampleEndpoints {
     /* OpenApi [...] */
     @Version("1")
     @Get("/hello/{name}")
-    void findExampleV1(Context ctx) { ctx.result("Outdated"); }
+    void findExampleV1(Context ctx) {
+        throw new UnsupportedOperationException("Deprecated");
+    }
+
+    // register exception handlers alongside endpoints
+    @ExceptionHandler(Exception.class)
+    void defaultExceptionHandler(Exception e, Context ctx) {
+        ctx.status(500).result("Something went wrong: " + e.getClass());
+    }
 
 }
 
@@ -137,7 +151,7 @@ public static void main(String[] args) {
 }
 ```
 
-Unfortunately, this approach requires some reflections under the hood to make work at this moment, 
+This approach requires some reflections under the hood to make work at this moment, 
 but **we're working on annotation processor to remove this requirement.**
 
 Another thing you can notice is that we're creating endpoint class instance using constructor, 

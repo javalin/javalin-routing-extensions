@@ -2,7 +2,7 @@ package io.javalin.community.routing.coroutines
 
 import io.javalin.Javalin
 import io.javalin.community.routing.coroutines.servlet.CoroutinesServlet
-import io.javalin.community.routing.route
+import io.javalin.community.routing.registerRoute
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig
 import io.javalin.http.Handler
@@ -18,7 +18,7 @@ class ReactiveRoutingPlugin<ROUTE : ReactiveRoute<CONTEXT, RESPONSE>, CONTEXT, R
         routes
             .sortRoutes()
             .map { it to Handler { ctx -> servlet.handle(ctx, it) } }
-            .forEach { (reactiveRoute, handler) -> app.route(reactiveRoute.method, reactiveRoute.path, handler) }
+            .forEach { (reactiveRoute, handler) -> app.registerRoute(reactiveRoute.method, reactiveRoute.path, handler) }
     }
 
     fun <ROUTES : ReactiveRoutes<ROUTE, CONTEXT, RESPONSE>> routing(vararg reactiveRoutes: ROUTES) {

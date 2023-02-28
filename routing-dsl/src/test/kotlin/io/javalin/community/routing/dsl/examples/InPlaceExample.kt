@@ -1,21 +1,20 @@
 package io.javalin.community.routing.dsl.examples
 
 import io.javalin.Javalin
-import io.javalin.community.routing.dsl.ConfigurationSupplier
-import io.javalin.community.routing.dsl.DefaultContextScope
-import io.javalin.community.routing.dsl.DefaultContextScopeConfiguration
-import io.javalin.community.routing.dsl.DefaultDsl.DefaultScope
+import io.javalin.community.routing.dsl.defaults.DefaultContextScopeConfiguration
+import io.javalin.community.routing.dsl.defaults.DefaultDsl.DefaultScope
+import io.javalin.community.routing.dsl.DslExceptionHandler
 import io.javalin.community.routing.dsl.DslRoute
-import io.javalin.community.routing.dsl.HandlerFactory
-import io.javalin.community.routing.dsl.Path
-import io.javalin.community.routing.dsl.RoutingDsl
+import io.javalin.community.routing.dsl.defaults.Path
+import io.javalin.community.routing.dsl.RoutingDslFactory
 import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
 import io.javalin.community.routing.dsl.examples.CustomDsl.CustomRoutingConfiguration
 import io.javalin.community.routing.dsl.routing
 import io.javalin.http.Context
+import io.javalin.http.ExceptionHandler
 import io.javalin.http.Handler
 
-object CustomDsl : RoutingDsl<CustomRoutingConfiguration, DslRoute<CustomScope, Unit>, CustomScope, Unit> {
+object CustomDsl : RoutingDslFactory<CustomRoutingConfiguration, DslRoute<CustomScope, Unit>, CustomScope, Unit> {
 
     // This is custom configuration class that will be used to register routes
     open class CustomRoutingConfiguration : DefaultContextScopeConfiguration<DslRoute<CustomScope, Unit>, CustomScope, Unit>()
@@ -25,14 +24,17 @@ object CustomDsl : RoutingDsl<CustomRoutingConfiguration, DslRoute<CustomScope, 
         fun helloWorld(): String = "Hello ${ctx.endpointHandlerPath()}"
     }
 
-    override fun createConfigurationSupplier(): ConfigurationSupplier<CustomRoutingConfiguration, DslRoute<CustomScope, Unit>, CustomScope, Unit> =
-        ConfigurationSupplier{ CustomRoutingConfiguration() }
+    override fun createConfiguration(): CustomRoutingConfiguration =
+        CustomRoutingConfiguration()
 
-    override fun createHandlerFactory(): HandlerFactory<DslRoute<CustomScope, Unit>> =
-        HandlerFactory { route ->
-            Handler {
-                route.handler.invoke(CustomScope(it))
-            }
+    override fun createHandler(route: DslRoute<CustomScope, Unit>): Handler =
+        Handler {
+            route.handler.invoke(CustomScope(it))
+        }
+
+    override fun createExceptionHandler(handler: DslExceptionHandler<CustomScope, Exception, Unit>): ExceptionHandler<Exception> =
+        ExceptionHandler { exception, ctx ->
+            handler.invoke(CustomScope(ctx), exception)
         }
 
 }
@@ -54,6 +56,10 @@ fun main() {
             get<PandaPath> { path ->
                 // support for type-safe paths
                 result(path.age.toString())
+            }
+            exception(Exception::class) { anyException ->
+                // support for exception handlers
+                result(anyException.message ?: "Unknown error")
             }
         }
     }.start(8080)

@@ -3,7 +3,7 @@ package io.javalin.community.routing.annotations
 import io.javalin.Javalin
 import io.javalin.community.routing.Route
 import io.javalin.community.routing.dsl.DslRoute
-import io.javalin.community.routing.route
+import io.javalin.community.routing.registerRoute
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig
 import io.javalin.http.BadRequestResponse
@@ -20,7 +20,8 @@ class AnnotatedRoutingPlugin @JvmOverloads constructor(
     private val configuration: AnnotatedRoutingPluginConfiguration = AnnotatedRoutingPluginConfiguration()
 ) : Plugin {
 
-    private val registeredRoutes = mutableListOf<DslRoute<Context, Unit>>()
+    private val registeredRoutes = mutableListOf<AnnotatedRoute>()
+    private val registeredExceptionHandlers = mutableListOf<AnnotatedException>()
 
     private data class RouteIdentifier(val route: Route, val path: String)
 
@@ -35,8 +36,14 @@ class AnnotatedRoutingPlugin @JvmOverloads constructor(
                 }
             }
             .forEach { (id, handler) ->
-                app.route(id.route, id.path, handler)
+                app.registerRoute(id.route, id.path, handler)
             }
+
+        registeredExceptionHandlers.forEach { annotatedException ->
+            app.exception(annotatedException.type.java) { exception, ctx ->
+                annotatedException.handler.invoke(ctx, exception)
+            }
+        }
     }
 
     private fun createVersionedRoute(id: RouteIdentifier, routes: List<DslRoute<Context, Unit>>): Handler {
@@ -60,6 +67,9 @@ class AnnotatedRoutingPlugin @JvmOverloads constructor(
     fun registerEndpoints(vararg endpoints: Any) {
         val detectedRoutes = endpoints.flatMap { ReflectiveEndpointLoader.loadRoutesFromEndpoint(it) }
         registeredRoutes.addAll(detectedRoutes)
+
+        val detectedExceptionHandlers = endpoints.flatMap { ReflectiveEndpointLoader.loadExceptionHandlers(it) }
+        registeredExceptionHandlers.addAll(detectedExceptionHandlers)
     }
 
 }

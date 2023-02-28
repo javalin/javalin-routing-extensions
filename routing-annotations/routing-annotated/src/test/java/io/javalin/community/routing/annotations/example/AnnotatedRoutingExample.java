@@ -2,8 +2,10 @@ package io.javalin.community.routing.annotations.example;
 
 import io.javalin.Javalin;
 import io.javalin.community.routing.annotations.AnnotatedRoutingPlugin;
+import io.javalin.community.routing.annotations.Before;
 import io.javalin.community.routing.annotations.Body;
 import io.javalin.community.routing.annotations.Endpoints;
+import io.javalin.community.routing.annotations.ExceptionHandler;
 import io.javalin.community.routing.annotations.Get;
 import io.javalin.community.routing.annotations.Header;
 import io.javalin.community.routing.annotations.Param;
@@ -55,6 +57,12 @@ public final class AnnotatedRoutingExample {
             this.exampleService = exampleService;
         }
 
+        // use Javalin-specific routes
+        @Before
+        void beforeEach(Context ctx) {
+            ctx.header("X-Example", "Example");
+        }
+
         // describe http method and path with annotation
         @Post("/hello")
         // use parameters to extract data from request
@@ -85,7 +93,15 @@ public final class AnnotatedRoutingExample {
         /* OpenApi [...] */
         @Version("1")
         @Get("/hello/{name}")
-        void findExampleV1(Context ctx) { ctx.result("Outdated"); }
+        void findExampleV1(Context ctx) {
+            throw new UnsupportedOperationException("Deprecated");
+        }
+
+        // register exception handlers alongside endpoints
+        @ExceptionHandler(Exception.class)
+        void defaultExceptionHandler(Exception e, Context ctx) {
+            ctx.status(500).result("Something went wrong: " + e.getClass());
+        }
 
     }
 

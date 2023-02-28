@@ -1,24 +1,29 @@
 package io.javalin.community.routing.annotations
 
 import io.javalin.community.routing.Route
+import io.javalin.community.routing.dsl.DefaultDslException
 import io.javalin.community.routing.dsl.DefaultDslRoute
-import io.javalin.community.routing.dsl.DslRoute
 import io.javalin.http.Context
 import io.javalin.validation.Validator
+import java.lang.reflect.Method
 import java.lang.reflect.Parameter
+import kotlin.reflect.KClass
+
+typealias AnnotatedRoute = DefaultDslRoute<Context, Unit>
+typealias AnnotatedException = DefaultDslException<Context, Exception, Unit>
 
 object ReflectiveEndpointLoader {
 
     private val repeatedPathSeparatorRegex = Regex("/+")
 
-    fun loadRoutesFromEndpoint(endpoint: Any): List<DslRoute<Context, Unit>> {
+    fun loadRoutesFromEndpoint(endpoint: Any): List<AnnotatedRoute> {
         val endpointClass = endpoint::class.java
 
         val endpointPath = endpointClass.getAnnotation(Endpoints::class.java)
             ?.value
-            ?: throw IllegalArgumentException("Endpoint class must be annotated with @Endpoints")
+            ?: ""
 
-        val endpointRoutes = mutableListOf<DslRoute<Context, Unit>>()
+        val endpointRoutes = mutableListOf<AnnotatedRoute>()
 
         endpointClass.declaredMethods.forEach { method ->
             val (httpMethod, path, async) = when {
@@ -38,21 +43,22 @@ object ReflectiveEndpointLoader {
                 "Unable to access method $method in class $endpointClass"
             }
 
-            val argumentSuppliers = method.parameters
-                .map { createArgumentSupplier(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it") }
+            val argumentSuppliers = method.parameters.map {
+                createArgumentSupplier<Unit>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
+            }
 
-            val route = DefaultDslRoute<Context, Unit>(
+            val route = AnnotatedRoute(
                 method = httpMethod,
                 path = ("/$endpointPath/$path").replace(repeatedPathSeparatorRegex, "/"),
                 version = method.getAnnotation(Version::class.java)?.value,
                 handler = {
                     val arguments = argumentSuppliers
-                        .map { it(this) }
+                        .map { it(this, Unit) }
                         .toTypedArray()
 
                     when (async) {
-                        true -> async { method.invoke(endpoint, *arguments) }
-                        else -> method.invoke(endpoint, *arguments)
+                        true -> async { invokeAndUnwrapIfErrored(method, endpoint, *arguments) }
+                        else -> invokeAndUnwrapIfErrored(method, endpoint, *arguments)
                     }
                 }
             )
@@ -63,51 +69,97 @@ object ReflectiveEndpointLoader {
         return endpointRoutes
     }
 
-    private fun createArgumentSupplier(parameter: Parameter): ((Context) -> Any?)? =
+    @Suppress("UNCHECKED_CAST")
+    fun loadExceptionHandlers(endpoint: Any): List<AnnotatedException> {
+        val endpointClass = endpoint::class.java
+        val dslExceptions = mutableListOf<AnnotatedException>()
+
+        endpointClass.declaredMethods.forEach { method ->
+            val exceptionHandlerAnnotation = method.getAnnotation(ExceptionHandler::class.java) ?: return@forEach
+
+            require(method.trySetAccessible()) {
+                "Unable to access method $method in class $endpointClass"
+            }
+
+            val argumentSuppliers = method.parameters.map {
+                createArgumentSupplier<Exception>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
+            }
+
+            val dslException = AnnotatedException(
+                type = exceptionHandlerAnnotation.value as KClass<Exception>,
+                handler = { exception ->
+                    val arguments = argumentSuppliers
+                        .map { it(this, exception) }
+                        .toTypedArray()
+
+                    invokeAndUnwrapIfErrored(method, endpoint, *arguments)
+                }
+            )
+
+            dslExceptions.add(dslException)
+        }
+
+        return dslExceptions
+    }
+
+    private fun invokeAndUnwrapIfErrored(method: Method, instance: Any, vararg arguments: Any?): Any? {
+        return try {
+            method.invoke(instance, *arguments)
+        } catch (reflectionException: ReflectiveOperationException) {
+            throw reflectionException.cause ?: reflectionException
+        }
+    }
+
+    private inline fun <reified CUSTOM : Any> createArgumentSupplier(
+        parameter: Parameter,
+        noinline custom: (Context, CUSTOM) -> Any? = { _, self -> self }
+    ): ((Context, CUSTOM) -> Any?)? =
         with (parameter) {
             when {
-                type.isAssignableFrom(Context::class.java) -> return { ctx ->
+                CUSTOM::class.java.isAssignableFrom(type) ->
+                    custom
+                type.isAssignableFrom(Context::class.java) -> { ctx, _ ->
                     ctx
                 }
-                isAnnotationPresent(Param::class.java) -> return { ctx ->
+                isAnnotationPresent(Param::class.java) -> { ctx, _ ->
                     getAnnotation(Param::class.java)
                         .value
                         .ifEmpty { name }
                         .let { ctx.pathParamAsClass(it, type) }
                         .get()
                 }
-                isAnnotationPresent(Header::class.java) -> return { ctx ->
+                isAnnotationPresent(Header::class.java) -> { ctx, _ ->
                     getAnnotation(Header::class.java)
                         .value
                         .ifEmpty { name }
                         .let { ctx.headerAsClass(it, type) }
                         .get()
                 }
-                isAnnotationPresent(Query::class.java) -> return { ctx ->
+                isAnnotationPresent(Query::class.java) -> { ctx, _ ->
                     getAnnotation(Query::class.java)
                         .value
                         .ifEmpty { name }
                         .let { ctx.queryParamAsClass(it, type) }
                         .get()
                 }
-                isAnnotationPresent(Form::class.java) -> return { ctx ->
+                isAnnotationPresent(Form::class.java) -> { ctx, _ ->
                     getAnnotation(Form::class.java)
                         .value
                         .ifEmpty { name }
                         .let { ctx.formParamAsClass(it, type) }
                         .get()
                 }
-                isAnnotationPresent(Cookie::class.java) -> return { ctx ->
+                isAnnotationPresent(Cookie::class.java) -> { ctx, _ ->
                     getAnnotation(Cookie::class.java)
                         .value
                         .ifEmpty { name }
                         .let { Validator.create(type, ctx.cookie(it), it) }
                         .get()
                 }
-                isAnnotationPresent(Body::class.java) -> return { ctx ->
+                isAnnotationPresent(Body::class.java) -> { ctx, _ ->
                     ctx.bodyAsClass(parameter.parameterizedType)
                 }
-                else -> return null
+                else -> null
             }
         }
 

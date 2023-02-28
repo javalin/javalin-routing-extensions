@@ -20,6 +20,8 @@ interface Routed {
     val path: String
 }
 
-fun interface Routes<ROUTE : Routed, CONTEXT, RESPONSE> {
-    fun routes(): Collection<ROUTE>
+interface Routes<ROUTE : Routed, CONTEXT, RESPONSE> {
+
+    fun routes(): Collection<ROUTE> = emptySet()
+
 }

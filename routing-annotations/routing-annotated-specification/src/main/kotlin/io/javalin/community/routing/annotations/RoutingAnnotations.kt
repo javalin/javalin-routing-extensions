@@ -4,6 +4,7 @@ import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.CLASS
 import kotlin.annotation.AnnotationTarget.FUNCTION
 import kotlin.annotation.AnnotationTarget.VALUE_PARAMETER
+import kotlin.reflect.KClass
 
 /**
  * Endpoints annotation is used to define a base path for all endpoints in a class.
@@ -14,7 +15,7 @@ annotation class Endpoints(val value: String = "")
 
 @Retention(RUNTIME)
 @Target(FUNCTION)
-annotation class Version(val value: String)
+annotation class ExceptionHandler(val value: KClass<out Exception>)
 
 @Retention(RUNTIME)
 @Target(FUNCTION)
@@ -51,6 +52,10 @@ annotation class Before(val value: String = "*", val async: Boolean = false)
 @Retention(RUNTIME)
 @Target(FUNCTION)
 annotation class After(val value: String = "*", val async: Boolean = false)
+
+@Retention(RUNTIME)
+@Target(FUNCTION)
+annotation class Version(val value: String)
 
 @Retention(RUNTIME)
 @Target(VALUE_PARAMETER)

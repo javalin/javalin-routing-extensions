@@ -15,20 +15,6 @@ import org.junit.jupiter.api.assertDoesNotThrow
 class AnnotatedRoutingTest {
 
     @Test
-    fun `should throw exception when endpoint class is not annotated`() {
-        assertThatThrownBy {
-            AnnotatedRoutingPlugin().registerEndpoints(
-                object {
-                    @Get("/test")
-                    fun test(ctx: Context) = ctx.result("test")
-                }
-            )
-        }
-        .isExactlyInstanceOf(IllegalArgumentException::class.java)
-        .hasMessageContaining("Endpoint class must be annotated with @Endpoints")
-    }
-
-    @Test
     fun `should sanitize repeated path separators`() {
         val app = Javalin.create {
             it.registerAnnotatedEndpoints(
@@ -260,6 +246,23 @@ class AnnotatedRoutingTest {
             assertThat(v1).isEqualTo("Panda")
             assertThat(v2).isEqualTo("Red Panda")
             assertThat(v3).isEqualTo("This endpoint does not support the requested API version (3).")
+        }
+
+    @Test
+    fun `should properly handle exceptions`() =
+        JavalinTest.test(
+            Javalin.create {
+                it.registerAnnotatedEndpoints(
+                    object {
+                        @Get("/throwing")
+                        fun throwing(ctx: Context): Nothing = throw IllegalStateException("This is a test")
+                        @ExceptionHandler(IllegalStateException::class)
+                        fun handleException(ctx: Context, e: IllegalStateException) = ctx.result(e::class.java.name)
+                    }
+                )
+            }
+        ) { _, client ->
+            assertThat(Unirest.get("${client.origin}/throwing").asString().body).isEqualTo("java.lang.IllegalStateException")
         }
 
 }

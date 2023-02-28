@@ -16,7 +16,7 @@ class JavalinRoutesTest {
 
         // when: routes are registered
         val app = Javalin.create()
-            .apply { routes.forEach { route -> route(route.first, "/", route.second) } }
+            .apply { routes.forEach { route -> registerRoute(route.first, "/", route.second) } }
             .start()
 
         // then: all routes are registered by as proper HandlerType

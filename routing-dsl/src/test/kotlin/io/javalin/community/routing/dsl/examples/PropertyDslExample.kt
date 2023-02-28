@@ -4,7 +4,8 @@ import io.javalin.Javalin
 import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.Route.POST
 import io.javalin.community.routing.dsl.DslRoute
-import io.javalin.community.routing.dsl.DslRoutes
+import io.javalin.community.routing.dsl.DslContainer
+import io.javalin.community.routing.dsl.DslException
 import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
 import io.javalin.community.routing.dsl.routing
 import io.javalin.openapi.HttpMethod
@@ -16,7 +17,7 @@ class ExampleService {
 }
 
 // Utility representation of custom routing in your application
-abstract class ExampleRouting : DslRoutes<DslRoute<CustomScope, Unit>, CustomScope, Unit>
+abstract class ExampleRouting : DslContainer<DslRoute<CustomScope, Unit>, CustomScope, Unit>
 
 // Endpoint (domain router)
 class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouting() {
@@ -37,7 +38,12 @@ class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouti
         exampleService.save(pathParam("name"))
     }
 
+    private val defaultExceptionHandler = exceptionHandler(Exception::class) { regularException ->
+        println("Exception: ${regularException.message}")
+    }
+
     override fun routes() = setOf(findAnimalByName, saveAnimal)
+    override fun exceptionHandlers() = setOf(defaultExceptionHandler)
 
 }
 

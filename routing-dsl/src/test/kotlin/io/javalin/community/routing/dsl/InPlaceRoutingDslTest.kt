@@ -2,6 +2,7 @@ package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
 import io.javalin.community.routing.Route
+import io.javalin.community.routing.dsl.defaults.Path
 import io.javalin.community.routing.dsl.specification.TestSpecification
 import io.javalin.testtools.JavalinTest
 import kong.unirest.Unirest.get
@@ -16,10 +17,14 @@ class InPlaceRoutingDslTest : TestSpecification() {
     @Test
     fun `each http dsl method is properly mapped to javalin handler`() = JavalinTest.test(
         // given: a javalin app with routes defined using the dsl
-        Javalin.create {
-            it.routing {
+        Javalin.create { config ->
+            config.routing {
                 before("/before") { header("test", "before") }
                 after("/after") { header("test", "after") }
+
+                get("/throwing") { throw RuntimeException() }
+                exception(Exception::class) { header("exception", it::class.java.name) }
+
                 get("/get") { header("test", "get") }
                 post("/post") { header("test", "post") }
                 put("/put") { header("test", "put") }
@@ -54,6 +59,12 @@ class InPlaceRoutingDslTest : TestSpecification() {
             // then: the response is the same as the route name
             assertThat(it.status).isEqualTo(404)
             assertThat(it.headers.getFirst("test")).isEqualTo("after")
+        }
+
+        // when: a request is made to the throwing handler
+        get("${client.origin}/throwing").asEmpty().also {
+            // then: the response is handled by exception handler
+            assertThat(it.headers.getFirst("exception")).isEqualTo(RuntimeException::class.java.name)
         }
     }
 

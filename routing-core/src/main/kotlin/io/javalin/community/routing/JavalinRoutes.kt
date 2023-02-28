@@ -13,10 +13,10 @@ enum class Route(val isHttpMethod: Boolean = true) {
     POST,
     DELETE,
     AFTER(isHttpMethod = false),
-    BEFORE(isHttpMethod = false)
+    BEFORE(isHttpMethod = false),
 }
 
-fun Javalin.route(route: Route, path: String, handler: Handler, vararg roles: RouteRole) {
+fun Javalin.registerRoute(route: Route, path: String, handler: Handler, vararg roles: RouteRole) {
     when (route) {
         Route.HEAD -> head(path, handler, *roles)
         Route.PATCH -> patch(path, handler, *roles)

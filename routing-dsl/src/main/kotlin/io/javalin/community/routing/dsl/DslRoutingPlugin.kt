@@ -1,78 +1,89 @@
 package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
-import io.javalin.community.routing.dsl.DefaultDsl.DefaultConfiguration
-import io.javalin.community.routing.route
+import io.javalin.community.routing.dsl.defaults.DefaultDsl
+import io.javalin.community.routing.dsl.defaults.DefaultDsl.DefaultConfiguration
+import io.javalin.community.routing.dsl.defaults.DefaultRoutes
+import io.javalin.community.routing.registerRoute
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig
 import io.javalin.plugin.Plugin
+import kotlin.reflect.KClass
 
 class DslRoutingPlugin<
-    CONFIG : RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>,
+    CONFIG : RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>,
     ROUTE : DslRoute<CONTEXT, RESPONSE>,
     CONTEXT,
     RESPONSE : Any
 >(
-    private val routingDsl: RoutingDsl<CONFIG, ROUTE, CONTEXT, RESPONSE>
+    private val routingDsl: RoutingDslFactory<CONFIG, ROUTE, CONTEXT, RESPONSE>
 ) : Plugin {
 
-    private val routes = mutableListOf<ROUTE>()
+    private val registeredRoutes = mutableListOf<ROUTE>()
+    private val registeredExceptionHandlers = mutableMapOf<KClass<out Exception>, DslExceptionHandler<CONTEXT, Exception, RESPONSE>>()
 
     override fun apply(app: Javalin) {
-        routes
+        registeredRoutes
             .sortRoutes()
-            .map { route -> route to routingDsl.createHandlerFactory().createHandler(route) }
-            .forEach { (route, handler) -> app.route(route.method, route.path, handler) }
+            .map { route -> route to routingDsl.createHandler(route) }
+            .forEach { (route, handler) -> app.registerRoute(route.method, route.path, handler) }
+
+        registeredExceptionHandlers.forEach { (exceptionClass, handler) ->
+            app.exception(exceptionClass.java, routingDsl.createExceptionHandler(handler))
+        }
     }
 
-    fun routing(init: CONFIG.() -> Unit) {
-        val routingConfiguration = routingDsl.createConfigurationSupplier().create()
+    fun routing(init: CONFIG.() -> Unit): DslRoutingPlugin<CONFIG, ROUTE, CONTEXT, RESPONSE> = also {
+        val routingConfiguration = routingDsl.createConfiguration()
         routingConfiguration.init()
-        this.routes.addAll(routingConfiguration.routes)
+        registeredRoutes.addAll(routingConfiguration.routes)
+        registeredExceptionHandlers.putAll(routingConfiguration.exceptionHandlers)
     }
 
-    fun routing(vararg routes: DslRoutes<ROUTE, CONTEXT, RESPONSE>) {
-        this.routes.addAll(routes.flatMap { it.routes() })
-    }
+    fun routing(vararg containers: DslContainer<ROUTE, CONTEXT, RESPONSE>): DslRoutingPlugin<CONFIG, ROUTE, CONTEXT, RESPONSE> =
+        routing {
+            containers.forEach { container ->
+                addRoutes(container.routes())
+                container.exceptionHandlers().forEach { exception(it.type, it.handler) }
+            }
+        }
 
-    fun routing(vararg routes: ROUTE) {
-        this.routes.addAll(routes)
-    }
+    fun routing(routes: Collection<ROUTE>): DslRoutingPlugin<CONFIG, ROUTE, CONTEXT, RESPONSE> =
+        routing {
+            addRoutes(routes)
+        }
+
+    fun routing(vararg routes: ROUTE): DslRoutingPlugin<CONFIG, ROUTE, CONTEXT, RESPONSE> =
+        routing(routes.toList())
 
 }
 
 fun <
-    CONFIG : RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>,
+    CONFIG : RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>,
     ROUTE : DslRoute<CONTEXT, RESPONSE>,
     CONTEXT,
     RESPONSE : Any
 > JavalinConfig.routing(
-    routingDsl: RoutingDsl<CONFIG, ROUTE, CONTEXT, RESPONSE>,
-    vararg routes: DslRoutes<ROUTE, CONTEXT, RESPONSE>
-) = routing(routingDsl) {
-    routes.forEach {
-        it.routes().forEach { route ->
-            addRoute(route.method, route.path, route.handler)
-        }
-    }
-}
+    routingDsl: RoutingDslFactory<CONFIG, ROUTE, CONTEXT, RESPONSE>,
+    vararg routes: DslContainer<ROUTE, CONTEXT, RESPONSE>
+) = plugins.register(
+    DslRoutingPlugin(routingDsl).routing(*routes)
+)
 
 fun JavalinConfig.routing(vararg routes: DefaultRoutes) =
     routing(DefaultDsl, *routes)
 
 fun <
-    CONFIG : RoutingConfiguration<ROUTE, CONTEXT, RESPONSE>,
+    CONFIG : RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>,
     ROUTE : DslRoute<CONTEXT, RESPONSE>,
     CONTEXT,
     RESPONSE : Any
 > JavalinConfig.routing(
-    routingDsl: RoutingDsl<CONFIG, ROUTE, CONTEXT, RESPONSE>,
+    routingDsl: RoutingDslFactory<CONFIG, ROUTE, CONTEXT, RESPONSE>,
     init: CONFIG.() -> Unit
-) {
-    val dslPlugin = DslRoutingPlugin(routingDsl)
-    dslPlugin.routing(init)
-    plugins.register(dslPlugin)
-}
+) = plugins.register(
+    DslRoutingPlugin(routingDsl).routing(init)
+)
 
 fun JavalinConfig.routing(init: DefaultConfiguration.() -> Unit) =
     routing(DefaultDsl, init)
