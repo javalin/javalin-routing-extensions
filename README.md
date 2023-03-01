@@ -267,8 +267,8 @@ you can check its source code here:
 **Experimental**: This module is more like a reference on how to use coroutines with Javalin.
 The production-readiness of this module is unknown, especially in complex scenarios. 
 
-The coroutines module provides works like `DSL :: Properties` module,
-but it uses coroutines to provide asynchronous execution of endpoints.
+The coroutines module provides API similar to `DSL :: Properties` module,
+but it uses coroutines & suspend directives to provide asynchronous & non-blocking endpoint execution.
 
 
 ```kotlin
