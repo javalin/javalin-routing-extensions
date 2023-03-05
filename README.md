@@ -35,7 +35,7 @@ Each module is distributed as a separate artifact:
 
 ```kotlin
 dependencies {
-    val javalinRoutingExtensions = "5.3.2-alpha.6"
+    val javalinRoutingExtensions = "5.4.0-RC.1"
     implementation("io.javalin.community.routing:routing-core:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-annotated:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-dsl:$javalinRoutingExtensions")
@@ -199,6 +199,10 @@ fun main() {
                 // support for type-safe paths
                 result(path.age.toString())
             }
+            exception(Exception::class) { anyException ->
+                // support for exception handlers
+                result(anyException.message ?: "Unknown error")
+            }
         }
     }.start(8080)
 }
@@ -243,7 +247,12 @@ class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouti
         exampleService.save(pathParam("name"))
     }
 
+    private val defaultExceptionHandler = exceptionHandler(Exception::class) { regularException ->
+        println("Exception: ${regularException.message}")
+    }
+
     override fun routes() = setOf(findAnimalByName, saveAnimal)
+    override fun exceptionHandlers() = setOf(defaultExceptionHandler)
 
 }
 

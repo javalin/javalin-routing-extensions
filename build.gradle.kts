@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.8.0"
-    kotlin("kapt") version "1.8.0"
+    kotlin("jvm") version "1.8.10"
+    kotlin("kapt") version "1.8.10"
     jacoco
     signing
     `maven-publish`
@@ -18,7 +18,7 @@ allprojects {
     apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "5.3.2-alpha.6"
+    version = "5.4.0-RC.1"
 
     repositories {
         mavenCentral()
@@ -102,7 +102,7 @@ allprojects {
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
             jvmTarget = "11"
-            languageVersion = "1.7"
+            languageVersion = "1.8"
             javaParameters = true
             freeCompilerArgs = listOf(
                 "-Xjvm-default=all", // For generating default methods in interfaces
@@ -116,14 +116,14 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     dependencies {
-        val javalin = "5.3.2"
+        val javalin = "5.4.0"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
-        testImplementation("io.javalin:javalin-testtools:$javalin")
+        testImplementation("io.javalin:javalin-testtools:5.3.2")
         kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$javalin")
         testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalin")
 
-        val jackson = "2.14.0"
+        val jackson = "2.14.2"
         testImplementation("com.fasterxml.jackson.core:jackson-databind:$jackson")
         testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson")
         testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson")
@@ -131,7 +131,7 @@ subprojects {
         val unirest = "3.14.1"
         testImplementation("com.konghq:unirest-java:$unirest")
 
-        val junit = "5.8.2"
+        val junit = "5.9.2"
         testImplementation("org.junit.jupiter:junit-jupiter-params:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$junit")
@@ -140,7 +140,7 @@ subprojects {
         val assertj = "3.23.1"
         testImplementation("org.assertj:assertj-core:$assertj")
 
-        val logback = "1.4.0"
+        val logback = "1.4.5"
         testImplementation("ch.qos.logback:logback-core:$logback")
         testImplementation("ch.qos.logback:logback-classic:$logback")
         testImplementation("org.slf4j:slf4j-api:2.0.0")

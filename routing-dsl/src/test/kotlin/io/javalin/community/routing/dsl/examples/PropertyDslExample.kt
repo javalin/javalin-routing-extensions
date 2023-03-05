@@ -5,7 +5,6 @@ import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.Route.POST
 import io.javalin.community.routing.dsl.DslRoute
 import io.javalin.community.routing.dsl.DslContainer
-import io.javalin.community.routing.dsl.DslException
 import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
 import io.javalin.community.routing.dsl.routing
 import io.javalin.openapi.HttpMethod
