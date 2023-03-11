@@ -18,7 +18,7 @@ allprojects {
     apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "5.4.0-RC.1"
+    version = "5.4.2-RC.1"
 
     repositories {
         mavenCentral()
@@ -116,10 +116,10 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     dependencies {
-        val javalin = "5.4.0"
+        val javalin = "5.4.2"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
-        testImplementation("io.javalin:javalin-testtools:5.3.2")
+        testImplementation("io.javalin:javalin-testtools:$javalin")
         kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$javalin")
         testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalin")
 
