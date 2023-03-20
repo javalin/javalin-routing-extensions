@@ -168,7 +168,7 @@ so it's safer than heavy reflection-based alternatives.
 Keep in mind, that if you want to use named parameters in your endpoints,
 you have to pass `-parameters` flag to your compiler to preserve parameter names in bytecode.
 
-Full example: [AnnotationsRoutingExample.kt](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-annotations/routing-annotated/src/test/java/io/javalin/community/routing/annotations/example/AnnotatedRoutingExample.java)
+Full example: [AnnotationsRoutingExample.java](https://github.com/javalin/javalin-routing-extensions/blob/main/routing-annotations/routing-annotated/src/test/java/io/javalin/community/routing/annotations/example/AnnotatedRoutingExample.java)
 
 ### DSL
 
