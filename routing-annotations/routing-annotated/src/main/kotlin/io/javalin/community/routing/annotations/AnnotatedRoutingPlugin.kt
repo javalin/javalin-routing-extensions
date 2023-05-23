@@ -12,8 +12,21 @@ import io.javalin.http.Handler
 import io.javalin.plugin.Plugin
 import java.lang.UnsupportedOperationException
 
+fun interface HandlerResultConsumer<T> {
+    fun handle(ctx: Context, default: Any?)
+}
+
 class AnnotatedRoutingPluginConfiguration {
     var apiVersionHeader: String = "X-API-Version"
+    var resultHandlers: MutableMap<Class<*>, HandlerResultConsumer<*>> = mutableMapOf()
+
+    fun <T> registerResultHandler(type: Class<T>, handler: HandlerResultConsumer<T>): AnnotatedRoutingPluginConfiguration = also {
+        this.resultHandlers[type] = handler
+    }
+
+    inline fun <reified T> registerResultHandler(handler: HandlerResultConsumer<T>): AnnotatedRoutingPluginConfiguration =
+        registerResultHandler(T::class.java, handler)
+
 }
 
 class AnnotatedRoutingPlugin @JvmOverloads constructor(
@@ -22,6 +35,7 @@ class AnnotatedRoutingPlugin @JvmOverloads constructor(
 
     private val registeredRoutes = mutableListOf<AnnotatedRoute>()
     private val registeredExceptionHandlers = mutableListOf<AnnotatedException>()
+    private val reflectiveEndpointLoader = ReflectiveEndpointLoader(configuration.resultHandlers)
 
     private data class RouteIdentifier(val route: Route, val path: String)
 
@@ -65,17 +79,20 @@ class AnnotatedRoutingPlugin @JvmOverloads constructor(
     }
 
     fun registerEndpoints(vararg endpoints: Any) {
-        val detectedRoutes = endpoints.flatMap { ReflectiveEndpointLoader.loadRoutesFromEndpoint(it) }
+        val detectedRoutes = endpoints.flatMap { reflectiveEndpointLoader.loadRoutesFromEndpoint(it) }
         registeredRoutes.addAll(detectedRoutes)
 
-        val detectedExceptionHandlers = endpoints.flatMap { ReflectiveEndpointLoader.loadExceptionHandlers(it) }
+        val detectedExceptionHandlers = endpoints.flatMap { reflectiveEndpointLoader.loadExceptionHandlers(it) }
         registeredExceptionHandlers.addAll(detectedExceptionHandlers)
     }
 
 }
 
-fun JavalinConfig.registerAnnotatedEndpoints(vararg endpoints: Any) {
-    val plugin = AnnotatedRoutingPlugin()
+fun JavalinConfig.registerAnnotatedEndpoints(configuration: AnnotatedRoutingPluginConfiguration, vararg endpoints: Any) {
+    val plugin = AnnotatedRoutingPlugin(configuration)
     plugin.registerEndpoints(*endpoints)
     this.plugins.register(plugin)
 }
+
+fun JavalinConfig.registerAnnotatedEndpoints(vararg endpoints: Any) =
+    registerAnnotatedEndpoints(AnnotatedRoutingPluginConfiguration(), *endpoints)

@@ -4,6 +4,7 @@ import io.javalin.Javalin
 import io.javalin.community.routing.Route
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
+import io.javalin.openapi.experimental.OpenApiAnnotationProcessorConfiguration
 import io.javalin.testtools.JavalinTest
 import kong.unirest.Unirest
 import kong.unirest.Unirest.request
@@ -65,23 +66,23 @@ class AnnotatedRoutingTest {
                     @Endpoints("/test")
                     object {
                         @Before
-                        fun beforeEach(ctx: Context) = ctx.header("before", "true")
+                        fun beforeEach(ctx: Context) { ctx.header("before", "true") }
                         @After
-                        fun afterEach(ctx: Context) = ctx.header("after", "true")
+                        fun afterEach(ctx: Context) { ctx.header("after", "true") }
                         @Get("/get")
-                        fun testGet(ctx: Context) = ctx.header("get", "true")
+                        fun testGet(ctx: Context) { ctx.header("get", "true") }
                         @Post("/post")
-                        fun testPost(ctx: Context) = ctx.header("post", "true")
+                        fun testPost(ctx: Context) { ctx.header("post", "true") }
                         @Put("/put")
-                        fun testPut(ctx: Context) = ctx.header("put", "true")
+                        fun testPut(ctx: Context) { ctx.header("put", "true") }
                         @Delete("/delete")
-                        fun testDelete(ctx: Context) = ctx.header("delete", "true")
+                        fun testDelete(ctx: Context) { ctx.header("delete", "true") }
                         @Patch("/patch")
-                        fun testPatch(ctx: Context) = ctx.header("patch", "true")
+                        fun testPatch(ctx: Context) { ctx.header("patch", "true") }
                         @Head("/head")
-                        fun testHead(ctx: Context) = ctx.header("head", "true")
+                        fun testHead(ctx: Context) { ctx.header("head", "true") }
                         @Options("/options")
-                        fun testOptions(ctx: Context) = ctx.header("options", "true")
+                        fun testOptions(ctx: Context) { ctx.header("options", "true") }
                     }
                 )
             }
@@ -104,9 +105,9 @@ class AnnotatedRoutingTest {
                     @Endpoints
                     object {
                         @Before("/test")
-                        fun before(ctx: Context) = ctx.header("sync", Thread.currentThread().name)
+                        fun before(ctx: Context) { ctx.header("sync", Thread.currentThread().name) }
                         @Get("/test", async = true)
-                        fun test(ctx: Context) = ctx.header("async", Thread.currentThread().name)
+                        fun test(ctx: Context) { ctx.header("async", Thread.currentThread().name) }
                     }
                 )
             }
@@ -204,13 +205,13 @@ class AnnotatedRoutingTest {
                     object {
                         @Version("1")
                         @Get
-                        fun findAll(ctx: Context) = ctx.result("Panda")
+                        fun findAll(ctx: Context) { ctx.result("Panda") }
                     },
                     @Endpoints("/api/users")
                     object {
                         @Version("1")
                         @Get
-                        fun test(ctx: Context) = ctx.result("Red Panda")
+                        fun test(ctx: Context) { ctx.result("Red Panda") }
                     }
                 )
             }
@@ -228,13 +229,13 @@ class AnnotatedRoutingTest {
                     object {
                         @Version("1")
                         @Get
-                        fun findAll(ctx: Context) = ctx.result("Panda")
+                        fun findAll(ctx: Context) { ctx.result("Panda") }
                     },
                     @Endpoints("/api/users")
                     object {
                         @Version("2")
                         @Get
-                        fun test(ctx: Context) = ctx.result("Red Panda")
+                        fun test(ctx: Context) { ctx.result("Red Panda") }
                     }
                 )
             }
@@ -257,12 +258,76 @@ class AnnotatedRoutingTest {
                         @Get("/throwing")
                         fun throwing(ctx: Context): Nothing = throw IllegalStateException("This is a test")
                         @ExceptionHandler(IllegalStateException::class)
-                        fun handleException(ctx: Context, e: IllegalStateException) = ctx.result(e::class.java.name)
+                        fun handleException(ctx: Context, e: IllegalStateException) { ctx.result(e::class.java.name) }
                     }
                 )
             }
         ) { _, client ->
             assertThat(Unirest.get("${client.origin}/throwing").asString().body).isEqualTo("java.lang.IllegalStateException")
         }
+
+    @Test
+    fun `should throw for unsupported return types`() {
+        assertThatThrownBy {
+            Javalin.create {
+                it.registerAnnotatedEndpoints(
+                    object {
+                        @Get("/unsupported")
+                        fun unsupported(ctx: Context): Int = 1
+                    }
+                )
+            }
+        }
+        .isInstanceOf(IllegalStateException::class.java)
+        .hasMessageContaining("Unsupported return type: int")
+    }
+
+    private open class Animal
+    private open class Panda : Animal()
+    private open class RedPanda : Panda()
+
+    @Test
+    fun `should properly handle inheritance`() =
+        JavalinTest.test(
+            Javalin.create {
+                it.registerAnnotatedEndpoints(
+                    configuration = AnnotatedRoutingPluginConfiguration()
+                        .registerResultHandler<Animal> { ctx, _ -> ctx.result("Animal") }
+                        .registerResultHandler<RedPanda> { ctx, _ -> ctx.result("RedPanda") }
+                        .registerResultHandler<Panda> { ctx, _ -> ctx.result("Panda") },
+                    object {
+                        @Get("/base")
+                        fun base(ctx: Context): Animal = Animal()
+                        @Get("/closest")
+                        fun closest(ctx: Context): RedPanda = RedPanda()
+                    }
+                )
+            }
+        ) { _, client ->
+            assertThat(Unirest.get("${client.origin}/base").asString().body).isEqualTo("Animal")
+            assertThat(Unirest.get("${client.origin}/closest").asString().body).isEqualTo("RedPanda")
+        }
+
+    interface Heavy
+    private open class GiantPanda : Panda(), Heavy
+
+    @Test
+    fun `should throw if result handler matched multiple classes`() {
+        assertThatThrownBy {
+            Javalin.create {
+                it.registerAnnotatedEndpoints(
+                    configuration = AnnotatedRoutingPluginConfiguration()
+                        .registerResultHandler<Panda> { ctx, _ -> ctx.result("Panda") }
+                        .registerResultHandler<Heavy> { ctx, _ -> ctx.result("Heavy") },
+                    object {
+                        @Get("/test")
+                        fun test(ctx: Context): GiantPanda = GiantPanda()
+                    }
+                )
+            }
+        }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("Unable to determine handler for type class")
+    }
 
 }

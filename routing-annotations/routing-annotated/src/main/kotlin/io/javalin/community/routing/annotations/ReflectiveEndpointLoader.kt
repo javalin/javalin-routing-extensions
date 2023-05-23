@@ -12,7 +12,9 @@ import kotlin.reflect.KClass
 typealias AnnotatedRoute = DefaultDslRoute<Context, Unit>
 typealias AnnotatedException = DefaultDslException<Context, Exception, Unit>
 
-object ReflectiveEndpointLoader {
+internal class ReflectiveEndpointLoader(
+    private val resultHandlers: Map<Class<*>, HandlerResultConsumer<*>>
+) {
 
     private val repeatedPathSeparatorRegex = Regex("/+")
 
@@ -47,6 +49,8 @@ object ReflectiveEndpointLoader {
                 createArgumentSupplier<Unit>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
             }
 
+            val resultHandler = findResultHandler(method)
+
             val route = AnnotatedRoute(
                 method = httpMethod,
                 path = ("/$endpointPath/$path").replace(repeatedPathSeparatorRegex, "/"),
@@ -57,8 +61,8 @@ object ReflectiveEndpointLoader {
                         .toTypedArray()
 
                     when (async) {
-                        true -> async { invokeAndUnwrapIfErrored(method, endpoint, *arguments) }
-                        else -> invokeAndUnwrapIfErrored(method, endpoint, *arguments)
+                        true -> async { invokeAndUnwrapIfErrored(method, endpoint, *arguments, ctx = this, resultHandler = resultHandler) }
+                        else -> invokeAndUnwrapIfErrored(method, endpoint, *arguments, ctx = this, resultHandler = resultHandler)
                     }
                 }
             )
@@ -85,6 +89,8 @@ object ReflectiveEndpointLoader {
                 createArgumentSupplier<Exception>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
             }
 
+            val resultHandler = findResultHandler(method)
+
             val dslException = AnnotatedException(
                 type = exceptionHandlerAnnotation.value as KClass<Exception>,
                 handler = { exception ->
@@ -92,7 +98,13 @@ object ReflectiveEndpointLoader {
                         .map { it(this, exception) }
                         .toTypedArray()
 
-                    invokeAndUnwrapIfErrored(method, endpoint, *arguments)
+                    invokeAndUnwrapIfErrored(
+                        method = method,
+                        instance = endpoint,
+                        arguments = arguments,
+                        ctx = this,
+                        resultHandler = resultHandler
+                    )
                 }
             )
 
@@ -102,13 +114,42 @@ object ReflectiveEndpointLoader {
         return dslExceptions
     }
 
-    private fun invokeAndUnwrapIfErrored(method: Method, instance: Any, vararg arguments: Any?): Any? {
-        return try {
-            method.invoke(instance, *arguments)
+    @Suppress("UNCHECKED_CAST")
+    private fun findResultHandler(method: Method): HandlerResultConsumer<Any?>? =
+        when {
+            method.returnType !in arrayOf(Void.TYPE, Void::class.java, Unit::class.java) -> {
+                resultHandlers.asSequence()
+                    .filter { it.key.isAssignableFrom(method.returnType) }
+                    .sortedWith { a, b ->
+                        when {
+                            a.key.isAssignableFrom(b.key) -> -1
+                            b.key.isAssignableFrom(a.key) -> 1
+                            else -> throw IllegalStateException("Unable to determine handler for type ${method.returnType}. Found two matching handlers: ${a.key} and ${b.key}")
+                        }
+                    }
+                    .toList()
+                    .takeIf { it.isNotEmpty() }
+                    ?.last()
+                    ?.value as HandlerResultConsumer<Any?>?
+                    ?: throw IllegalStateException("Unsupported return type: ${method.returnType}")
+            }
+            else -> null
+        }
+
+
+    private fun invokeAndUnwrapIfErrored(
+        method: Method,
+        instance: Any,
+        vararg arguments: Any?,
+        ctx: Context,
+        resultHandler: HandlerResultConsumer<Any?>?
+    ): Any? =
+        try {
+            val result = method.invoke(instance, *arguments)
+            resultHandler?.handle(ctx, result)
         } catch (reflectionException: ReflectiveOperationException) {
             throw reflectionException.cause ?: reflectionException
         }
-    }
 
     private inline fun <reified CUSTOM : Any> createArgumentSupplier(
         parameter: Parameter,
