@@ -1,5 +1,6 @@
 package io.javalin.community.routing.annotations
 
+import io.javalin.http.HttpStatus
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.CLASS
 import kotlin.annotation.AnnotationTarget.FUNCTION
@@ -56,6 +57,10 @@ annotation class After(val value: String = "*", val async: Boolean = false)
 @Retention(RUNTIME)
 @Target(FUNCTION)
 annotation class Version(val value: String)
+
+@Retention(RUNTIME)
+@Target(FUNCTION)
+annotation class Status(val success: HttpStatus = HttpStatus.UNKNOWN, val error: HttpStatus = HttpStatus.UNKNOWN)
 
 @Retention(RUNTIME)
 @Target(VALUE_PARAMETER)
