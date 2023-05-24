@@ -13,7 +13,7 @@ import io.javalin.plugin.Plugin
 import java.lang.UnsupportedOperationException
 
 fun interface HandlerResultConsumer<T> {
-    fun handle(ctx: Context, default: Any?)
+    fun handle(ctx: Context, value: T)
 }
 
 class AnnotatedRoutingPluginConfiguration {
