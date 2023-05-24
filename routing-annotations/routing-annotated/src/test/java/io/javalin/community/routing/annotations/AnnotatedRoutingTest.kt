@@ -4,7 +4,7 @@ import io.javalin.Javalin
 import io.javalin.community.routing.Route
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
-import io.javalin.openapi.experimental.OpenApiAnnotationProcessorConfiguration
+import io.javalin.http.HttpStatus
 import io.javalin.testtools.JavalinTest
 import kong.unirest.Unirest
 import kong.unirest.Unirest.request
@@ -329,5 +329,21 @@ class AnnotatedRoutingTest {
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("Unable to determine handler for type class")
     }
+
+    @Test
+    fun `should use status code from result handler`() =
+        JavalinTest.test(
+            Javalin.create {
+                it.registerAnnotatedEndpoints(
+                    object {
+                        @Get("/test")
+                        @Status(success = HttpStatus.IM_A_TEAPOT)
+                        fun test(ctx: Context): String = "abc"
+                    }
+                )
+            }
+        ) { _, client ->
+            assertThat(Unirest.get("${client.origin}/test").asString().status).isEqualTo(HttpStatus.IM_A_TEAPOT.code)
+        }
 
 }

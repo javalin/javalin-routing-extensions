@@ -4,6 +4,7 @@ import io.javalin.community.routing.Route
 import io.javalin.community.routing.dsl.DefaultDslException
 import io.javalin.community.routing.dsl.DefaultDslRoute
 import io.javalin.http.Context
+import io.javalin.http.HttpStatus
 import io.javalin.validation.Validator
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
@@ -49,6 +50,7 @@ internal class ReflectiveEndpointLoader(
                 createArgumentSupplier<Unit>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
             }
 
+            val status = method.getAnnotation(Status::class.java)
             val resultHandler = findResultHandler(method)
 
             val route = AnnotatedRoute(
@@ -61,8 +63,8 @@ internal class ReflectiveEndpointLoader(
                         .toTypedArray()
 
                     when (async) {
-                        true -> async { invokeAndUnwrapIfErrored(method, endpoint, *arguments, ctx = this, resultHandler = resultHandler) }
-                        else -> invokeAndUnwrapIfErrored(method, endpoint, *arguments, ctx = this, resultHandler = resultHandler)
+                        true -> async { invokeAndUnwrapIfErrored(method, endpoint, arguments, ctx = this, status = status, resultHandler = resultHandler) }
+                        else -> invokeAndUnwrapIfErrored(method, endpoint, arguments, ctx = this, status = status, resultHandler = resultHandler)
                     }
                 }
             )
@@ -89,6 +91,7 @@ internal class ReflectiveEndpointLoader(
                 createArgumentSupplier<Exception>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
             }
 
+            val status = method.getAnnotation(Status::class.java)
             val resultHandler = findResultHandler(method)
 
             val dslException = AnnotatedException(
@@ -102,6 +105,7 @@ internal class ReflectiveEndpointLoader(
                         method = method,
                         instance = endpoint,
                         arguments = arguments,
+                        status = status,
                         ctx = this,
                         resultHandler = resultHandler
                     )
@@ -115,39 +119,39 @@ internal class ReflectiveEndpointLoader(
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun findResultHandler(method: Method): HandlerResultConsumer<Any?>? =
-        when {
-            method.returnType !in arrayOf(Void.TYPE, Void::class.java, Unit::class.java) -> {
-                resultHandlers.asSequence()
-                    .filter { it.key.isAssignableFrom(method.returnType) }
-                    .sortedWith { a, b ->
-                        when {
-                            a.key.isAssignableFrom(b.key) -> -1
-                            b.key.isAssignableFrom(a.key) -> 1
-                            else -> throw IllegalStateException("Unable to determine handler for type ${method.returnType}. Found two matching handlers: ${a.key} and ${b.key}")
-                        }
-                    }
-                    .toList()
-                    .takeIf { it.isNotEmpty() }
-                    ?.last()
-                    ?.value as HandlerResultConsumer<Any?>?
-                    ?: throw IllegalStateException("Unsupported return type: ${method.returnType}")
+    private fun findResultHandler(method: Method): HandlerResultConsumer<Any?> =
+        resultHandlers.asSequence()
+            .filter { it.key.isAssignableFrom(method.returnType) }
+            .sortedWith { a, b ->
+                when {
+                    a.key.isAssignableFrom(b.key) -> -1
+                    b.key.isAssignableFrom(a.key) -> 1
+                    else -> throw IllegalStateException("Unable to determine handler for type ${method.returnType}. Found two matching handlers: ${a.key} and ${b.key}")
+                }
             }
-            else -> null
-        }
-
+            .toList()
+            .lastOrNull()
+            ?.value as? HandlerResultConsumer<Any?>
+            ?: throw IllegalStateException("Unsupported return type: ${method.returnType}")
 
     private fun invokeAndUnwrapIfErrored(
         method: Method,
         instance: Any,
-        vararg arguments: Any?,
+        arguments: Array<Any?>,
+        status: Status?,
         ctx: Context,
-        resultHandler: HandlerResultConsumer<Any?>?
+        resultHandler: HandlerResultConsumer<Any?>
     ): Any? =
         try {
             val result = method.invoke(instance, *arguments)
-            resultHandler?.handle(ctx, result)
+            status
+                ?.takeIf { it.success != HttpStatus.UNKNOWN }
+                ?.let { ctx.status(it.success) }
+            resultHandler.handle(ctx, result)
         } catch (reflectionException: ReflectiveOperationException) {
+            status
+                ?.takeIf { it.error != HttpStatus.UNKNOWN }
+                ?.let { ctx.status(it.error) }
             throw reflectionException.cause ?: reflectionException
         }
 

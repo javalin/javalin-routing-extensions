@@ -18,7 +18,12 @@ fun interface HandlerResultConsumer<T> {
 
 class AnnotatedRoutingPluginConfiguration {
     var apiVersionHeader: String = "X-API-Version"
-    var resultHandlers: MutableMap<Class<*>, HandlerResultConsumer<*>> = mutableMapOf()
+    var resultHandlers: MutableMap<Class<*>, HandlerResultConsumer<*>> = mutableMapOf(
+        String::class.java to HandlerResultConsumer<String?> { ctx, value -> value?.also { ctx.result(it) } },
+        Unit::class.java to HandlerResultConsumer<Unit?> { _, _ -> },
+        Void::class.java to HandlerResultConsumer<Void?> { _, _ -> },
+        Void.TYPE to HandlerResultConsumer<Void?> { _, _ -> },
+    )
 
     fun <T> registerResultHandler(type: Class<T>, handler: HandlerResultConsumer<T>): AnnotatedRoutingPluginConfiguration = also {
         this.resultHandlers[type] = handler
