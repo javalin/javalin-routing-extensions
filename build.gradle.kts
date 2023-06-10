@@ -1,12 +1,12 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.8.20"
-    kotlin("kapt") version "1.8.20"
+    kotlin("jvm") version "1.8.22"
+    kotlin("kapt") version "1.8.22"
     jacoco
     signing
     `maven-publish`
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
 description = "Javalin Routing Extensions Parent | Parent project for Javalin Routing Extensions"
@@ -18,7 +18,7 @@ allprojects {
     apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "5.5.0-RC.3"
+    version = "5.6.0-RC.1"
 
     repositories {
         mavenCentral()
@@ -116,34 +116,34 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     dependencies {
-        val javalin = "5.5.0"
+        val javalin = "5.6.0"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin-testtools:$javalin")
         kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$javalin")
         testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalin")
 
-        val jackson = "2.14.2"
+        val jackson = "2.15.2"
         testImplementation("com.fasterxml.jackson.core:jackson-databind:$jackson")
         testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson")
         testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson")
 
-        val unirest = "3.14.1"
+        val unirest = "3.14.2"
         testImplementation("com.konghq:unirest-java:$unirest")
 
-        val junit = "5.9.2"
+        val junit = "5.9.3"
         testImplementation("org.junit.jupiter:junit-jupiter-params:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$junit")
-        testImplementation("org.assertj:assertj-core:3.24.1")
+        testImplementation("org.assertj:assertj-core:3.24.2")
 
-        val assertj = "3.23.1"
+        val assertj = "3.24.2"
         testImplementation("org.assertj:assertj-core:$assertj")
 
-        val logback = "1.4.5"
+        val logback = "1.4.7"
         testImplementation("ch.qos.logback:logback-core:$logback")
         testImplementation("ch.qos.logback:logback-classic:$logback")
-        testImplementation("org.slf4j:slf4j-api:2.0.0")
+        testImplementation("org.slf4j:slf4j-api:2.0.7")
     }
 
     tasks.test {
@@ -194,11 +194,9 @@ jacoco {
 }
 
 nexusPublishing {
-    repositories {
-        sonatype {
-            username.set(getEnvOrProperty("SONATYPE_USER", "sonatypeUser"))
-            password.set(getEnvOrProperty("SONATYPE_PASSWORD", "sonatypePassword"))
-        }
+    repositories.sonatype {
+        username.set(getEnvOrProperty("SONATYPE_USER", "sonatypeUser"))
+        password.set(getEnvOrProperty("SONATYPE_PASSWORD", "sonatypePassword"))
     }
 }
 

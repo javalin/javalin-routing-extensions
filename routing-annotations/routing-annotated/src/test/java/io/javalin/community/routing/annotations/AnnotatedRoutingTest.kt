@@ -331,7 +331,7 @@ class AnnotatedRoutingTest {
     }
 
     @Test
-    fun `should use status code from result handler`() =
+    fun `should use status code from annotation`() =
         JavalinTest.test(
             Javalin.create {
                 it.registerAnnotatedEndpoints(
