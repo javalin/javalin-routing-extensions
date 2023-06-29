@@ -18,7 +18,7 @@ allprojects {
     apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "5.6.0-RC.1"
+    version = "5.6.2-RC.1-SNAPSHOT"
 
     repositories {
         mavenCentral()
@@ -116,7 +116,7 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     dependencies {
-        val javalin = "5.6.0"
+        val javalin = "5.6.1"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin-testtools:$javalin")
