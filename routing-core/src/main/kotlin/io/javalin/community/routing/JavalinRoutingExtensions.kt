@@ -2,6 +2,8 @@ package io.javalin.community.routing
 
 import io.javalin.Javalin
 import io.javalin.http.Handler
+import io.javalin.http.HandlerType
+import io.javalin.router.InternalRouter
 import io.javalin.security.RouteRole
 
 class JavalinRoutingExtensions(private val javalin: Javalin) {
@@ -20,7 +22,7 @@ class JavalinRoutingExtensions(private val javalin: Javalin) {
     fun register(): Javalin {
         routes
             .sortRoutes()
-            .forEach { javalin.registerRoute(it) }
+            .forEach { javalin.unsafeConfig().pvt.internalRouter.registerRoute(it) }
 
         return javalin
     }
@@ -34,19 +36,19 @@ data class HandlerEntry @JvmOverloads constructor(
     val roles: List<RouteRole> = emptyList(),
 ) : Routed
 
-fun Javalin.registerRoute(handlerEntry: HandlerEntry) =
+fun InternalRouter.registerRoute(handlerEntry: HandlerEntry) =
     registerRoute(handlerEntry.route, handlerEntry.path, handlerEntry.handler, *handlerEntry.roles.toTypedArray())
 
-fun Javalin.registerRoute(route: Route, path: String, handler: Handler, vararg roles: RouteRole) {
+fun InternalRouter.registerRoute(route: Route, path: String, handler: Handler, vararg roles: RouteRole) {
     when (route) {
-        Route.HEAD -> head(path, handler, *roles)
-        Route.PATCH -> patch(path, handler, *roles)
-        Route.OPTIONS -> options(path, handler, *roles)
-        Route.GET -> get(path, handler, *roles)
-        Route.PUT -> put(path, handler, *roles)
-        Route.POST -> post(path, handler, *roles)
-        Route.DELETE -> delete(path, handler, *roles)
-        Route.AFTER -> after(path, handler)
-        Route.BEFORE -> before(path, handler)
+        Route.HEAD -> addHttpHandler(HandlerType.HEAD, path, handler, *roles)
+        Route.PATCH -> addHttpHandler(HandlerType.PATCH, path, handler, *roles)
+        Route.OPTIONS -> addHttpHandler(HandlerType.OPTIONS, path, handler, *roles)
+        Route.GET -> addHttpHandler(HandlerType.GET, path, handler, *roles)
+        Route.PUT -> addHttpHandler(HandlerType.PUT, path, handler, *roles)
+        Route.POST -> addHttpHandler(HandlerType.POST, path, handler, *roles)
+        Route.DELETE -> addHttpHandler(HandlerType.DELETE, path, handler, *roles)
+        Route.AFTER -> addHttpHandler(HandlerType.AFTER, path, handler)
+        Route.BEFORE -> addHttpHandler(HandlerType.BEFORE, path, handler)
     }
 }

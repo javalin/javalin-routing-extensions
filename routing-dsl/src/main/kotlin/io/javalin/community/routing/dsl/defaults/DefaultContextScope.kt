@@ -26,10 +26,7 @@ open class DefaultContextScopeConfiguration<
 > : RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>() {
 
     @OptIn(ExperimentalStdlibApi::class)
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.method(
-        method: Route,
-        crossinline handler: (CONTEXT, PATH) -> RESPONSE
-    ) {
+    inline fun <reified PATH : Any> method(method: Route, crossinline handler: (CONTEXT, PATH) -> RESPONSE) {
         val path = PATH::class.findAnnotation<Path>()
             ?.path
             ?: throw IllegalArgumentException("@Path annotation not found")
@@ -72,31 +69,14 @@ open class DefaultContextScopeConfiguration<
         }
     }
 
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.get(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.GET, handler)
-
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.post(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.POST, handler)
-
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.put(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.PUT, handler)
-
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.delete(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.DELETE, handler)
-
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.patch(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.PATCH, handler)
-
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.head(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.HEAD, handler)
-
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.options(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.OPTIONS, handler)
-
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.before(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.BEFORE, handler)
-
-    inline fun <reified PATH : Any> RoutingDslConfiguration<ROUTE, CONTEXT, RESPONSE>.after(crossinline handler: CONTEXT.(PATH) -> RESPONSE) =
-        method(Route.AFTER, handler)
+    inline fun <reified PATH : Any> get(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.GET, handler)
+    inline fun <reified PATH : Any> post(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.POST, handler)
+    inline fun <reified PATH : Any> put(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.PUT, handler)
+    inline fun <reified PATH : Any> delete(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.DELETE, handler)
+    inline fun <reified PATH : Any> patch(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.PATCH, handler)
+    inline fun <reified PATH : Any> head(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.HEAD, handler)
+    inline fun <reified PATH : Any> options(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.OPTIONS, handler)
+    inline fun <reified PATH : Any> before(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.BEFORE, handler)
+    inline fun <reified PATH : Any> after(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.AFTER, handler)
 
 }

@@ -1,16 +1,16 @@
 package io.javalin.community.routing.examples
 
-import io.javalin.community.routing.coroutines.ReactiveRoutes
-import io.javalin.community.routing.Route.GET
 import io.javalin.Javalin
-import io.javalin.community.routing.coroutines.servlet.DefaultContextCoroutinesServlet
+import io.javalin.community.routing.Route.GET
+import io.javalin.community.routing.coroutines.Coroutines
 import io.javalin.community.routing.coroutines.ReactiveRoute
-import io.javalin.community.routing.coroutines.reactiveRouting
+import io.javalin.community.routing.coroutines.ReactiveRoutes
+import io.javalin.community.routing.coroutines.servlet.DefaultContextCoroutinesServlet
 import io.javalin.http.Context
-import kotlinx.coroutines.delay
 import java.lang.Thread.sleep
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.delay
 
 // Some dependencies
 class ExampleService {
@@ -78,7 +78,9 @@ fun main() {
     // setup Javalin with reactive routing
     Javalin
         .create { config ->
-            config.reactiveRouting(coroutinesServlet, ExampleEndpoint(exampleService))
+            config.router.mount(Coroutines(coroutinesServlet)) {
+                it.routes(ExampleEndpoint(exampleService))
+            }
         }
         .events {
             it.serverStopping { coroutinesServlet.prepareShutdown() }

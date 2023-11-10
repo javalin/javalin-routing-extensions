@@ -1,15 +1,15 @@
 package io.javalin.community.routing.dsl.examples
 
 import io.javalin.Javalin
-import io.javalin.community.routing.dsl.defaults.DefaultContextScopeConfiguration
-import io.javalin.community.routing.dsl.defaults.DefaultDsl.DefaultScope
 import io.javalin.community.routing.dsl.DslExceptionHandler
 import io.javalin.community.routing.dsl.DslRoute
-import io.javalin.community.routing.dsl.defaults.Path
+import io.javalin.community.routing.dsl.DslRouting
 import io.javalin.community.routing.dsl.RoutingDslFactory
-import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
+import io.javalin.community.routing.dsl.defaults.DefaultContextScopeConfiguration
+import io.javalin.community.routing.dsl.defaults.DefaultDsl.DefaultScope
+import io.javalin.community.routing.dsl.defaults.Path
 import io.javalin.community.routing.dsl.examples.CustomDsl.CustomRoutingConfiguration
-import io.javalin.community.routing.dsl.routing
+import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
 import io.javalin.http.Context
 import io.javalin.http.ExceptionHandler
 import io.javalin.http.Handler
@@ -44,20 +44,20 @@ data class PandaPath(val age: Int)
 
 fun main() {
     Javalin.create { config ->
-        config.routing(CustomDsl) {
-            before {
+        config.router.mount(DslRouting(CustomDsl)) {
+            it.before {
                 // `endpointHandlerPath` comes from Context class
                 result("Called endpoint: ${matchedPath()}")
             }
-            get("/") {
+            it.get("/") {
                 // `helloWorld` comes from CustomScope class
                 result(helloWorld())
             }
-            get<PandaPath> { path ->
+            it.get<PandaPath> { path ->
                 // support for type-safe paths
                 result(path.age.toString())
             }
-            exception(Exception::class) { anyException ->
+            it.exception(Exception::class) { anyException ->
                 // support for exception handlers
                 result(anyException.message ?: "Unknown error")
             }

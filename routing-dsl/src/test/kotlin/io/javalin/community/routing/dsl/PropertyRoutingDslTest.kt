@@ -2,6 +2,7 @@ package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
 import io.javalin.community.routing.Route.GET
+import io.javalin.community.routing.dsl.DslRouting.Companion.Dsl
 import io.javalin.community.routing.dsl.defaults.DefaultRoutes
 import io.javalin.community.routing.dsl.specification.TestSpecification
 import io.javalin.testtools.JavalinTest
@@ -27,7 +28,9 @@ class PropertyRoutingDslTest : TestSpecification() {
     fun `should register valid route in javalin instance`() =
         JavalinTest.test(
             Javalin.create {
-                it.routing(ValidTestEndpoints())
+                it.router.mount(Dsl) {
+                    it.routes(ValidTestEndpoints())
+                }
             },
             defaultConfig
         ) { _, client ->
