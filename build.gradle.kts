@@ -121,8 +121,10 @@ subprojects {
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin-testtools:$javalin")
-        kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$javalin")
-        testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalin")
+
+        val openapi = "5.6.3"
+        kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$openapi")
+        testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$openapi")
 
         val jackson = "2.15.3"
         testImplementation("com.fasterxml.jackson.core:jackson-databind:$jackson")
