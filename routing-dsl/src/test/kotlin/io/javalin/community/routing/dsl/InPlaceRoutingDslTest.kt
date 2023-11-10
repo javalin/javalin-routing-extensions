@@ -2,6 +2,7 @@ package io.javalin.community.routing.dsl
 
 import io.javalin.Javalin
 import io.javalin.community.routing.Route
+import io.javalin.community.routing.dsl.DslRouting.Companion.Dsl
 import io.javalin.community.routing.dsl.defaults.Path
 import io.javalin.community.routing.dsl.specification.TestSpecification
 import io.javalin.testtools.JavalinTest
@@ -18,8 +19,8 @@ class InPlaceRoutingDslTest : TestSpecification() {
     fun `each http dsl method is properly mapped to javalin handler`() = JavalinTest.test(
         // given: a javalin app with routes defined using the dsl
         Javalin.create { config ->
-            config.routing {
-                before("/before") { header("test", "before") }
+            config.router.mount(Dsl) {
+                it.before("/before") { header("test", "before") }
                 after("/after") { header("test", "after") }
 
                 get("/throwing") { throw RuntimeException() }
@@ -37,7 +38,8 @@ class InPlaceRoutingDslTest : TestSpecification() {
         defaultConfig
     ) { _, client ->
         // when: a request is made to the http route
-        Route.values()
+        Route.entries
+            .asSequence()
             .filter { it.isHttpMethod }
             .map { it.name.lowercase() }
             .map { it to request(it, "${client.origin}/$it").asEmpty() }
