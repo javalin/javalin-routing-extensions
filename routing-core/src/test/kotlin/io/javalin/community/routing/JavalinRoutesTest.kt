@@ -19,7 +19,7 @@ class JavalinRoutesTest {
 
         // when: routes are registered
         val app = Javalin.create()
-            .apply { routes.forEach { route -> registerRoute(route.first, "/", route.second) } }
+        app.unsafeConfig().pvt.internalRouter.apply { routes.forEach { route -> registerRoute(route.first, "/", route.second) } }
 
         // then: all routes are registered by as proper HandlerType
         routes.forEach { (method, handler) ->

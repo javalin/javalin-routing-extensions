@@ -1,7 +1,6 @@
 package io.javalin.community.routing.annotations.example;
 
 import io.javalin.Javalin;
-import io.javalin.community.routing.annotations.AnnotatedRoutingPlugin;
 import io.javalin.community.routing.annotations.Before;
 import io.javalin.community.routing.annotations.Body;
 import io.javalin.community.routing.annotations.Endpoints;
@@ -16,13 +15,14 @@ import io.javalin.openapi.OpenApi;
 import io.javalin.openapi.OpenApiContent;
 import io.javalin.openapi.OpenApiParam;
 import io.javalin.openapi.OpenApiResponse;
-import jakarta.annotation.Nullable;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
+import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.javalin.community.routing.annotations.AnnotatedRouting.Annotated;
 import static io.javalin.http.Header.AUTHORIZATION;
 import static io.javalin.openapi.HttpMethod.GET;
 
@@ -106,15 +106,15 @@ public final class AnnotatedRoutingExample {
     }
 
     public static void main(String[] args) {
-        Javalin.create(config -> {
+        Javalin.createAndStart(config -> {
             // prepare dependencies
-            ExampleEndpoints exampleEndpoints = new ExampleEndpoints(new ExampleService());
+            var exampleService = new ExampleService();
 
             // register endpoints
-            AnnotatedRoutingPlugin routingPlugin = new AnnotatedRoutingPlugin();
-            routingPlugin.registerEndpoints(exampleEndpoints);
-            config.plugins.register(routingPlugin);
-        }).start(7000);
+            config.router.mount(Annotated, routing -> {
+                routing.registerEndpoints(new ExampleEndpoints(exampleService));
+            });
+        });
 
         // test request to `saveExample` endpoint
         HttpResponse<?> saved = Unirest.post("http://localhost:7000/api/hello")

@@ -3,29 +3,24 @@ package io.javalin.community.routing.dsl.examples
 import io.javalin.Javalin
 import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.Route.POST
-import io.javalin.community.routing.dsl.DslRoute
-import io.javalin.community.routing.dsl.DslContainer
-import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
-import io.javalin.community.routing.dsl.routing
+import io.javalin.community.routing.dsl.DslRouting.Companion.Dsl
+import io.javalin.community.routing.dsl.defaults.DefaultRoutes
 import io.javalin.openapi.HttpMethod
 import io.javalin.openapi.OpenApi
 
 // Some dependencies
-class ExampleService {
+private class ExampleService {
     fun save(animal: String) = println("Saved animal: $animal")
 }
 
-// Utility representation of custom routing in your application
-abstract class ExampleRouting : DslContainer<DslRoute<CustomScope, Unit>, CustomScope, Unit>
-
 // Endpoint (domain router)
-class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouting() {
+private class AnimalEndpoints(private val exampleService: ExampleService) : DefaultRoutes() {
 
     @OpenApi(
         path = "/animal/{name}",
         methods = [HttpMethod.GET]
     )
-    private val findAnimalByName = route("/animal/<name>", GET) {
+    private val findAnimalByName = route(GET, "/animal/<name>") {
         result(pathParam("name"))
     }
 
@@ -33,7 +28,7 @@ class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouti
         path = "/animal/{name}",
         methods = [HttpMethod.POST]
     )
-    private val saveAnimal = route("/animal/<name>", POST) {
+    private val saveAnimal = route(POST, "/animal/<name>") {
         exampleService.save(pathParam("name"))
     }
 
@@ -51,7 +46,9 @@ fun main() {
     val exampleService = ExampleService()
 
     // setup & launch application
-    Javalin
-        .create { it.routing(CustomDsl, AnimalEndpoints(exampleService) /*, provide more classes with endpoints */) }
-        .start(8080)
+    Javalin.createAndStart { cfg ->
+        cfg.router.mount(Dsl) {
+            it.routes(AnimalEndpoints(exampleService))
+        }
+    }
 }
