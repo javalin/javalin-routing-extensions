@@ -8,13 +8,13 @@ import io.javalin.community.routing.dsl.RoutingDslFactory
 import io.javalin.community.routing.dsl.defaults.DefaultContextScopeConfiguration
 import io.javalin.community.routing.dsl.defaults.DefaultDsl.DefaultScope
 import io.javalin.community.routing.dsl.defaults.Path
-import io.javalin.community.routing.dsl.examples.CustomDsl.CustomRoutingConfiguration
-import io.javalin.community.routing.dsl.examples.CustomDsl.CustomScope
+import io.javalin.community.routing.dsl.examples.ExampleDsl.CustomRoutingConfiguration
+import io.javalin.community.routing.dsl.examples.ExampleDsl.CustomScope
 import io.javalin.http.Context
 import io.javalin.http.ExceptionHandler
 import io.javalin.http.Handler
 
-object CustomDsl : RoutingDslFactory<CustomRoutingConfiguration, DslRoute<CustomScope, Unit>, CustomScope, Unit> {
+object ExampleDsl : RoutingDslFactory<CustomRoutingConfiguration, DslRoute<CustomScope, Unit>, CustomScope, Unit> {
 
     // This is custom configuration class that will be used to register routes
     open class CustomRoutingConfiguration : DefaultContextScopeConfiguration<DslRoute<CustomScope, Unit>, CustomScope, Unit>()
@@ -44,7 +44,7 @@ data class PandaPath(val age: Int)
 
 fun main() {
     Javalin.create { config ->
-        config.router.mount(DslRouting(CustomDsl)) {
+        config.router.mount(DslRouting(ExampleDsl)) {
             it.before {
                 // `endpointHandlerPath` comes from Context class
                 result("Called endpoint: ${matchedPath()}")
