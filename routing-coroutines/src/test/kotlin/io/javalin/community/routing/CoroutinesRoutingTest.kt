@@ -2,6 +2,7 @@ package io.javalin.community.routing
 
 import io.javalin.Javalin
 import io.javalin.community.routing.coroutines.Coroutines
+import io.javalin.community.routing.coroutines.route
 import io.javalin.community.routing.coroutines.servlet.DefaultContextCoroutinesServlet
 import io.javalin.testtools.JavalinTest
 import java.util.concurrent.Executors

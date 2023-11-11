@@ -1,6 +1,6 @@
 package io.javalin.community.routing.coroutines.servlet
 
-import io.javalin.community.routing.coroutines.ReactiveRoute
+import io.javalin.community.routing.coroutines.SuspendedRoute
 import io.javalin.http.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
@@ -16,8 +16,8 @@ open class CoroutinesServlet<CONTEXT, RESPONSE : Any>(
     name: String = "javalin-reactive-routing",
     private val coroutinesEnabled: Boolean = true,
     protected val dispatcher: CoroutineDispatcher,
-    protected val syncHandler: suspend (Context, ReactiveRoute<CONTEXT, RESPONSE>) -> RESPONSE,
-    protected val asyncHandler: suspend (Context, ReactiveRoute<CONTEXT, RESPONSE>, CompletableFuture<RESPONSE>) -> RESPONSE,
+    protected val syncHandler: suspend (Context, SuspendedRoute<CONTEXT, RESPONSE>) -> RESPONSE,
+    protected val asyncHandler: suspend (Context, SuspendedRoute<CONTEXT, RESPONSE>, CompletableFuture<RESPONSE>) -> RESPONSE,
     private val responseConsumer: (suspend (Context, RESPONSE) -> Unit)? = null,
     uncaughtExceptionConsumer: (CoroutineNameRepresentation, Throwable) -> Unit,
 ) {
@@ -28,7 +28,7 @@ open class CoroutinesServlet<CONTEXT, RESPONSE : Any>(
     private val id = AtomicLong()
     private val finished = AtomicLong()
 
-    fun handle(ctx: Context, route: ReactiveRoute<CONTEXT, RESPONSE>) {
+    fun handle(ctx: Context, route: SuspendedRoute<CONTEXT, RESPONSE>) {
         id.incrementAndGet()
 
         when {
