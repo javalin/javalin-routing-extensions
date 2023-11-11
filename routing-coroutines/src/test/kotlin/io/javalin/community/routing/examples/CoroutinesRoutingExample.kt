@@ -3,8 +3,8 @@ package io.javalin.community.routing.examples
 import io.javalin.Javalin
 import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.coroutines.Coroutines
-import io.javalin.community.routing.coroutines.ReactiveRoute
-import io.javalin.community.routing.coroutines.ReactiveRoutes
+import io.javalin.community.routing.coroutines.SuspendedRoute
+import io.javalin.community.routing.coroutines.SuspendedRoutes
 import io.javalin.community.routing.coroutines.servlet.DefaultContextCoroutinesServlet
 import io.javalin.http.Context
 import java.lang.Thread.sleep
@@ -29,30 +29,30 @@ class CustomScope(val ctx: Context) : Context by ctx {
 }
 
 // Utility class representing group of reactive routes
-abstract class ExampleRoutes : ReactiveRoutes<ReactiveRoute<CustomScope, Unit>, CustomScope, Unit>()
+abstract class ExampleRoutes : SuspendedRoutes<SuspendedRoute<CustomScope, Unit>, CustomScope, Unit>()
 
 // Endpoint (domain router)
 class ExampleEndpoint(private val exampleService: ExampleService) : ExampleRoutes() {
 
     // you can use suspend functions in coroutines context
     // and as long as they're truly reactive, they won't freeze it
-    private val nonBlockingAsync = reactiveRoute("/async", GET) {
+    private val nonBlockingAsync = route("/async", GET) {
         result(nonBlockingDelay("Non-blocking Async"))
     }
 
     // using truly-blocking functions in coroutines context will freeze thread anyway
-    private val blockingAsync = reactiveRoute("/async-blocking", GET) {
+    private val blockingAsync = route("/async-blocking", GET) {
         result(blockingDelay("Blocking Async"))
     }
 
     // you can also use async = false, to run coroutine in sync context (runBlocking)
-    private val sync = reactiveRoute("/sync", GET, async = false) {
+    private val sync = route("/sync", GET, async = false) {
         result(blockingDelay("Sync"))
     }
 
     // you can visit /stream in browser and see that despite single-threaded executor,
     // you can make multiple concurrent requests and each request is handled
-    private val stream = reactiveRoute("/stream", GET) {
+    private val stream = route("/stream", GET) {
         val id = exampleService.streamId.incrementAndGet()
 
         while (true) {
