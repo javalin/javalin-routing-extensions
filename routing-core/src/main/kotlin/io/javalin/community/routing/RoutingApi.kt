@@ -21,7 +21,5 @@ interface Routed {
 }
 
 interface Routes<ROUTE : Routed, CONTEXT, RESPONSE> {
-
     fun routes(): Collection<ROUTE> = emptySet()
-
 }

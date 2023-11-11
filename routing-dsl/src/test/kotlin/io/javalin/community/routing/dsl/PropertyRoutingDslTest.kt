@@ -14,8 +14,8 @@ class PropertyRoutingDslTest : TestSpecification() {
     private class ValidTestEndpoints : DefaultRoutes() {
 
         override fun routes() = setOf(
-            route("/test", GET) { result("test") },
-            route("/throwing", GET) { throw RuntimeException() }
+            route(GET, "/test") { result("test") },
+            route(GET, "/throwing") { throw RuntimeException() }
         )
 
         override fun exceptionHandlers() = setOf(
@@ -27,8 +27,8 @@ class PropertyRoutingDslTest : TestSpecification() {
     @Test
     fun `should register valid route in javalin instance`() =
         JavalinTest.test(
-            Javalin.create {
-                it.router.mount(Dsl) {
+            Javalin.create { cfg ->
+                cfg.router.mount(Dsl) {
                     it.routes(ValidTestEndpoints())
                 }
             },

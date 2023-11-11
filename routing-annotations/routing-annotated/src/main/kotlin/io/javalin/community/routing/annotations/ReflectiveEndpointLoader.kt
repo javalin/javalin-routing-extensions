@@ -5,7 +5,7 @@ import io.javalin.community.routing.dsl.DefaultDslException
 import io.javalin.community.routing.dsl.DefaultDslRoute
 import io.javalin.http.Context
 import io.javalin.http.HttpStatus
-import io.javalin.validation.Validator
+import io.javalin.validation.validation
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 import kotlin.reflect.KClass
@@ -141,7 +141,7 @@ internal class ReflectiveEndpointLoader(
         status: Status?,
         ctx: Context,
         resultHandler: HandlerResultConsumer<Any?>
-    ): Any? =
+    ): Any =
         try {
             val result = method.invoke(instance, *arguments)
             status
@@ -198,7 +198,7 @@ internal class ReflectiveEndpointLoader(
                     getAnnotation(Cookie::class.java)
                         .value
                         .ifEmpty { name }
-                        .let { Validator.create(type, ctx.cookie(it), it) }
+                        .let { ctx.validation().validator(it, type, ctx.cookie(it)) }
                         .get()
                 }
                 isAnnotationPresent(Body::class.java) -> { ctx, _ ->
