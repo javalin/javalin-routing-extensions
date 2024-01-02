@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.20"
-    kotlin("kapt") version "1.9.20"
+    kotlin("jvm") version "1.9.22"
+    kotlin("kapt") version "1.9.22"
     jacoco
     signing
     `maven-publish`
@@ -117,12 +117,12 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     dependencies {
-        val javalin = "6.0.0-SNAPSHOT"
+        val javalin = "6.0.0-beta.4"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin-testtools:$javalin")
 
-        val openapi = "5.6.3"
+        val openapi = "6.0.0-SNAPSHOT"
         kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$openapi")
         testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$openapi")
 

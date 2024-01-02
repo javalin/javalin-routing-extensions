@@ -23,12 +23,15 @@ class JavalinRoutesTest {
 
         // then: all routes are registered by as proper HandlerType
         routes.forEach { (method, handler) ->
-            assertThat(
-                app.unsafeConfig().pvt.internalRouter
+            val endpoint = app.unsafeConfig()
+                    .pvt
+                    .internalRouter
                     .findHttpHandlerEntries(HandlerType.findByName(method.name), "/")
                     .firstOrNull()
-                    ?.handler
-            ).isEqualTo(handler)
+                    ?.endpoint
+
+            assertThat(endpoint?.method?.name).isEqualTo(method.name)
+            assertThat(endpoint?.path).isEqualTo("/")
         }
     }
 

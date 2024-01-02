@@ -3,7 +3,9 @@ package io.javalin.community.routing
 import io.javalin.Javalin
 import io.javalin.http.Handler
 import io.javalin.http.HandlerType
+import io.javalin.router.Endpoint
 import io.javalin.router.InternalRouter
+import io.javalin.router.RoutingSetupScope
 import io.javalin.security.RouteRole
 
 class JavalinRoutingExtensions(private val javalin: Javalin) {
@@ -41,14 +43,18 @@ fun InternalRouter.registerRoute(handlerEntry: HandlerEntry) =
 
 fun InternalRouter.registerRoute(route: Route, path: String, handler: Handler, vararg roles: RouteRole) {
     when (route) {
-        Route.HEAD -> addHttpHandler(HandlerType.HEAD, path, handler, *roles)
-        Route.PATCH -> addHttpHandler(HandlerType.PATCH, path, handler, *roles)
-        Route.OPTIONS -> addHttpHandler(HandlerType.OPTIONS, path, handler, *roles)
-        Route.GET -> addHttpHandler(HandlerType.GET, path, handler, *roles)
-        Route.PUT -> addHttpHandler(HandlerType.PUT, path, handler, *roles)
-        Route.POST -> addHttpHandler(HandlerType.POST, path, handler, *roles)
-        Route.DELETE -> addHttpHandler(HandlerType.DELETE, path, handler, *roles)
-        Route.AFTER -> addHttpHandler(HandlerType.AFTER, path, handler)
-        Route.BEFORE -> addHttpHandler(HandlerType.BEFORE, path, handler)
+        Route.HEAD -> addHttpEndpoint(Endpoint(method = HandlerType.HEAD, path = path, handler = handler, roles = roles))
+        Route.PATCH -> addHttpEndpoint(Endpoint(method = HandlerType.PATCH, path = path, handler = handler, roles = roles))
+        Route.OPTIONS -> addHttpEndpoint(Endpoint(method = HandlerType.OPTIONS, path = path, handler = handler, roles = roles))
+        Route.GET -> addHttpEndpoint(Endpoint(method = HandlerType.GET, path = path, handler = handler, roles = roles))
+        Route.PUT -> addHttpEndpoint(Endpoint(method = HandlerType.PUT, path = path, handler = handler, roles = roles))
+        Route.POST -> addHttpEndpoint(Endpoint(method = HandlerType.POST, path = path, handler = handler, roles = roles))
+        Route.DELETE -> addHttpEndpoint(Endpoint(method = HandlerType.DELETE, path = path, handler = handler, roles = roles))
+        Route.AFTER -> addHttpEndpoint(Endpoint(method = HandlerType.AFTER, path = path, handler = handler))
+        Route.BEFORE -> addHttpEndpoint(Endpoint(method = HandlerType.BEFORE, path = path, handler = handler))
     }
+}
+
+fun <SETUP> RoutingSetupScope<SETUP>.invokeAsSamWithReceiver(receiver: SETUP) {
+    with(this) { receiver.setup() }
 }

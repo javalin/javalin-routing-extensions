@@ -2,6 +2,7 @@ package io.javalin.community.routing.annotations
 
 import io.javalin.community.routing.Route
 import io.javalin.community.routing.dsl.DslRoute
+import io.javalin.community.routing.invokeAsSamWithReceiver
 import io.javalin.community.routing.registerRoute
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig
@@ -10,7 +11,7 @@ import io.javalin.http.Context
 import io.javalin.http.Handler
 import io.javalin.router.InternalRouter
 import io.javalin.router.RoutingApiInitializer
-import java.util.function.Consumer
+import io.javalin.router.RoutingSetupScope
 
 fun interface HandlerResultConsumer<T> {
     fun handle(ctx: Context, value: T)
@@ -46,9 +47,9 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
 
     private data class RouteIdentifier(val route: Route, val path: String)
 
-    override fun initialize(cfg: JavalinConfig, internalRouter: InternalRouter, setup: Consumer<AnnotatedRoutingConfig>) {
+    override fun initialize(cfg: JavalinConfig, internalRouter: InternalRouter, setup: RoutingSetupScope<AnnotatedRoutingConfig>) {
         val configuration = AnnotatedRoutingConfig()
-        setup.accept(configuration)
+        setup.invokeAsSamWithReceiver(configuration)
 
         val loader = ReflectiveEndpointLoader(configuration.resultHandlers)
         val registeredRoutes = mutableListOf<AnnotatedRoute>()

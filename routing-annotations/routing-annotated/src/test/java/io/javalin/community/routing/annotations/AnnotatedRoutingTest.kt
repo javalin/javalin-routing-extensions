@@ -41,11 +41,11 @@ class AnnotatedRoutingTest {
 
         assertThat(matcher.findHttpHandlerEntries(HandlerType.GET, "/test/with"))
             .hasSize(1)
-            .allMatch { it.path == "/test/with" }
+            .allMatch { it.endpoint.path == "/test/with" }
 
         assertThat(matcher.findHttpHandlerEntries(HandlerType.GET, "/test/without"))
             .hasSize(1)
-            .allMatch { it.path == "/test/without" }
+            .allMatch { it.endpoint.path == "/test/without" }
     }
 
     @Test
