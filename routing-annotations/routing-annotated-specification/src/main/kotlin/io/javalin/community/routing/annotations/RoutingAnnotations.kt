@@ -52,7 +52,15 @@ annotation class Before(val value: String = "*", val async: Boolean = false)
 
 @Retention(RUNTIME)
 @Target(FUNCTION)
+annotation class BeforeMatched(val value: String = "*", val async: Boolean = false)
+
+@Retention(RUNTIME)
+@Target(FUNCTION)
 annotation class After(val value: String = "*", val async: Boolean = false)
+
+@Retention(RUNTIME)
+@Target(FUNCTION)
+annotation class AfterMatched(val value: String = "*", val async: Boolean = false)
 
 @Retention(RUNTIME)
 @Target(FUNCTION)

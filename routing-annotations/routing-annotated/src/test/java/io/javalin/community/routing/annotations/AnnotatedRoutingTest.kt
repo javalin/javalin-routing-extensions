@@ -74,6 +74,8 @@ class AnnotatedRoutingTest {
                         object {
                             // formatter:off
                             @Before fun beforeEach(ctx: Context) { ctx.header("before", "true") }
+                            @BeforeMatched fun beforeEachMatched(ctx: Context) { ctx.header("before-matched", "true") }
+                            @AfterMatched fun afterEachMatched(ctx: Context) { ctx.header("after-matched", "true") }
                             @After fun afterEach(ctx: Context) { ctx.header("after", "true") }
                             @Get("/get") fun testGet(ctx: Context) { ctx.header("get", "true") }
                             @Post("/post") fun testPost(ctx: Context) { ctx.header("post", "true") }
@@ -94,7 +96,9 @@ class AnnotatedRoutingTest {
                     val response = request(it.name, "${client.origin}/test/${it.name.lowercase()}").asEmpty()
                     assertThat(response.headers.getFirst(it.name.lowercase())).isEqualTo("true")
                     assertThat(response.headers.getFirst("before")).isEqualTo("true")
+                    assertThat(response.headers.getFirst("before-matched")).isEqualTo("true")
                     assertThat(response.headers.getFirst("after")).isEqualTo("true")
+                    assertThat(response.headers.getFirst("after-matched")).isEqualTo("true")
                 }
         }
 

@@ -1,11 +1,13 @@
 package io.javalin.community.routing.annotations
 
 import io.javalin.community.routing.Route
+import io.javalin.community.routing.Route.BEFORE_MATCHED
 import io.javalin.community.routing.dsl.DefaultDslException
 import io.javalin.community.routing.dsl.DefaultDslRoute
 import io.javalin.http.Context
 import io.javalin.http.HttpStatus
 import io.javalin.validation.Validation
+import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 import kotlin.reflect.KClass
@@ -22,7 +24,7 @@ internal class ReflectiveEndpointLoader(
     fun loadRoutesFromEndpoint(endpoint: Any): List<AnnotatedRoute> {
         val endpointClass = endpoint::class.java
 
-        val endpointPath = endpointClass.getAnnotation(Endpoints::class.java)
+        val endpointPath = endpointClass.getAnnotation<Endpoints>()
             ?.value
             ?: ""
 
@@ -30,15 +32,17 @@ internal class ReflectiveEndpointLoader(
 
         endpointClass.declaredMethods.forEach { method ->
             val (httpMethod, path, async) = when {
-                method.isAnnotationPresent(Before::class.java) -> method.getAnnotation(Before::class.java).let { Triple(Route.BEFORE, it.value, it.async) }
-                method.isAnnotationPresent(After::class.java) -> method.getAnnotation(After::class.java).let { Triple(Route.AFTER, it.value, it.async) }
-                method.isAnnotationPresent(Get::class.java) -> method.getAnnotation(Get::class.java).let { Triple(Route.GET, it.value, it.async) }
-                method.isAnnotationPresent(Put::class.java) -> method.getAnnotation(Put::class.java).let { Triple(Route.PUT, it.value, it.async) }
-                method.isAnnotationPresent(Post::class.java) -> method.getAnnotation(Post::class.java).let { Triple(Route.POST, it.value, it.async) }
-                method.isAnnotationPresent(Delete::class.java) -> method.getAnnotation(Delete::class.java).let { Triple(Route.DELETE, it.value, it.async) }
-                method.isAnnotationPresent(Head::class.java) -> method.getAnnotation(Head::class.java).let { Triple(Route.HEAD, it.value, it.async) }
-                method.isAnnotationPresent(Patch::class.java) -> method.getAnnotation(Patch::class.java).let { Triple(Route.PATCH, it.value, it.async) }
-                method.isAnnotationPresent(Options::class.java) -> method.getAnnotation(Options::class.java).let { Triple(Route.OPTIONS, it.value, it.async) }
+                method.isAnnotationPresent<Before>() -> method.getAnnotation<Before>()!!.let { Triple(Route.BEFORE, it.value, it.async) }
+                method.isAnnotationPresent<BeforeMatched>() -> method.getAnnotation<BeforeMatched>()!!.let { Triple(BEFORE_MATCHED, it.value, it.async) }
+                method.isAnnotationPresent<After>() -> method.getAnnotation<After>()!!.let { Triple(Route.AFTER, it.value, it.async) }
+                method.isAnnotationPresent<AfterMatched>() -> method.getAnnotation<AfterMatched>()!!.let { Triple(Route.AFTER_MATCHED, it.value, it.async) }
+                method.isAnnotationPresent<Get>() -> method.getAnnotation<Get>()!!.let { Triple(Route.GET, it.value, it.async) }
+                method.isAnnotationPresent<Put>() -> method.getAnnotation<Put>()!!.let { Triple(Route.PUT, it.value, it.async) }
+                method.isAnnotationPresent<Post>() -> method.getAnnotation<Post>()!!.let { Triple(Route.POST, it.value, it.async) }
+                method.isAnnotationPresent<Delete>() -> method.getAnnotation<Delete>()!!.let { Triple(Route.DELETE, it.value, it.async) }
+                method.isAnnotationPresent<Head>() -> method.getAnnotation<Head>()!!.let { Triple(Route.HEAD, it.value, it.async) }
+                method.isAnnotationPresent<Patch>() -> method.getAnnotation<Patch>()!!.let { Triple(Route.PATCH, it.value, it.async) }
+                method.isAnnotationPresent<Options>() -> method.getAnnotation<Options>()!!.let { Triple(Route.OPTIONS, it.value, it.async) }
                 else -> return@forEach
             }
 
@@ -50,13 +54,13 @@ internal class ReflectiveEndpointLoader(
                 createArgumentSupplier<Unit>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
             }
 
-            val status = method.getAnnotation(Status::class.java)
+            val status = method.getAnnotation<Status>()
             val resultHandler = findResultHandler(method)
 
             val route = AnnotatedRoute(
                 method = httpMethod,
                 path = ("/$endpointPath/$path").replace(repeatedPathSeparatorRegex, "/"),
-                version = method.getAnnotation(Version::class.java)?.value,
+                version = method.getAnnotation<Version>()?.value,
                 handler = {
                     val arguments = argumentSuppliers
                         .map { it(this, Unit) }
@@ -81,7 +85,7 @@ internal class ReflectiveEndpointLoader(
         val dslExceptions = mutableListOf<AnnotatedException>()
 
         endpointClass.declaredMethods.forEach { method ->
-            val exceptionHandlerAnnotation = method.getAnnotation(ExceptionHandler::class.java) ?: return@forEach
+            val exceptionHandlerAnnotation = method.getAnnotation<ExceptionHandler>() ?: return@forEach
 
             require(method.trySetAccessible()) {
                 "Unable to access method $method in class $endpointClass"
@@ -91,7 +95,7 @@ internal class ReflectiveEndpointLoader(
                 createArgumentSupplier<Exception>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
             }
 
-            val status = method.getAnnotation(Status::class.java)
+            val status = method.getAnnotation<Status>()
             val resultHandler = findResultHandler(method)
 
             val dslException = AnnotatedException(
@@ -166,46 +170,55 @@ internal class ReflectiveEndpointLoader(
                 type.isAssignableFrom(Context::class.java) -> { ctx, _ ->
                     ctx
                 }
-                isAnnotationPresent(Param::class.java) -> { ctx, _ ->
-                    getAnnotation(Param::class.java)
+                isAnnotationPresent<Param>() -> { ctx, _ ->
+                    getAnnotationOrThrow<Param>()
                         .value
                         .ifEmpty { name }
                         .let { ctx.pathParamAsClass(it, type) }
                         .get()
                 }
-                isAnnotationPresent(Header::class.java) -> { ctx, _ ->
-                    getAnnotation(Header::class.java)
+                isAnnotationPresent<Header>() -> { ctx, _ ->
+                    getAnnotationOrThrow<Header>()
                         .value
                         .ifEmpty { name }
                         .let { ctx.headerAsClass(it, type) }
                         .get()
                 }
-                isAnnotationPresent(Query::class.java) -> { ctx, _ ->
-                    getAnnotation(Query::class.java)
+                isAnnotationPresent<Query>() -> { ctx, _ ->
+                    getAnnotationOrThrow<Query>()
                         .value
                         .ifEmpty { name }
                         .let { ctx.queryParamAsClass(it, type) }
                         .get()
                 }
-                isAnnotationPresent(Form::class.java) -> { ctx, _ ->
-                    getAnnotation(Form::class.java)
+                isAnnotationPresent<Form>() -> { ctx, _ ->
+                    getAnnotationOrThrow<Form>()
                         .value
                         .ifEmpty { name }
                         .let { ctx.formParamAsClass(it, type) }
                         .get()
                 }
-                isAnnotationPresent(Cookie::class.java) -> { ctx, _ ->
-                    getAnnotation(Cookie::class.java)
+                isAnnotationPresent<Cookie>() -> { ctx, _ ->
+                    getAnnotationOrThrow<Cookie>()
                         .value
                         .ifEmpty { name }
                         .let { Validation().validator(it, type, ctx.cookie(it)) }
                         .get()
                 }
-                isAnnotationPresent(Body::class.java) -> { ctx, _ ->
+                isAnnotationPresent<Body>() -> { ctx, _ ->
                     ctx.bodyAsClass(parameter.parameterizedType)
                 }
                 else -> null
             }
         }
+
+    private inline fun <reified A : Annotation> AnnotatedElement.isAnnotationPresent(): Boolean =
+        isAnnotationPresent(A::class.java)
+
+    private inline fun <reified A : Annotation> AnnotatedElement.getAnnotationOrThrow(): A =
+        getAnnotation(A::class.java) ?: throw IllegalStateException("Annotation ${A::class.java.name} not found")
+
+    private inline fun <reified A : Annotation> AnnotatedElement.getAnnotation(): A? =
+        getAnnotation(A::class.java)
 
 }
