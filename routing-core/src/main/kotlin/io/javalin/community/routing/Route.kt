@@ -9,5 +9,7 @@ enum class Route(val isHttpMethod: Boolean = true) {
     POST,
     DELETE,
     AFTER(isHttpMethod = false),
+    AFTER_MATCHED(isHttpMethod = false),
     BEFORE(isHttpMethod = false),
+    BEFORE_MATCHED(isHttpMethod = false),
 }

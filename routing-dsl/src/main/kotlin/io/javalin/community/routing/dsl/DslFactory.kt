@@ -2,7 +2,9 @@ package io.javalin.community.routing.dsl
 
 import io.javalin.community.routing.Route
 import io.javalin.community.routing.Route.AFTER
+import io.javalin.community.routing.Route.AFTER_MATCHED
 import io.javalin.community.routing.Route.BEFORE
+import io.javalin.community.routing.Route.BEFORE_MATCHED
 import io.javalin.community.routing.Route.DELETE
 import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.Route.HEAD
@@ -45,7 +47,9 @@ open class RoutingDslConfiguration<ROUTE : DslRoute<CONTEXT, RESPONSE>, CONTEXT,
     fun head(path: String, handler: CONTEXT.() -> RESPONSE) = route(HEAD, path, handler)
     fun options(path: String, handler: CONTEXT.() -> RESPONSE) = route(OPTIONS, path, handler)
     fun before(path: String = "", handler: CONTEXT.() -> RESPONSE) = route(BEFORE, path, handler)
+    fun beforeMatched(path: String = "", handler: CONTEXT.() -> RESPONSE) = route(BEFORE_MATCHED, path, handler)
     fun after(path: String = "", handler: CONTEXT.() -> RESPONSE) = route(AFTER, path, handler)
+    fun afterMatched(path: String = "", handler: CONTEXT.() -> RESPONSE) = route(AFTER_MATCHED, path, handler)
 
     fun routes(container: DslContainer<ROUTE, CONTEXT, RESPONSE>) {
         routes(container.routes())

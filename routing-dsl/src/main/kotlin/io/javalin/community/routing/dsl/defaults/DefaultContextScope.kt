@@ -65,7 +65,9 @@ open class DefaultContextScopeConfiguration<
             Route.HEAD -> head(path, standardHandler)
             Route.OPTIONS -> options(path, standardHandler)
             Route.BEFORE -> before(path, standardHandler)
+            Route.BEFORE_MATCHED -> beforeMatched(path, standardHandler)
             Route.AFTER -> after(path, standardHandler)
+            Route.AFTER_MATCHED -> afterMatched(path, standardHandler)
         }
     }
 

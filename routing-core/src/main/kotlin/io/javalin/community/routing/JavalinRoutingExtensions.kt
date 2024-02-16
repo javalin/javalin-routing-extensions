@@ -50,8 +50,10 @@ fun InternalRouter.registerRoute(route: Route, path: String, handler: Handler, v
         Route.PUT -> addHttpEndpoint(Endpoint(method = HandlerType.PUT, path = path, handler = handler, roles = roles))
         Route.POST -> addHttpEndpoint(Endpoint(method = HandlerType.POST, path = path, handler = handler, roles = roles))
         Route.DELETE -> addHttpEndpoint(Endpoint(method = HandlerType.DELETE, path = path, handler = handler, roles = roles))
-        Route.AFTER -> addHttpEndpoint(Endpoint(method = HandlerType.AFTER, path = path, handler = handler))
         Route.BEFORE -> addHttpEndpoint(Endpoint(method = HandlerType.BEFORE, path = path, handler = handler))
+        Route.BEFORE_MATCHED -> addHttpEndpoint(Endpoint(method = HandlerType.BEFORE_MATCHED, path = path, handler = handler))
+        Route.AFTER -> addHttpEndpoint(Endpoint(method = HandlerType.AFTER, path = path, handler = handler))
+        Route.AFTER_MATCHED -> addHttpEndpoint(Endpoint(method = HandlerType.AFTER_MATCHED, path = path, handler = handler))
     }
 }
 
