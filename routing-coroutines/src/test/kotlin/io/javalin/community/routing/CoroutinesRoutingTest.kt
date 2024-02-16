@@ -31,7 +31,7 @@ class CoroutinesRoutingTest {
         JavalinTest.test(
             Javalin.create { config ->
                 config.router.mount(coroutines) {
-                    it.route(Route.GET, "/test") {
+                    route(Route.GET, "/test") {
                         withContext(Dispatchers.IO) {
                             result(Thread.currentThread().name)
                         }
@@ -49,7 +49,7 @@ class CoroutinesRoutingTest {
         JavalinTest.test(
             Javalin.create { config ->
                 config.router.mount(coroutines) {
-                    it.route(Route.GET, "/test") {
+                    route(Route.GET, "/test") {
                         withContext(Dispatchers.IO) {
                             throw TestException()
                         }
@@ -67,7 +67,7 @@ class CoroutinesRoutingTest {
         JavalinTest.test(
             Javalin.create { config ->
                 config.router.mount(coroutines) {
-                    it.route(Route.GET, "/test", async = false) {
+                    route(Route.GET, "/test", async = false) {
                         result(Thread.currentThread().name)
                     }
                 }
