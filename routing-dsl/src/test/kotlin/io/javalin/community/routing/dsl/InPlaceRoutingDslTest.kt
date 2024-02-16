@@ -21,7 +21,11 @@ class InPlaceRoutingDslTest : TestSpecification() {
         Javalin.create { config ->
             config.router.mount(Dsl) {
                 it.before("/before") { header("test", "before") }
+                it.beforeMatched("/before-matched") { header("test", "before-matched") }
+                it.get("/before-matched") {  }
                 it.after("/after") { header("test", "after") }
+                it.afterMatched("/after-matched") { header("test", "after-matched") }
+                it.get("/after-matched") {}
                 it.get("/throwing") { throw RuntimeException() }
                 it.exception(Exception::class) { header("exception", it::class.java.name) }
                 it.get("/get") { header("test", "get") }
@@ -54,11 +58,25 @@ class InPlaceRoutingDslTest : TestSpecification() {
             assertThat(it.headers.getFirst("test")).isEqualTo("before")
         }
 
+        // when: a request is made to the before matched handler
+        get("${client.origin}/before-matched").asEmpty().also {
+            // then: the response is the same as the route name
+            assertThat(it.status).isEqualTo(200)
+            assertThat(it.headers.getFirst("test")).isEqualTo("before-matched")
+        }
+
         // when: a request is made to the after handler
         get("${client.origin}/after").asEmpty().also {
             // then: the response is the same as the route name
             assertThat(it.status).isEqualTo(404)
             assertThat(it.headers.getFirst("test")).isEqualTo("after")
+        }
+
+        // when: a request is made to the after matched handler
+        get("${client.origin}/after-matched").asEmpty().also {
+            // then: the response is the same as the route name
+            assertThat(it.status).isEqualTo(200)
+            assertThat(it.headers.getFirst("test")).isEqualTo("after-matched")
         }
 
         // when: a request is made to the throwing handler
@@ -158,6 +176,7 @@ class InPlaceRoutingDslTest : TestSpecification() {
         Javalin.create { config ->
             config.router.mount(Dsl) {
                 it.before<ReifiedPath> { result("Before ") }
+                it.beforeMatched<ReifiedPath> { result(result() + "Before-Matched ") }
                 it.get<ReifiedPath> { result(result() + "GET") }
                 it.put<ReifiedPath> { result(result() + "PUT") }
                 it.post<ReifiedPath> { result(result() + "POST") }
@@ -165,6 +184,7 @@ class InPlaceRoutingDslTest : TestSpecification() {
                 it.delete<ReifiedPath> { result(result() + "DELETE") }
                 it.head<ReifiedPath> { result(result() + "HEAD") }
                 it.options<ReifiedPath> { result(result() + "OPTIONS") }
+                it.afterMatched<ReifiedPath> { result(result() + " After-Matched") }
                 it.after<ReifiedPath> {
                     result(result() + " After")
                     header("test", result()!!)
@@ -180,7 +200,7 @@ class InPlaceRoutingDslTest : TestSpecification() {
             .map { it to request(it.name, "${client.origin}/path").asString() }
             .forEach { (method, response) ->
                 // then: the response is the same as the route name
-                assertThat(response.headers.getFirst("test")).isEqualTo("Before $method After")
+                assertThat(response.headers.getFirst("test")).isEqualTo("Before Before-Matched $method After-Matched After")
             }
     }
 

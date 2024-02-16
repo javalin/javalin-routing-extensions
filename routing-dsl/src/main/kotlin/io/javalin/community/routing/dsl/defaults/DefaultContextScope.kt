@@ -79,6 +79,8 @@ open class DefaultContextScopeConfiguration<
     inline fun <reified PATH : Any> head(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.HEAD, handler)
     inline fun <reified PATH : Any> options(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.OPTIONS, handler)
     inline fun <reified PATH : Any> before(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.BEFORE, handler)
+    inline fun <reified PATH : Any> beforeMatched(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.BEFORE_MATCHED, handler)
     inline fun <reified PATH : Any> after(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.AFTER, handler)
+    inline fun <reified PATH : Any> afterMatched(crossinline handler: CONTEXT.(PATH) -> RESPONSE) = method(Route.AFTER_MATCHED, handler)
 
 }
