@@ -4,6 +4,7 @@ import io.javalin.community.routing.Route
 import io.javalin.community.routing.Route.BEFORE_MATCHED
 import io.javalin.community.routing.dsl.DefaultDslException
 import io.javalin.community.routing.dsl.DefaultDslRoute
+import io.javalin.event.JavalinLifecycleEvent
 import io.javalin.http.Context
 import io.javalin.http.HttpStatus
 import io.javalin.validation.Validation
@@ -14,6 +15,7 @@ import kotlin.reflect.KClass
 
 typealias AnnotatedRoute = DefaultDslRoute<Context, Unit>
 typealias AnnotatedException = DefaultDslException<Context, Exception, Unit>
+typealias AnnotatedEvent = () -> Unit
 
 internal class ReflectiveEndpointLoader(
     private val resultHandlers: Map<Class<*>, HandlerResultConsumer<*>>
@@ -120,6 +122,27 @@ internal class ReflectiveEndpointLoader(
         }
 
         return dslExceptions
+    }
+
+    fun loadEventHandlers(endpoint: Any): Map<JavalinLifecycleEvent, AnnotatedEvent> {
+        val endpointClass = endpoint::class.java
+        val dslEvents = mutableMapOf<JavalinLifecycleEvent, AnnotatedEvent>()
+
+        endpointClass.declaredMethods.forEach { method ->
+            val lifecycleEventHandler = method.getAnnotation<LifecycleEventHandler>() ?: return@forEach
+
+            require(method.trySetAccessible()) {
+                "Unable to access method $method in class $endpointClass"
+            }
+
+            dslEvents[lifecycleEventHandler.lifecycleEvent] =  object : AnnotatedEvent {
+                override fun invoke() {
+                    method.invoke(endpoint)
+                }
+            }
+        }
+
+        return dslEvents
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -6,6 +6,13 @@ import io.javalin.community.routing.invokeAsSamWithReceiver
 import io.javalin.community.routing.registerRoute
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig
+import io.javalin.event.JavalinLifecycleEvent
+import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTED
+import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTING
+import io.javalin.event.JavalinLifecycleEvent.SERVER_START_FAILED
+import io.javalin.event.JavalinLifecycleEvent.SERVER_STOPPED
+import io.javalin.event.JavalinLifecycleEvent.SERVER_STOPPING
+import io.javalin.event.JavalinLifecycleEvent.SERVER_STOP_FAILED
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.http.Handler
@@ -52,15 +59,30 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
         setup.invokeAsSamWithReceiver(configuration)
 
         val loader = ReflectiveEndpointLoader(configuration.resultHandlers)
+        val registeredEventListeners = mutableMapOf<JavalinLifecycleEvent, AnnotatedEvent>()
         val registeredRoutes = mutableListOf<AnnotatedRoute>()
         val registeredExceptionHandlers = mutableListOf<AnnotatedException>()
 
         configuration.registeredRoutes.forEach {
+            val detectedEventListeners = loader.loadEventHandlers(it)
+            registeredEventListeners.putAll(detectedEventListeners)
+
             val detectedRoutes = loader.loadRoutesFromEndpoint(it)
             registeredRoutes.addAll(detectedRoutes)
 
             val detectedExceptionHandlers = loader.loadExceptionHandlers(it)
             registeredExceptionHandlers.addAll(detectedExceptionHandlers)
+        }
+
+        registeredEventListeners.forEach { (key, event) ->
+            when (key) {
+                SERVER_STARTING -> cfg.events.serverStarting { event.invoke() }
+                SERVER_STARTED -> cfg.events.serverStarted { event.invoke() }
+                SERVER_START_FAILED -> cfg.events.serverStartFailed { event.invoke() }
+                SERVER_STOP_FAILED -> cfg.events.serverStopFailed { event.invoke() }
+                SERVER_STOPPING -> cfg.events.serverStopping { event.invoke() }
+                SERVER_STOPPED -> cfg.events.serverStopped { event.invoke() }
+            }
         }
 
         registeredRoutes

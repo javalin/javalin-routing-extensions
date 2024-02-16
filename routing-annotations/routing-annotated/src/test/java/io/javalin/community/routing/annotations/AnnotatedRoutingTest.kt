@@ -3,6 +3,7 @@ package io.javalin.community.routing.annotations
 import io.javalin.Javalin
 import io.javalin.community.routing.Route
 import io.javalin.community.routing.annotations.AnnotatedRouting.Annotated
+import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTED
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
 import io.javalin.http.HttpStatus
@@ -293,6 +294,26 @@ class AnnotatedRoutingTest {
         ) { _, client ->
             assertThat(Unirest.get("${client.origin}/throwing").asString().body).isEqualTo("java.lang.IllegalStateException")
         }
+
+    @Test
+    fun `should handle lifecycle events`() {
+        val log = mutableListOf<String>()
+
+        JavalinTest.test(
+            Javalin.create {
+                it.router.mount(Annotated) { cfg ->
+                    cfg.registerEndpoints(object {
+                        @LifecycleEventHandler(SERVER_STARTED)
+                        fun onStart() {
+                            log.add("Started")
+                        }
+                    })
+                }
+            }
+        ) { _, _ ->
+            assertThat(log).containsExactly("Started")
+        }
+    }
 
     @Test
     fun `should throw for unsupported return types`() {

@@ -1,5 +1,6 @@
 package io.javalin.community.routing.annotations
 
+import io.javalin.event.JavalinLifecycleEvent
 import io.javalin.http.HttpStatus
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.CLASS
@@ -17,6 +18,10 @@ annotation class Endpoints(val value: String = "")
 @Retention(RUNTIME)
 @Target(FUNCTION)
 annotation class ExceptionHandler(val value: KClass<out Exception>)
+
+@Retention(RUNTIME)
+@Target(FUNCTION)
+annotation class LifecycleEventHandler(val lifecycleEvent: JavalinLifecycleEvent)
 
 @Retention(RUNTIME)
 @Target(FUNCTION)
