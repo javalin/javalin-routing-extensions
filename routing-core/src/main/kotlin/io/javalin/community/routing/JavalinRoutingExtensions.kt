@@ -1,12 +1,16 @@
 package io.javalin.community.routing
 
 import io.javalin.Javalin
+import io.javalin.config.RouterConfig
 import io.javalin.http.Handler
 import io.javalin.http.HandlerType
 import io.javalin.router.Endpoint
 import io.javalin.router.InternalRouter
+import io.javalin.router.JavalinDefaultRouting
+import io.javalin.router.RoutingApiInitializer
 import io.javalin.router.RoutingSetupScope
 import io.javalin.security.RouteRole
+import java.util.function.Consumer
 
 class JavalinRoutingExtensions(private val javalin: Javalin) {
 
@@ -55,6 +59,18 @@ fun InternalRouter.registerRoute(route: Route, path: String, handler: Handler, v
         Route.AFTER -> addHttpEndpoint(Endpoint(method = HandlerType.AFTER, path = path, handler = handler))
         Route.AFTER_MATCHED -> addHttpEndpoint(Endpoint(method = HandlerType.AFTER_MATCHED, path = path, handler = handler))
     }
+}
+
+fun RouterConfig.mount(setup: RoutingSetupScope<JavalinDefaultRouting>): RouterConfig = also {
+    mount(Consumer {
+        setup.invokeAsSamWithReceiver(it)
+    })
+}
+
+fun <SETUP> RouterConfig.mount(initializer: RoutingApiInitializer<SETUP>, setup: RoutingSetupScope<SETUP> = RoutingSetupScope {}): RouterConfig = also {
+    mount(initializer, Consumer {
+        setup.invokeAsSamWithReceiver(it)
+    })
 }
 
 fun <SETUP> RoutingSetupScope<SETUP>.invokeAsSamWithReceiver(receiver: SETUP) {

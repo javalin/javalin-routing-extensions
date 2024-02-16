@@ -51,4 +51,13 @@ class JavalinRoutesTest {
         }
     }
 
+    @Test
+    fun `should enable sam receiver for mount`() {
+        Javalin.create { cfg ->
+            cfg.router.mount {
+                get("/") { it.result("Hello World!") }
+            }
+        }
+    }
+
 }
