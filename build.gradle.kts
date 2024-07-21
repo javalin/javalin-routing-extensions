@@ -18,7 +18,7 @@ allprojects {
     apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "6.2.0-SNAPSHOT"
+    version = "6.2.0"
 
     repositories {
         mavenCentral()
