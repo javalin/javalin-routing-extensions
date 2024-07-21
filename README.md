@@ -65,6 +65,8 @@ some people may even say that it's the only one.
 Take a look on the example below to see how it looks like:
 
 ```java
+import static io.javalin.community.routing.annotations.AnnotatedRouting.Annotated;
+
 // register endpoints with prefix
 @Endpoints("/api")
 static final class ExampleEndpoints {
@@ -125,15 +127,15 @@ static final class ExampleEndpoints {
 }
 
 public static void main(String[] args) {
-    Javalin.create(config -> {
+    Javalin.createAndStart(config -> {
         // prepare dependencies
-        ExampleEndpoints exampleEndpoints = new ExampleEndpoints(new ExampleService());
+        var exampleService = new ExampleService();
 
         // register endpoints
-        AnnotatedRoutingPlugin routingPlugin = new AnnotatedRoutingPlugin();
-        routingPlugin.registerEndpoints(exampleEndpoints);
-        config.plugins.register(routingPlugin);
-    }).start(7000);
+        config.router.mount(Annotated, routing -> {
+            routing.registerEndpoints(new ExampleEndpoints(exampleService));
+        });
+    });
 
     // test request to `saveExample` endpoint
     HttpResponse<?> saved = Unirest.post("http://localhost:7000/api/hello")
