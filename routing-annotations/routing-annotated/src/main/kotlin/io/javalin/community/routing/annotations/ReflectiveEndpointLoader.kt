@@ -23,6 +23,16 @@ internal class ReflectiveEndpointLoader(
 
     private val repeatedPathSeparatorRegex = Regex("/+")
 
+    private fun getAllDeclaredMethods(clazz: Class<*>): Collection<Method> {
+        val methods = mutableListOf<Method>()
+        var currentClass: Class<*>? = clazz
+        while (currentClass?.name != "java.lang.Object") {
+            methods.addAll(currentClass?.declaredMethods ?: emptyArray())
+            currentClass = currentClass?.superclass
+        }
+        return methods
+    }
+
     fun loadRoutesFromEndpoint(endpoint: Any): List<AnnotatedRoute> {
         val endpointClass = endpoint::class.java
 
@@ -32,7 +42,7 @@ internal class ReflectiveEndpointLoader(
 
         val endpointRoutes = mutableListOf<AnnotatedRoute>()
 
-        endpointClass.declaredMethods.forEach { method ->
+        getAllDeclaredMethods(endpointClass).forEach { method ->
             val (httpMethod, path, async) = when {
                 method.isAnnotationPresent<Before>() -> method.getAnnotation<Before>()!!.let { Triple(Route.BEFORE, it.value, it.async) }
                 method.isAnnotationPresent<BeforeMatched>() -> method.getAnnotation<BeforeMatched>()!!.let { Triple(BEFORE_MATCHED, it.value, it.async) }
@@ -86,7 +96,7 @@ internal class ReflectiveEndpointLoader(
         val endpointClass = endpoint::class.java
         val dslExceptions = mutableListOf<AnnotatedException>()
 
-        endpointClass.declaredMethods.forEach { method ->
+        getAllDeclaredMethods(endpointClass).forEach { method ->
             val exceptionHandlerAnnotation = method.getAnnotation<ExceptionHandler>() ?: return@forEach
 
             require(method.trySetAccessible()) {
@@ -128,7 +138,7 @@ internal class ReflectiveEndpointLoader(
         val endpointClass = endpoint::class.java
         val dslEvents = mutableMapOf<JavalinLifecycleEvent, AnnotatedEvent>()
 
-        endpointClass.declaredMethods.forEach { method ->
+        getAllDeclaredMethods(endpointClass).forEach { method ->
             val lifecycleEventHandler = method.getAnnotation<LifecycleEventHandler>() ?: return@forEach
 
             require(method.trySetAccessible()) {
