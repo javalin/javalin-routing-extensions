@@ -14,6 +14,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.util.*
 
 class AnnotatedRoutingTest {
 
@@ -145,12 +146,14 @@ class AnnotatedRoutingTest {
                                 ctx: Context,
                                 @Param param: Int,
                                 @Header header: Int,
+                                @Header optionalHeader: Optional<String>,
                                 @Query query: Int,
                                 @Cookie cookie: Int,
                                 @Body body: Int,
                             ) {
                                 ctx.header("param", param.toString())
                                 ctx.header("header", header.toString())
+                                ctx.header("optionalHeader", optionalHeader.orElse("default"))
                                 ctx.header("query", query.toString())
                                 ctx.header("cookie", cookie.toString())
                                 ctx.header("body", body.toString())
@@ -170,6 +173,7 @@ class AnnotatedRoutingTest {
 
             assertThat(responseHeaders.getFirst("param")).isEqualTo("1")
             assertThat(responseHeaders.getFirst("header")).isEqualTo("2")
+            assertThat(responseHeaders.getFirst("optionalHeader")).isEqualTo("default")
             assertThat(responseHeaders.getFirst("query")).isEqualTo("3")
             assertThat(responseHeaders.getFirst("cookie")).isEqualTo("4")
             assertThat(responseHeaders.getFirst("body")).isEqualTo("5")

@@ -8,9 +8,13 @@ import io.javalin.event.JavalinLifecycleEvent
 import io.javalin.http.Context
 import io.javalin.http.HttpStatus
 import io.javalin.validation.Validation
+import io.javalin.validation.Validator
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
+import java.util.*
 import kotlin.reflect.KClass
 
 typealias AnnotatedRoute = DefaultDslRoute<Context, Unit>
@@ -62,8 +66,9 @@ internal class ReflectiveEndpointLoader(
                 "Unable to access method $method in class $endpointClass"
             }
 
-            val argumentSuppliers = method.parameters.map {
-                createArgumentSupplier<Unit>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
+            val types = method.genericParameterTypes
+            val argumentSuppliers = method.parameters.mapIndexed { idx, parameter ->
+                createArgumentSupplier<Unit>(parameter, types[idx]) ?: throw IllegalArgumentException("Unsupported parameter type: $parameter")
             }
 
             val status = method.getAnnotation<Status>()
@@ -103,8 +108,9 @@ internal class ReflectiveEndpointLoader(
                 "Unable to access method $method in class $endpointClass"
             }
 
-            val argumentSuppliers = method.parameters.map {
-                createArgumentSupplier<Exception>(it) ?: throw IllegalArgumentException("Unsupported parameter type: $it")
+            val types = method.genericParameterTypes
+            val argumentSuppliers = method.parameters.mapIndexed { idx, parameter ->
+                createArgumentSupplier<Exception>(parameter, types[idx]) ?: throw IllegalArgumentException("Unsupported parameter type: $parameter")
             }
 
             val status = method.getAnnotation<Status>()
@@ -194,55 +200,75 @@ internal class ReflectiveEndpointLoader(
 
     private inline fun <reified CUSTOM : Any> createArgumentSupplier(
         parameter: Parameter,
+        parameterType: Type,
         noinline custom: (Context, CUSTOM) -> Any? = { _, self -> self }
-    ): ((Context, CUSTOM) -> Any?)? =
-        with (parameter) {
+    ): ((Context, CUSTOM) -> Any?)? {
+        val isOptional = parameter.type.isAssignableFrom(Optional::class.java)
+
+        val expectedType = when {
+            isOptional -> (parameterType as ParameterizedType).actualTypeArguments[0]
+            else -> parameterType
+        }
+        val expectedTypeAsClass = expectedType as Class<*>
+
+        return with(parameter) {
             when {
-                CUSTOM::class.java.isAssignableFrom(type) ->
-                    custom
-                type.isAssignableFrom(Context::class.java) -> { ctx, _ ->
+                CUSTOM::class.java.isAssignableFrom(expectedTypeAsClass) -> { ctx, c ->
+                    when {
+                        isOptional -> Optional.ofNullable(custom(ctx, c))
+                        else -> custom(ctx, c)
+                    }
+                }
+                expectedTypeAsClass.isAssignableFrom(Context::class.java) -> { ctx, _ ->
                     ctx
                 }
                 isAnnotationPresent<Param>() -> { ctx, _ ->
                     getAnnotationOrThrow<Param>()
                         .value
                         .ifEmpty { name }
-                        .let { ctx.pathParamAsClass(it, type) }
-                        .get()
+                        .let { ctx.pathParamAsClass(it, expectedTypeAsClass) }
+                        .getValidatorValue(optional = isOptional)
                 }
                 isAnnotationPresent<Header>() -> { ctx, _ ->
                     getAnnotationOrThrow<Header>()
                         .value
                         .ifEmpty { name }
-                        .let { ctx.headerAsClass(it, type) }
-                        .get()
+                        .let { ctx.headerAsClass(it, expectedTypeAsClass) }
+                        .getValidatorValue(optional = isOptional)
                 }
                 isAnnotationPresent<Query>() -> { ctx, _ ->
                     getAnnotationOrThrow<Query>()
                         .value
                         .ifEmpty { name }
-                        .let { ctx.queryParamAsClass(it, type) }
-                        .get()
+                        .let { ctx.queryParamAsClass(it, expectedTypeAsClass) }
+                        .getValidatorValue(optional = isOptional)
                 }
                 isAnnotationPresent<Form>() -> { ctx, _ ->
                     getAnnotationOrThrow<Form>()
                         .value
                         .ifEmpty { name }
-                        .let { ctx.formParamAsClass(it, type) }
-                        .get()
+                        .let { ctx.formParamAsClass(it, expectedTypeAsClass) }
+                        .getValidatorValue(optional = isOptional)
                 }
                 isAnnotationPresent<Cookie>() -> { ctx, _ ->
                     getAnnotationOrThrow<Cookie>()
                         .value
                         .ifEmpty { name }
-                        .let { Validation().validator(it, type, ctx.cookie(it)) }
-                        .get()
+                        .let { Validation().validator(it, expectedTypeAsClass, ctx.cookie(it)) }
+                        .getValidatorValue(optional = isOptional)
                 }
                 isAnnotationPresent<Body>() -> { ctx, _ ->
                     ctx.bodyAsClass(parameter.parameterizedType)
                 }
                 else -> null
             }
+        }
+    }
+
+    private fun <T : Any> Validator<T>.getValidatorValue(optional: Boolean): Any =
+        when {
+            optional -> Optional.ofNullable(allowNullable().get())
+            else -> get()
         }
 
     private inline fun <reified A : Annotation> AnnotatedElement.isAnnotationPresent(): Boolean =
