@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static io.javalin.community.routing.annotations.AnnotatedRouting.Annotated;
 import static io.javalin.http.Header.AUTHORIZATION;
@@ -60,7 +61,7 @@ public final class AnnotatedRoutingExample {
         // use Javalin-specific routes
         @Before
         void beforeEach(Context ctx) {
-            ctx.header("X-Example", "Example");
+            System.out.println("Before each request: " + ctx.method() + " " + ctx.path());
         }
 
         // describe http method and path with annotation
@@ -117,14 +118,14 @@ public final class AnnotatedRoutingExample {
         });
 
         // test request to `saveExample` endpoint
-        HttpResponse<?> saved = Unirest.post("http://localhost:7000/api/hello")
+        HttpResponse<?> saved = Unirest.post("http://localhost:8080/api/hello")
                 .basicAuth("Panda", "passwd")
                 .body(new ExampleDto("Panda"))
                 .asEmpty();
         System.out.println("Entity saved: " + saved.getStatusText()); // Entity saved: OK
 
         // test request to `findExampleV2` endpoint
-        String result = Unirest.get("http://localhost:7000/api/hello/Panda")
+        String result = Unirest.get("http://localhost:8080/api/hello/Panda")
                 .header("X-API-Version", "2")
                 .asString()
                 .getBody();

@@ -74,23 +74,32 @@ internal class ReflectiveEndpointLoader(
             val status = method.getAnnotation<Status>()
             val resultHandler = findResultHandler(method)
 
-            val route = AnnotatedRoute(
-                method = httpMethod,
-                path = ("/$endpointPath/$path").replace(repeatedPathSeparatorRegex, "/"),
-                version = method.getAnnotation<Version>()?.value,
-                handler = {
-                    val arguments = argumentSuppliers
-                        .map { it(this, Unit) }
-                        .toTypedArray()
+            val declaredPath = "/$endpointPath/$path".replace(repeatedPathSeparatorRegex, "/").dropLastWhile { it == '/' }
+            val processedPaths = mutableSetOf(declaredPath)
 
-                    when (async) {
-                        true -> async { invokeAndUnwrapIfErrored(method, endpoint, arguments, ctx = this, status = status, resultHandler = resultHandler) }
-                        else -> invokeAndUnwrapIfErrored(method, endpoint, arguments, ctx = this, status = status, resultHandler = resultHandler)
-                    }
-                }
-            )
+            if (!httpMethod.isHttpMethod && declaredPath.endsWith("*")) {
+                processedPaths.add(declaredPath.dropLast(1).dropLastWhile { it == '/' })
+            }
 
-            endpointRoutes.add(route)
+            processedPaths.forEach { pathToAdd ->
+                endpointRoutes.add(
+                    AnnotatedRoute(
+                        method = httpMethod,
+                        path = pathToAdd,
+                        version = method.getAnnotation<Version>()?.value,
+                        handler = {
+                            val arguments = argumentSuppliers
+                                .map { it(this, Unit) }
+                                .toTypedArray()
+
+                            when (async) {
+                                true -> async { invokeAndUnwrapIfErrored(method, endpoint, arguments, ctx = this, status = status, resultHandler = resultHandler) }
+                                else -> invokeAndUnwrapIfErrored(method, endpoint, arguments, ctx = this, status = status, resultHandler = resultHandler)
+                            }
+                        }
+                    )
+                )
+            }
         }
 
         return endpointRoutes
