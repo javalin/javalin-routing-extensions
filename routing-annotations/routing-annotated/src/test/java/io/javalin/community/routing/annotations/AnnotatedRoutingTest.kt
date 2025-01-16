@@ -126,7 +126,7 @@ class AnnotatedRoutingTest {
             fun `should not register before and after handlers below the specified path`() {
                 withinSharedScenario { client ->
                     val beforeAtRootLevel = request("GET", "${client.origin}/").asEmpty()
-                    assertThat(beforeAtRootLevel.headers.getFirst("after")).isEmpty()
+                    assertThat(beforeAtRootLevel.headers.getFirst("before")).isEmpty()
 
                     val afterAtRootLevel = request("GET", "${client.origin}/").asEmpty()
                     assertThat(afterAtRootLevel.headers.getFirst("after")).isEmpty()
