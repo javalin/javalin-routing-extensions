@@ -1,20 +1,13 @@
 package io.javalin.community.routing.annotations.example;
 
 import io.javalin.Javalin;
-import io.javalin.community.routing.annotations.Before;
-import io.javalin.community.routing.annotations.Body;
-import io.javalin.community.routing.annotations.Endpoints;
-import io.javalin.community.routing.annotations.ExceptionHandler;
-import io.javalin.community.routing.annotations.Get;
-import io.javalin.community.routing.annotations.Header;
-import io.javalin.community.routing.annotations.Param;
-import io.javalin.community.routing.annotations.Post;
-import io.javalin.community.routing.annotations.Version;
+import io.javalin.community.routing.annotations.*;
 import io.javalin.http.Context;
 import io.javalin.openapi.OpenApi;
 import io.javalin.openapi.OpenApiContent;
 import io.javalin.openapi.OpenApiParam;
 import io.javalin.openapi.OpenApiResponse;
+import io.javalin.router.Endpoint;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import org.jetbrains.annotations.Nullable;
@@ -62,6 +55,11 @@ public final class AnnotatedRoutingExample {
         @Before
         void beforeEach(Context ctx) {
             System.out.println("Before each request: " + ctx.method() + " " + ctx.path());
+        }
+
+        @BeforeMatched
+        void beforeMatched(Context ctx, Endpoint endpoint) {
+            System.out.println("Before matched request to " + endpoint.getMethod() + " " + endpoint.getPath());
         }
 
         // describe http method and path with annotation

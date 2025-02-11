@@ -7,6 +7,7 @@ import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTED
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
 import io.javalin.http.HttpStatus
+import io.javalin.router.Endpoint
 import io.javalin.testtools.HttpClient
 import io.javalin.testtools.JavalinTest
 import kong.unirest.Unirest
@@ -36,11 +37,25 @@ class AnnotatedRoutingTest {
                                 object {
                                     // formatter:off
                                     @Before fun beforeEach(ctx: Context) { ctx.header("before", "true") }
-                                    @Before("/specific") fun beforeSpecific(ctx: Context) { ctx.header("before", "specific") }
-                                    @BeforeMatched fun beforeEachMatched(ctx: Context) { ctx.header("before-matched", "true") }
-                                    @AfterMatched fun afterEachMatched(ctx: Context) { ctx.header("after-matched", "true") }
-                                    @After("/specific") fun afterSpecific(ctx: Context) { ctx.header("after", "specific") }
                                     @After fun afterEach(ctx: Context) { ctx.header("after", "true") }
+
+                                    @Before("/specific") fun beforeSpecific(ctx: Context, endpoint: Endpoint?) {
+                                        ctx.header("before", "specific")
+                                        ctx.header("before-endpoint", endpoint?.path ?: "not-matched")
+                                    }
+                                    @BeforeMatched fun beforeEachMatched(ctx: Context, endpoint: Endpoint) {
+                                        ctx.header("before-matched", "true")
+                                        ctx.header("before-matched-endpoint", "${endpoint.method.name} ${endpoint.path}")
+                                    }
+                                    @AfterMatched fun afterEachMatched(ctx: Context, endpoint: Endpoint) {
+                                        ctx.header("after-matched", "true")
+                                        ctx.header("after-matched-endpoint", "${endpoint.method.name} ${endpoint.path}")
+                                    }
+                                    @After("/specific") fun afterSpecific(ctx: Context, endpoint: Endpoint?) {
+                                        ctx.header("after", "specific")
+                                        ctx.header("after-endpoint", endpoint?.path ?: "not-matched")
+                                    }
+
                                     @Get("/get") fun testGet(ctx: Context) { ctx.header("get", "true") }
                                     @Post("/post") fun testPost(ctx: Context) { ctx.header("post", "true") }
                                     @Put("/put") fun testPut(ctx: Context) { ctx.header("put", "true") }
@@ -64,10 +79,16 @@ class AnnotatedRoutingTest {
                         .forEach {
                             val response = request(it.name, "${client.origin}/test/${it.name.lowercase()}").asEmpty()
                             assertThat(response.headers.getFirst(it.name.lowercase())).isEqualTo("true")
+
                             assertThat(response.headers.getFirst("before")).isEqualTo("true")
+                            assertThat(response.headers.getFirst("before-endpoint")).isEmpty()
                             assertThat(response.headers.getFirst("before-matched")).isEqualTo("true")
+                            assertThat(response.headers.getFirst("before-matched-endpoint")).isEqualTo("${it.name} /test/${it.name.lowercase()}")
+
                             assertThat(response.headers.getFirst("after")).isEqualTo("true")
+                            assertThat(response.headers.getFirst("after-endpoint")).isEmpty()
                             assertThat(response.headers.getFirst("after-matched")).isEqualTo("true")
+                            assertThat(response.headers.getFirst("after-matched-endpoint")).isEqualTo("${it.name} /test/${it.name.lowercase()}")
                         }
                 }
             }
@@ -91,9 +112,11 @@ class AnnotatedRoutingTest {
                 withinSharedScenario { client ->
                     val beforeSpecific = request("GET", "${client.origin}/test/specific").asEmpty()
                     assertThat(beforeSpecific.headers.getFirst("before")).isEqualTo("specific")
+                    assertThat(beforeSpecific.headers.getFirst("before-endpoint")).isEqualTo("not-matched")
 
                     val beforeTooSpecific = request("GET", "${client.origin}/test/specific/too-specific").asEmpty()
                     assertThat(beforeTooSpecific.headers.getFirst("before")).isNotEqualTo("specific")
+                    assertThat(beforeTooSpecific.headers.getFirst("before-endpoint")).isEmpty()
                 }
             }
 
@@ -102,9 +125,11 @@ class AnnotatedRoutingTest {
                 withinSharedScenario { client ->
                     val afterSpecific = request("GET", "${client.origin}/test/specific").asEmpty()
                     assertThat(afterSpecific.headers.getFirst("after")).isEqualTo("specific")
+                    assertThat(afterSpecific.headers.getFirst("after-endpoint")).isEqualTo("not-matched")
 
                     val afterTooSpecific = request("GET", "${client.origin}/test/specific/too-specific").asEmpty()
                     assertThat(afterTooSpecific.headers.getFirst("after")).isNotEqualTo("specific")
+                    assertThat(afterTooSpecific.headers.getFirst("after-endpoint")).isEmpty()
                 }
             }
 

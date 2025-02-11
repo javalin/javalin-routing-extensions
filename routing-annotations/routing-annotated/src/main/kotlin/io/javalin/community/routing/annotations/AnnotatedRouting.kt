@@ -58,7 +58,11 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
         val configuration = AnnotatedRoutingConfig()
         setup.invokeAsSamWithReceiver(configuration)
 
-        val loader = ReflectiveEndpointLoader(configuration.resultHandlers)
+        val loader = ReflectiveEndpointLoader(
+            internalRouter = internalRouter,
+            resultHandlers = configuration.resultHandlers
+        )
+
         val registeredEventListeners = mutableMapOf<JavalinLifecycleEvent, AnnotatedEvent>()
         val registeredRoutes = mutableListOf<AnnotatedRoute>()
         val registeredExceptionHandlers = mutableListOf<AnnotatedException>()

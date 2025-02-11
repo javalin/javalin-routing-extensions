@@ -7,6 +7,9 @@ import io.javalin.community.routing.dsl.DefaultDslRoute
 import io.javalin.event.JavalinLifecycleEvent
 import io.javalin.http.Context
 import io.javalin.http.HttpStatus
+import io.javalin.router.Endpoint
+import io.javalin.router.InternalRouter
+import io.javalin.util.Util.firstOrNull
 import io.javalin.validation.Validation
 import io.javalin.validation.Validator
 import java.lang.reflect.AnnotatedElement
@@ -22,20 +25,11 @@ typealias AnnotatedException = DefaultDslException<Context, Exception, Unit>
 typealias AnnotatedEvent = () -> Unit
 
 internal class ReflectiveEndpointLoader(
+    private val internalRouter: InternalRouter,
     private val resultHandlers: Map<Class<*>, HandlerResultConsumer<*>>
 ) {
 
     private val repeatedPathSeparatorRegex = Regex("/+")
-
-    private fun getAllDeclaredMethods(clazz: Class<*>): Collection<Method> {
-        val methods = mutableListOf<Method>()
-        var currentClass: Class<*>? = clazz
-        while (currentClass?.name != "java.lang.Object") {
-            methods.addAll(currentClass?.declaredMethods ?: emptyArray())
-            currentClass = currentClass?.superclass
-        }
-        return methods
-    }
 
     fun loadRoutesFromEndpoint(endpoint: Any): List<AnnotatedRoute> {
         val endpointClass = endpoint::class.java
@@ -160,7 +154,7 @@ internal class ReflectiveEndpointLoader(
                 "Unable to access method $method in class $endpointClass"
             }
 
-            dslEvents[lifecycleEventHandler.lifecycleEvent] =  object : AnnotatedEvent {
+            dslEvents[lifecycleEventHandler.lifecycleEvent] = object : AnnotatedEvent {
                 override fun invoke() {
                     method.invoke(endpoint)
                 }
@@ -231,6 +225,12 @@ internal class ReflectiveEndpointLoader(
                 expectedTypeAsClass.isAssignableFrom(Context::class.java) -> { ctx, _ ->
                     ctx
                 }
+                expectedTypeAsClass.isAssignableFrom(Endpoint::class.java) -> { ctx, _ ->
+                    internalRouter
+                        .findHttpHandlerEntries(ctx.method(), ctx.path().removePrefix(ctx.contextPath()))
+                        .firstOrNull()
+                        ?.endpoint
+                }
                 isAnnotationPresent<Param>() -> { ctx, _ ->
                     getAnnotationOrThrow<Param>()
                         .value
@@ -288,5 +288,15 @@ internal class ReflectiveEndpointLoader(
 
     private inline fun <reified A : Annotation> AnnotatedElement.getAnnotation(): A? =
         getAnnotation(A::class.java)
+
+    private fun getAllDeclaredMethods(clazz: Class<*>): Collection<Method> {
+        val methods = mutableListOf<Method>()
+        var currentClass: Class<*>? = clazz
+        while (currentClass?.name != "java.lang.Object") {
+            methods.addAll(currentClass?.declaredMethods ?: emptyArray())
+            currentClass = currentClass?.superclass
+        }
+        return methods
+    }
 
 }
