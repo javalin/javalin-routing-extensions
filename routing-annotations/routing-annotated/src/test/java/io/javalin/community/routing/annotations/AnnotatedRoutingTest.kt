@@ -6,6 +6,7 @@ import io.javalin.community.routing.annotations.AnnotatedRouting.Annotated
 import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTED
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
+import io.javalin.http.Header.AUTHORIZATION
 import io.javalin.http.HttpStatus
 import io.javalin.router.Endpoint
 import io.javalin.testtools.HttpClient
@@ -539,6 +540,45 @@ class AnnotatedRoutingTest {
                 .isInstanceOf(IllegalStateException::class.java)
                 .hasMessageContaining("Unable to determine handler for type class")
         }
+
+    }
+
+    @Retention(AnnotationRetention.RUNTIME)
+    annotation class Protected
+
+    @Nested
+    inner class Metadata {
+
+        @Test
+        fun `should expose custom annotations in metadata`() =
+            JavalinTest.test(
+                Javalin.create { cfg ->
+                    cfg.router.mount(Annotated) {
+                        it.registerEndpoints(
+                            object {
+                                @BeforeMatched
+                                fun protect(ctx: Context, metadata: AnnotatedEndpointMetadata) {
+                                    val isProtected = metadata.getAnnotation(Protected::class.java).isPresent
+                                    val hasValidToken = ctx.header(AUTHORIZATION) == "Bearer token"
+
+                                    if (isProtected && !hasValidToken) {
+                                        ctx.status(HttpStatus.UNAUTHORIZED).skipRemainingHandlers()
+                                    }
+                                }
+
+                                @Protected
+                                @Get("/protected")
+                                fun endpoint(ctx: Context) {
+                                    ctx.result("success")
+                                }
+                            }
+                        )
+                    }
+                }
+            ) { _, client ->
+                assertThat(Unirest.get("${client.origin}/protected").asString().status).isEqualTo(HttpStatus.UNAUTHORIZED.code)
+                assertThat(Unirest.get("${client.origin}/protected").header(AUTHORIZATION, "Bearer token").asString().body).isEqualTo("success")
+            }
 
     }
 

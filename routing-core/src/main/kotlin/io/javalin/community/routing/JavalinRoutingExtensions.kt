@@ -4,11 +4,8 @@ import io.javalin.Javalin
 import io.javalin.config.RouterConfig
 import io.javalin.http.Handler
 import io.javalin.http.HandlerType
-import io.javalin.router.Endpoint
-import io.javalin.router.InternalRouter
-import io.javalin.router.JavalinDefaultRouting
-import io.javalin.router.RoutingApiInitializer
-import io.javalin.router.RoutingSetupScope
+import io.javalin.router.*
+import io.javalin.security.Roles
 import io.javalin.security.RouteRole
 import java.util.function.Consumer
 
@@ -43,23 +40,32 @@ data class HandlerEntry @JvmOverloads constructor(
 ) : Routed
 
 fun InternalRouter.registerRoute(handlerEntry: HandlerEntry) =
-    registerRoute(handlerEntry.route, handlerEntry.path, handlerEntry.handler, *handlerEntry.roles.toTypedArray())
+    registerRoute(
+        route = handlerEntry.route,
+        path = handlerEntry.path,
+        handler = handlerEntry.handler,
+        metadata = arrayOf(Roles(handlerEntry.roles.toSet())),
+    )
 
-fun InternalRouter.registerRoute(route: Route, path: String, handler: Handler, vararg roles: RouteRole) {
+@Suppress("DEPRECATION")
+fun InternalRouter.registerRoute(route: Route, path: String, handler: Handler, vararg metadata: EndpointMetadata) {
     when (route) {
-        Route.HEAD -> addHttpEndpoint(Endpoint(method = HandlerType.HEAD, path = path, handler = handler, roles = roles))
-        Route.PATCH -> addHttpEndpoint(Endpoint(method = HandlerType.PATCH, path = path, handler = handler, roles = roles))
-        Route.OPTIONS -> addHttpEndpoint(Endpoint(method = HandlerType.OPTIONS, path = path, handler = handler, roles = roles))
-        Route.GET -> addHttpEndpoint(Endpoint(method = HandlerType.GET, path = path, handler = handler, roles = roles))
-        Route.PUT -> addHttpEndpoint(Endpoint(method = HandlerType.PUT, path = path, handler = handler, roles = roles))
-        Route.POST -> addHttpEndpoint(Endpoint(method = HandlerType.POST, path = path, handler = handler, roles = roles))
-        Route.DELETE -> addHttpEndpoint(Endpoint(method = HandlerType.DELETE, path = path, handler = handler, roles = roles))
-        Route.BEFORE -> addHttpEndpoint(Endpoint(method = HandlerType.BEFORE, path = path, handler = handler))
-        Route.BEFORE_MATCHED -> addHttpEndpoint(Endpoint(method = HandlerType.BEFORE_MATCHED, path = path, handler = handler))
-        Route.AFTER -> addHttpEndpoint(Endpoint(method = HandlerType.AFTER, path = path, handler = handler))
-        Route.AFTER_MATCHED -> addHttpEndpoint(Endpoint(method = HandlerType.AFTER_MATCHED, path = path, handler = handler))
+        Route.HEAD -> addHttpEndpoint(Endpoint.create(HandlerType.HEAD, path).metadata(*metadata).handler(handler))
+        Route.PATCH -> addHttpEndpoint(Endpoint.create(HandlerType.PATCH, path).metadata(*metadata).handler(handler))
+        Route.OPTIONS -> addHttpEndpoint(Endpoint.create(HandlerType.OPTIONS, path).metadata(*metadata).handler(handler))
+        Route.GET -> addHttpEndpoint(Endpoint.create(HandlerType.GET, path).metadata(*metadata).handler(handler))
+        Route.PUT -> addHttpEndpoint(Endpoint.create(HandlerType.PUT, path).metadata(*metadata).handler(handler))
+        Route.POST -> addHttpEndpoint(Endpoint.create(HandlerType.POST, path).metadata(*metadata).handler(handler))
+        Route.DELETE -> addHttpEndpoint(Endpoint.create(HandlerType.DELETE, path).metadata(*metadata).handler(handler))
+        Route.BEFORE -> addHttpEndpoint(Endpoint.create(HandlerType.BEFORE, path).metadata(*metadata).handler(handler))
+        Route.BEFORE_MATCHED -> addHttpEndpoint(Endpoint.create(HandlerType.BEFORE_MATCHED, path).metadata(*metadata).handler(handler))
+        Route.AFTER -> addHttpEndpoint(Endpoint.create(HandlerType.AFTER, path).metadata(*metadata).handler(handler))
+        Route.AFTER_MATCHED -> addHttpEndpoint(Endpoint.create(HandlerType.AFTER_MATCHED, path).metadata(*metadata).handler(handler))
     }
 }
+
+fun Endpoint.Companion.EndpointBuilder.metadata(vararg metadata: EndpointMetadata): Endpoint.Companion.EndpointBuilder =
+    metadata.fold(this) { acc, value -> acc.addMetadata(value) }
 
 fun RouterConfig.mount(setup: RoutingSetupScope<JavalinDefaultRouting>): RouterConfig = also {
     mount(Consumer {
