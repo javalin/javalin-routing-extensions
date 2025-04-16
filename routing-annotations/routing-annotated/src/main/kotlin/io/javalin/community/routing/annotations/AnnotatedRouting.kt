@@ -2,6 +2,7 @@ package io.javalin.community.routing.annotations
 
 import io.javalin.community.routing.Route
 import io.javalin.community.routing.dsl.DslRoute
+import io.javalin.community.routing.dsl.DslRouteMetadataFactory
 import io.javalin.community.routing.invokeAsSamWithReceiver
 import io.javalin.community.routing.registerRoute
 import io.javalin.community.routing.sortRoutes
@@ -93,17 +94,25 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
             .sortRoutes()
             .groupBy { RouteIdentifier(it.method, it.path) }
             .map { (id, routes) ->
-                id to when (routes.size) {
-                    1 -> routes.first().let { Handler { ctx -> it.handler(ctx) } }
-                    else -> createVersionedRoute(
-                        apiVersionHeader = configuration.apiVersionHeader,
-                        id = id,
-                        routes = routes
-                    )
+                when (routes.size) {
+                    1 -> Triple(id, routes.first().let { Handler { ctx -> it.handler(ctx) } }, routes.first().metadataFactory)
+                    else ->
+                        createVersionedRoute(
+                            apiVersionHeader = configuration.apiVersionHeader,
+                            id = id,
+                            routes = routes
+                        ).let {
+                            Triple(id, it.first, it.second)
+                        }
                 }
             }
-            .forEach { (id, handler) ->
-                internalRouter.registerRoute(id.route, id.path, handler)
+            .forEach { (id, handler, metadataFactory) ->
+                internalRouter.registerRoute(
+                    route = id.route,
+                    path = id.path,
+                    handler = handler,
+                    metadata = metadataFactory?.let { arrayOf(it) } ?: emptyArray(),
+                )
             }
 
         registeredExceptionHandlers.forEach { annotatedException ->
@@ -113,11 +122,19 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
         }
     }
 
-    private fun createVersionedRoute(apiVersionHeader: String, id: RouteIdentifier, routes: List<DslRoute<Context, Unit>>): Handler {
+    private fun createVersionedRoute(apiVersionHeader: String, id: RouteIdentifier, routes: List<DslRoute<Context, Unit>>): Pair<Handler, DslRouteMetadataFactory> {
         val versions = routes.map { it.version }
         check(versions.size == versions.toSet().size) { "Duplicated version found for the same route: ${id.route} ${id.path} (versions: $versions)" }
 
-        return Handler { ctx ->
+        val metadataFactory = DslRouteMetadataFactory { ctx ->
+            val version = ctx.header(apiVersionHeader)
+
+            routes.firstOrNull { it.version == version }
+                ?.let { it.metadataFactory?.create(ctx) }
+                ?: throw BadRequestResponse("This endpoint does not support the requested API version ($version).")
+        }
+
+        val handler = Handler { ctx ->
             val version = ctx.header(apiVersionHeader)
 
             routes.firstOrNull { it.version == version }
@@ -125,6 +142,8 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
                 ?.invoke(ctx)
                 ?: throw BadRequestResponse("This endpoint does not support the requested API version ($version).")
         }
+
+        return handler to metadataFactory
     }
 
 }
