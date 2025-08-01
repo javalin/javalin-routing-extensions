@@ -4,6 +4,7 @@ import io.javalin.community.routing.Route
 import io.javalin.community.routing.Route.BEFORE_MATCHED
 import io.javalin.community.routing.dsl.DefaultDslException
 import io.javalin.community.routing.dsl.DefaultDslRoute
+import io.javalin.community.routing.dsl.DslRouteMetadataFactory
 import io.javalin.event.JavalinLifecycleEvent
 import io.javalin.http.Context
 import io.javalin.http.HttpStatus
@@ -60,7 +61,9 @@ internal class ReflectiveEndpointLoader(
                 "Unable to access method $method in class $endpointClass"
             }
 
+            val annotations = method.annotations.toSet()
             val types = method.genericParameterTypes
+
             val argumentSuppliers = method.parameters.mapIndexed { idx, parameter ->
                 createArgumentSupplier<Unit>(parameter, types[idx]) ?: throw IllegalArgumentException("Unsupported parameter type: $parameter")
             }
@@ -80,6 +83,7 @@ internal class ReflectiveEndpointLoader(
                     AnnotatedRoute(
                         method = httpMethod,
                         path = pathToAdd,
+                        metadataFactory = { _ -> AnnotatedEndpointMetadata(annotations = annotations) },
                         version = method.getAnnotation<Version>()?.value,
                         handler = {
                             val arguments = argumentSuppliers
@@ -230,6 +234,14 @@ internal class ReflectiveEndpointLoader(
                         .findHttpHandlerEntries(ctx.method(), ctx.path().removePrefix(ctx.contextPath()))
                         .firstOrNull()
                         ?.endpoint
+                }
+                expectedTypeAsClass.isAssignableFrom(AnnotatedEndpointMetadata::class.java) -> { ctx, _ ->
+                    internalRouter
+                        .findHttpHandlerEntries(ctx.method(), ctx.path().removePrefix(ctx.contextPath()))
+                        .firstOrNull()
+                        ?.endpoint
+                        ?.metadata(DslRouteMetadataFactory::class.java)
+                        ?.create(ctx)
                 }
                 isAnnotationPresent<Param>() -> { ctx, _ ->
                     getAnnotationOrThrow<Param>()
