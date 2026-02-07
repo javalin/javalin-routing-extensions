@@ -10,7 +10,7 @@ class CoroutinesRouting<ROUTE : SuspendedRoute<CONTEXT, RESPONSE>, CONTEXT, RESP
         routes.add(route)
     }
 
-    fun routes(exampleEndpoint: SuspendedRoutes<ROUTE, CONTEXT, RESPONSE>): CoroutinesRouting<ROUTE, CONTEXT, RESPONSE> {
+    fun register(exampleEndpoint: SuspendedRoutes<ROUTE, CONTEXT, RESPONSE>): CoroutinesRouting<ROUTE, CONTEXT, RESPONSE> {
         exampleEndpoint.routes().forEach { route(it) }
         return this
     }

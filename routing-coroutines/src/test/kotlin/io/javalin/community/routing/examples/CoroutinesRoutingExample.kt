@@ -6,6 +6,7 @@ import io.javalin.community.routing.coroutines.Coroutines
 import io.javalin.community.routing.coroutines.SuspendedRoute
 import io.javalin.community.routing.coroutines.SuspendedRoutes
 import io.javalin.community.routing.coroutines.servlet.DefaultContextCoroutinesServlet
+import io.javalin.community.routing.routes
 import io.javalin.http.Context
 import java.lang.Thread.sleep
 import java.util.concurrent.Executors
@@ -78,13 +79,15 @@ fun main() {
     // setup Javalin with reactive routing
     Javalin
         .create { config ->
-            config.router.mount(Coroutines(coroutinesServlet)) {
-                it.routes(ExampleEndpoint(exampleService))
+            config.routes(Coroutines(coroutinesServlet)) {
+                register(
+                    ExampleEndpoint(exampleService = exampleService)
+                )
             }
-        }
-        .events {
-            it.serverStopping { coroutinesServlet.prepareShutdown() }
-            it.serverStopped { coroutinesServlet.completeShutdown() }
+            config.events.also {
+                it.serverStopping { coroutinesServlet.prepareShutdown() }
+                it.serverStopped { coroutinesServlet.completeShutdown() }
+            }
         }
         .start("127.0.0.1", 8080)
 }

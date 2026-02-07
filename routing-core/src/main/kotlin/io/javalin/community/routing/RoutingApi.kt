@@ -16,10 +16,20 @@
 
 package io.javalin.community.routing
 
+import io.javalin.config.JavalinState
+
 interface Routed {
     val path: String
 }
 
 interface Routes<ROUTE : Routed, CONTEXT, RESPONSE> {
     fun routes(): Collection<ROUTE> = emptySet()
+}
+
+fun interface RoutingApiInitializer<SETUP> {
+    fun initialize(state: JavalinState, setup: RoutingSetupScope<SETUP>)
+}
+
+fun interface RoutingSetupScope<SETUP> {
+    fun SETUP.setup()
 }

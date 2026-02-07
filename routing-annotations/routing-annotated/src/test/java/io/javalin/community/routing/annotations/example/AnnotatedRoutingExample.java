@@ -59,7 +59,7 @@ public final class AnnotatedRoutingExample {
 
         @BeforeMatched
         void beforeMatched(Context ctx, Endpoint endpoint) {
-            System.out.println("Before matched request to " + endpoint.getMethod() + " " + endpoint.getPath());
+            System.out.println("Before matched request to " + endpoint.method + " " + endpoint.path);
         }
 
         // describe http method and path with annotation
@@ -105,12 +105,12 @@ public final class AnnotatedRoutingExample {
     }
 
     public static void main(String[] args) {
-        Javalin.createAndStart(config -> {
+        Javalin.create(config -> {
             // prepare dependencies
             var exampleService = new ExampleService();
 
             // register endpoints
-            config.router.mount(Annotated, routing -> {
+            AnnotatedRouting.install(config, routing -> {
                 routing.registerEndpoints(new ExampleEndpoints(exampleService));
             });
         });

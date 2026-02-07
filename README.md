@@ -35,7 +35,7 @@ Each module is distributed as a separate artifact:
 
 ```kotlin
 dependencies {
-    val javalinRoutingExtensions = "6.7.0"
+    val javalinRoutingExtensions = "7.0.0-beta.1"
     implementation("io.javalin.community.routing:routing-core:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-annotated:$javalinRoutingExtensions")
     implementation("io.javalin.community.routing:routing-dsl:$javalinRoutingExtensions")
@@ -132,7 +132,7 @@ public static void main(String[] args) {
         var exampleService = new ExampleService();
 
         // register endpoints
-        config.router.mount(Annotated, routing -> {
+        AnnotatedRouting.install(config, routing -> {
             routing.registerEndpoints(new ExampleEndpoints(exampleService));
         });
     });
@@ -188,10 +188,10 @@ data class PandaPath(val age: Int)
 
 fun main() {
     Javalin.create { config ->
-        config.routing(CustomDsl) {
+        config.routes(DslRouting(ExampleDsl)) {
             before {
-                // `endpointHandlerPath` comes from Context class
-                result("Called endpoint: ${matchedPath()}")
+                // `endpoint().path` comes from Context class
+                result("Called endpoint: ${endpoint().path}")
             }
             get("/") {
                 // `helloWorld` comes from CustomScope class
@@ -223,21 +223,18 @@ you're in full control of your execution flow.
 
 ```kotlin
 // Some dependencies
-class ExampleService {
+private class ExampleService {
     fun save(animal: String) = println("Saved animal: $animal")
 }
 
-// Utility representation of custom routing in your application
-abstract class ExampleRouting : DslRoutes<DslRoute<CustomScope, Unit>, CustomScope, Unit>
-
 // Endpoint (domain router)
-class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouting() {
+private class AnimalEndpoints(private val exampleService: ExampleService) : DefaultRouting() {
 
     @OpenApi(
         path = "/animal/{name}",
         methods = [HttpMethod.GET]
     )
-    private val findAnimalByName = route("/animal/<name>", GET) {
+    private val findAnimalByName = route(GET, "/animal/<name>") {
         result(pathParam("name"))
     }
 
@@ -245,7 +242,7 @@ class AnimalEndpoints(private val exampleService: ExampleService) : ExampleRouti
         path = "/animal/{name}",
         methods = [HttpMethod.POST]
     )
-    private val saveAnimal = route("/animal/<name>", POST) {
+    private val saveAnimal = route(POST, "/animal/<name>") {
         exampleService.save(pathParam("name"))
     }
 
@@ -263,9 +260,11 @@ fun main() {
     val exampleService = ExampleService()
 
     // setup & launch application
-    Javalin
-        .create { it.routing(CustomDsl, AnimalEndpoints(exampleService) /*, provide more classes with endpoints */) }
-        .start(8080)
+    Javalin.create { cfg ->
+        cfg.routes(Dsl) {
+            register(AnimalEndpoints(exampleService))
+        }
+    }.start()
 }
 ```
 
@@ -283,25 +282,56 @@ but it uses coroutines & suspend directives to provide asynchronous & non-blocki
 
 
 ```kotlin
+// Some dependencies
+class ExampleService {
+    val streamId = AtomicInteger(0)
+}
+
 // Custom scope used by routing DSL
 class CustomScope(val ctx: Context) : Context by ctx {
+
     // blocks thread using reactive `delay` function
     suspend fun nonBlockingDelay(message: String): String = delay(2000L).let { message }
+
+    // truly blocks thread using blocking JVM `sleep` function
+    fun blockingDelay(message: String): String = sleep(2000L).let { message }
+
 }
 
 // Utility class representing group of reactive routes
-abstract class ExampleRoutes : ReactiveRoutes<ReactiveRoute<CustomScope, Unit>, CustomScope, Unit>()
+abstract class ExampleRoutes : SuspendedRoutes<SuspendedRoute<CustomScope, Unit>, CustomScope, Unit>()
 
 // Endpoint (domain router)
 class ExampleEndpoint(private val exampleService: ExampleService) : ExampleRoutes() {
-    
-    // you can use suspend functions in coroutines context 
+
+    // you can use suspend functions in coroutines context
     // and as long as they're truly reactive, they won't freeze it
-    private val nonBlockingAsync = reactiveRoute("/async", GET) {
+    private val nonBlockingAsync = route("/async", GET) {
         result(nonBlockingDelay("Non-blocking Async"))
     }
 
-    override fun routes() = setOf(nonBlockingAsync)
+    // using truly-blocking functions in coroutines context will freeze thread anyway
+    private val blockingAsync = route("/async-blocking", GET) {
+        result(blockingDelay("Blocking Async"))
+    }
+
+    // you can also use async = false, to run coroutine in sync context (runBlocking)
+    private val sync = route("/sync", GET, async = false) {
+        result(blockingDelay("Sync"))
+    }
+
+    // you can visit /stream in browser and see that despite single-threaded executor,
+    // you can make multiple concurrent requests and each request is handled
+    private val stream = route("/stream", GET) {
+        val id = exampleService.streamId.incrementAndGet()
+
+        while (true) {
+            println("${Thread.currentThread().name} | $id")
+            delay(1000L)
+        }
+    }
+
+    override fun routes() = setOf(sync, blockingAsync, nonBlockingAsync, stream)
 
 }
     
@@ -318,11 +348,15 @@ fun main() {
     // setup Javalin with reactive routing
     Javalin
         .create { config ->
-            config.reactiveRouting(coroutinesServlet, ExampleEndpoint(exampleService))
-        }
-        .events {
-            it.serverStopping { coroutinesServlet.prepareShutdown() }
-            it.serverStopped { coroutinesServlet.completeShutdown() }
+            config.routes(Coroutines(coroutinesServlet)) {
+                register(
+                    ExampleEndpoint(exampleService = exampleService)
+                )
+            }
+            config.events.also {
+                it.serverStopping { coroutinesServlet.prepareShutdown() }
+                it.serverStopped { coroutinesServlet.completeShutdown() }
+            }
         }
         .start("127.0.0.1", 8080)
 }

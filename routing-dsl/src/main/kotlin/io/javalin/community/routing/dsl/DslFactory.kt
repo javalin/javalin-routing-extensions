@@ -51,18 +51,24 @@ open class RoutingDslConfiguration<ROUTE : DslRoute<CONTEXT, RESPONSE>, CONTEXT,
     fun after(path: String = "", handler: CONTEXT.() -> RESPONSE) = route(AFTER, path, handler)
     fun afterMatched(path: String = "", handler: CONTEXT.() -> RESPONSE) = route(AFTER_MATCHED, path, handler)
 
-    fun routes(container: DslContainer<ROUTE, CONTEXT, RESPONSE>) {
-        routes(container.routes())
-        container.exceptionHandlers().forEach { exception(it.type, it.handler) }
+    fun register(vararg containers: DslContainer<ROUTE, CONTEXT, RESPONSE>) {
+        containers.forEach { container ->
+            register(container.routes())
+            
+            container.exceptionHandlers().forEach { 
+                exception(it.type, it.handler) 
+            }
+        }
     }
 
-    fun routes(routesToAdd: Collection<DslRoute<CONTEXT, RESPONSE>>) = routesToAdd.forEach {
-        @Suppress("UNCHECKED_CAST")
-        routes.add(it as ROUTE)
-    }
+    fun register(routesToAdd: Collection<DslRoute<CONTEXT, RESPONSE>>) =
+        routesToAdd.forEach {
+            @Suppress("UNCHECKED_CAST")
+            routes.add(it as ROUTE)
+        }
 
     fun route(method: Route, path: String, handler: CONTEXT.() -> RESPONSE) {
-        routes(
+        register(
             listOf(
                 DefaultDslRoute(
                     method = method,
