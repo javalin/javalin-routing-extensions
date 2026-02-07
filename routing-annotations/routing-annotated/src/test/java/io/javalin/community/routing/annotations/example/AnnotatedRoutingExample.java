@@ -113,7 +113,7 @@ public final class AnnotatedRoutingExample {
             AnnotatedRouting.install(config, routing -> {
                 routing.registerEndpoints(new ExampleEndpoints(exampleService));
             });
-        });
+        }).start(8080);
 
         // test request to `saveExample` endpoint
         HttpResponse<?> saved = Unirest.post("http://localhost:8080/api/hello")

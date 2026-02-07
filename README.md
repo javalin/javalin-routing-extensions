@@ -127,7 +127,7 @@ static final class ExampleEndpoints {
 }
 
 public static void main(String[] args) {
-    Javalin.createAndStart(config -> {
+    Javalin.create(config -> {
         // prepare dependencies
         var exampleService = new ExampleService();
 
@@ -135,7 +135,7 @@ public static void main(String[] args) {
         AnnotatedRouting.install(config, routing -> {
             routing.registerEndpoints(new ExampleEndpoints(exampleService));
         });
-    });
+    }).start(8080);
 
     // test request to `saveExample` endpoint
     HttpResponse<?> saved = Unirest.post("http://localhost:7000/api/hello")
