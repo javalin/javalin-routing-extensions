@@ -4,7 +4,8 @@ import io.javalin.Javalin
 import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.Route.POST
 import io.javalin.community.routing.dsl.DslRouting.Companion.Dsl
-import io.javalin.community.routing.dsl.defaults.DefaultRoutes
+import io.javalin.community.routing.dsl.defaults.DefaultRouting
+import io.javalin.community.routing.routes
 import io.javalin.openapi.HttpMethod
 import io.javalin.openapi.OpenApi
 
@@ -14,7 +15,7 @@ private class ExampleService {
 }
 
 // Endpoint (domain router)
-private class AnimalEndpoints(private val exampleService: ExampleService) : DefaultRoutes() {
+private class AnimalEndpoints(private val exampleService: ExampleService) : DefaultRouting() {
 
     @OpenApi(
         path = "/animal/{name}",
@@ -46,9 +47,9 @@ fun main() {
     val exampleService = ExampleService()
 
     // setup & launch application
-    Javalin.createAndStart { cfg ->
-        cfg.router.mount(Dsl) {
-            it.routes(AnimalEndpoints(exampleService))
+    Javalin.create { cfg ->
+        cfg.routes(Dsl) {
+            register(AnimalEndpoints(exampleService))
         }
-    }
+    }.start()
 }

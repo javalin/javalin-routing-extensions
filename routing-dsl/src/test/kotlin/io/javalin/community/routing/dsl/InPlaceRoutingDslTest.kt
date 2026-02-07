@@ -5,6 +5,7 @@ import io.javalin.community.routing.Route
 import io.javalin.community.routing.dsl.DslRouting.Companion.Dsl
 import io.javalin.community.routing.dsl.defaults.Path
 import io.javalin.community.routing.dsl.specification.TestSpecification
+import io.javalin.community.routing.routes
 import io.javalin.testtools.JavalinTest
 import kong.unirest.Unirest.get
 import kong.unirest.Unirest.request
@@ -19,22 +20,22 @@ class InPlaceRoutingDslTest : TestSpecification() {
     fun `each http dsl method is properly mapped to javalin handler`() = JavalinTest.test(
         // given: a javalin app with routes defined using the dsl
         Javalin.create { config ->
-            config.router.mount(Dsl) {
-                it.before("/before") { header("test", "before") }
-                it.beforeMatched("/before-matched") { header("test", "before-matched") }
-                it.get("/before-matched") {  }
-                it.after("/after") { header("test", "after") }
-                it.afterMatched("/after-matched") { header("test", "after-matched") }
-                it.get("/after-matched") {}
-                it.get("/throwing") { throw RuntimeException() }
-                it.exception(Exception::class) { header("exception", it::class.java.name) }
-                it.get("/get") { header("test", "get") }
-                it.post("/post") { header("test", "post") }
-                it.put("/put") { header("test", "put") }
-                it.patch("/patch") { header("test", "patch") }
-                it.delete("/delete") { header("test", "delete") }
-                it.head("/head") { header("test", "head") }
-                it.options("/options") { header("test", "options") }
+            config.routes(Dsl) {
+                before("/before") { header("test", "before") }
+                beforeMatched("/before-matched") { header("test", "before-matched") }
+                get("/before-matched") {  }
+                after("/after") { header("test", "after") }
+                afterMatched("/after-matched") { header("test", "after-matched") }
+                get("/after-matched") {}
+                get("/throwing") { throw RuntimeException() }
+                exception(Exception::class) { header("exception", it::class.java.name) }
+                get("/get") { header("test", "get") }
+                post("/post") { header("test", "post") }
+                put("/put") { header("test", "put") }
+                patch("/patch") { header("test", "patch") }
+                delete("/delete") { header("test", "delete") }
+                head("/head") { header("test", "head") }
+                options("/options") { header("test", "options") }
             }
         },
         defaultConfig
@@ -93,8 +94,8 @@ class InPlaceRoutingDslTest : TestSpecification() {
     fun `should properly handle class based route`() = JavalinTest.test(
         // given: a javalin app with routes defined using the dsl
         Javalin.create { config ->
-            config.router.mount(Dsl) {
-                it.get<ValidPath> { result("Panda") }
+            config.routes(Dsl) {
+                get<ValidPath> { result("Panda") }
             }
         },
         defaultConfig
@@ -113,8 +114,8 @@ class InPlaceRoutingDslTest : TestSpecification() {
     fun `should properly handle class based route with parameter`() = JavalinTest.test(
         // given: a javalin app with routes defined using the dsl
         Javalin.create { config ->
-            config.router.mount(Dsl) {
-                it.get<ValidPathWithParameter> { result(it.name) }
+            config.routes(Dsl) {
+                get<ValidPathWithParameter> { result(it.name) }
             }
         },
         defaultConfig
@@ -133,9 +134,9 @@ class InPlaceRoutingDslTest : TestSpecification() {
         // given: a javalin app with routes defined using the dsl
         val app = ThrowingCallable {
             Javalin.create {
-                it.router.mount(Dsl) {
+                it.routes(Dsl) {
                     // when: a route is defined with path without @Path annotation
-                    it.get<MissingAnnotationPath> { }
+                    get<MissingAnnotationPath> { }
                 }
             }
         }
@@ -154,9 +155,9 @@ class InPlaceRoutingDslTest : TestSpecification() {
         // given: a javalin app with routes defined using the dsl
         val app = ThrowingCallable {
             Javalin.create {
-                it.router.mount(Dsl) {
+                it.routes(Dsl) {
                     // when: a route is defined with invalid @Path annotation
-                    it.get<InvalidParameterPath> { }
+                    get<InvalidParameterPath> { }
                 }
             }
         }
@@ -174,18 +175,18 @@ class InPlaceRoutingDslTest : TestSpecification() {
     fun `should properly map all reified variants`() = JavalinTest.test(
         // given: a javalin app with routes defined by all available reified methods
         Javalin.create { config ->
-            config.router.mount(Dsl) {
-                it.before<ReifiedPath> { result("Before ") }
-                it.beforeMatched<ReifiedPath> { result(result() + "Before-Matched ") }
-                it.get<ReifiedPath> { result(result() + "GET") }
-                it.put<ReifiedPath> { result(result() + "PUT") }
-                it.post<ReifiedPath> { result(result() + "POST") }
-                it.patch<ReifiedPath> { result(result() + "PATCH") }
-                it.delete<ReifiedPath> { result(result() + "DELETE") }
-                it.head<ReifiedPath> { result(result() + "HEAD") }
-                it.options<ReifiedPath> { result(result() + "OPTIONS") }
-                it.afterMatched<ReifiedPath> { result(result() + " After-Matched") }
-                it.after<ReifiedPath> {
+            config.routes(Dsl) {
+                before<ReifiedPath> { result("Before ") }
+                beforeMatched<ReifiedPath> { result(result() + "Before-Matched ") }
+                get<ReifiedPath> { result(result() + "GET") }
+                put<ReifiedPath> { result(result() + "PUT") }
+                post<ReifiedPath> { result(result() + "POST") }
+                patch<ReifiedPath> { result(result() + "PATCH") }
+                delete<ReifiedPath> { result(result() + "DELETE") }
+                head<ReifiedPath> { result(result() + "HEAD") }
+                options<ReifiedPath> { result(result() + "OPTIONS") }
+                afterMatched<ReifiedPath> { result(result() + " After-Matched") }
+                after<ReifiedPath> {
                     result(result() + " After")
                     header("test", result()!!)
                 }

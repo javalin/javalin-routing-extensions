@@ -10,6 +10,7 @@ import io.javalin.community.routing.dsl.defaults.DefaultDsl.DefaultScope
 import io.javalin.community.routing.dsl.defaults.Path
 import io.javalin.community.routing.dsl.examples.ExampleDsl.CustomRoutingConfiguration
 import io.javalin.community.routing.dsl.examples.ExampleDsl.CustomScope
+import io.javalin.community.routing.routes
 import io.javalin.http.Context
 import io.javalin.http.ExceptionHandler
 import io.javalin.http.Handler
@@ -21,7 +22,7 @@ object ExampleDsl : RoutingDslFactory<CustomRoutingConfiguration, DslRoute<Custo
 
     // This is custom scope that will be used in the handlers
     class CustomScope(ctx: Context) : DefaultScope(ctx) {
-        fun helloWorld(): String = "Hello ${ctx.endpointHandlerPath()}"
+        fun helloWorld(): String = "Hello ${ctx.endpoint().path}"
     }
 
     override fun createConfiguration(): CustomRoutingConfiguration =
@@ -44,20 +45,20 @@ data class PandaPath(val age: Int)
 
 fun main() {
     Javalin.create { config ->
-        config.router.mount(DslRouting(ExampleDsl)) {
-            it.before {
-                // `endpointHandlerPath` comes from Context class
-                result("Called endpoint: ${matchedPath()}")
+        config.routes(DslRouting(ExampleDsl)) {
+            before {
+                // `endpoint().path` comes from Context class
+                result("Called endpoint: ${endpoint().path}")
             }
-            it.get("/") {
+            get("/") {
                 // `helloWorld` comes from CustomScope class
                 result(helloWorld())
             }
-            it.get<PandaPath> { path ->
+            get<PandaPath> { path ->
                 // support for type-safe paths
                 result(path.age.toString())
             }
-            it.exception(Exception::class) { anyException ->
+            exception(Exception::class) { anyException ->
                 // support for exception handlers
                 result(anyException.message ?: "Unknown error")
             }

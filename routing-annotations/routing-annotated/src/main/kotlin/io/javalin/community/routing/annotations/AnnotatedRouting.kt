@@ -1,11 +1,15 @@
 package io.javalin.community.routing.annotations
 
 import io.javalin.community.routing.Route
+import io.javalin.community.routing.RoutingApiInitializer
+import io.javalin.community.routing.RoutingSetupScope
 import io.javalin.community.routing.dsl.DslRoute
 import io.javalin.community.routing.invokeAsSamWithReceiver
 import io.javalin.community.routing.registerRoute
+import io.javalin.community.routing.routes
 import io.javalin.community.routing.sortRoutes
 import io.javalin.config.JavalinConfig
+import io.javalin.config.JavalinState
 import io.javalin.event.JavalinLifecycleEvent
 import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTED
 import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTING
@@ -16,9 +20,6 @@ import io.javalin.event.JavalinLifecycleEvent.SERVER_STOP_FAILED
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.http.Handler
-import io.javalin.router.InternalRouter
-import io.javalin.router.RoutingApiInitializer
-import io.javalin.router.RoutingSetupScope
 
 fun interface HandlerResultConsumer<T> {
     fun handle(ctx: Context, value: T)
@@ -52,14 +53,20 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
 
     @JvmField val Annotated = this
 
+    /** For Java since the routes.mount(Annotated, setup -> ...) API has been removed from Javalin **/
+    @JvmStatic
+    fun install(config: JavalinConfig, setup: RoutingSetupScope<AnnotatedRoutingConfig>) {
+        config.routes(Annotated, setup)
+    }
+
     private data class RouteIdentifier(val route: Route, val path: String)
 
-    override fun initialize(cfg: JavalinConfig, internalRouter: InternalRouter, setup: RoutingSetupScope<AnnotatedRoutingConfig>) {
+    override fun initialize(state: JavalinState, setup: RoutingSetupScope<AnnotatedRoutingConfig>) {
         val configuration = AnnotatedRoutingConfig()
         setup.invokeAsSamWithReceiver(configuration)
 
         val loader = ReflectiveEndpointLoader(
-            internalRouter = internalRouter,
+            internalRouter = state.internalRouter,
             resultHandlers = configuration.resultHandlers
         )
 
@@ -80,12 +87,12 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
 
         registeredEventListeners.forEach { (key, event) ->
             when (key) {
-                SERVER_STARTING -> cfg.events.serverStarting { event.invoke() }
-                SERVER_STARTED -> cfg.events.serverStarted { event.invoke() }
-                SERVER_START_FAILED -> cfg.events.serverStartFailed { event.invoke() }
-                SERVER_STOP_FAILED -> cfg.events.serverStopFailed { event.invoke() }
-                SERVER_STOPPING -> cfg.events.serverStopping { event.invoke() }
-                SERVER_STOPPED -> cfg.events.serverStopped { event.invoke() }
+                SERVER_STARTING -> state.events.serverStarting { event.invoke() }
+                SERVER_STARTED -> state.events.serverStarted { event.invoke() }
+                SERVER_START_FAILED -> state.events.serverStartFailed { event.invoke() }
+                SERVER_STOP_FAILED -> state.events.serverStopFailed { event.invoke() }
+                SERVER_STOPPING -> state.events.serverStopping { event.invoke() }
+                SERVER_STOPPED -> state.events.serverStopped { event.invoke() }
             }
         }
 
@@ -103,11 +110,11 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
                 }
             }
             .forEach { (id, handler) ->
-                internalRouter.registerRoute(id.route, id.path, handler)
+                state.internalRouter.registerRoute(id.route, id.path, handler)
             }
 
         registeredExceptionHandlers.forEach { annotatedException ->
-            internalRouter.addHttpExceptionHandler(annotatedException.type.java) { exception, ctx ->
+            state.internalRouter.addHttpExceptionHandler(annotatedException.type.java) { exception, ctx ->
                 annotatedException.handler.invoke(ctx, exception)
             }
         }

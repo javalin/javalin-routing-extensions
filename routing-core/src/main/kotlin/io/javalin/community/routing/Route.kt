@@ -1,5 +1,7 @@
 package io.javalin.community.routing
 
+import io.javalin.http.HandlerType
+
 enum class Route(val isHttpMethod: Boolean = true) {
     HEAD,
     PATCH,

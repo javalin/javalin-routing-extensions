@@ -274,9 +274,9 @@ internal class ReflectiveEndpointLoader(
         }
     }
 
-    private fun <T : Any> Validator<T>.getValidatorValue(optional: Boolean): Any =
+    private fun <T : Any> Validator<T?>.getValidatorValue(optional: Boolean): Any =
         when {
-            optional -> Optional.ofNullable(allowNullable().get())
+            optional -> Optional.ofNullable(this.getOrNull())
             else -> get()
         }
 

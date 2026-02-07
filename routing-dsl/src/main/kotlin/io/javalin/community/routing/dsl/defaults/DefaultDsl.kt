@@ -12,7 +12,7 @@ import io.javalin.http.Handler
 
 typealias DefaultRoute = DslRoute<DefaultScope, Unit>
 
-abstract class DefaultRoutes : DslContainer<DefaultRoute, DefaultScope, Unit>
+abstract class DefaultRouting : DslContainer<DefaultRoute, DefaultScope, Unit>
 
 /**
  * Default implementation of [RoutingDslFactory] that uses [DefaultScope] as scope and [DefaultConfiguration] as configuration.

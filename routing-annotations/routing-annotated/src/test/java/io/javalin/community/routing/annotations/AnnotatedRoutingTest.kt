@@ -3,6 +3,7 @@ package io.javalin.community.routing.annotations
 import io.javalin.Javalin
 import io.javalin.community.routing.Route
 import io.javalin.community.routing.annotations.AnnotatedRouting.Annotated
+import io.javalin.community.routing.routes
 import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTED
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
@@ -31,8 +32,8 @@ class AnnotatedRoutingTest {
             private fun withinSharedScenario(test: (HttpClient) -> Unit) {
                 JavalinTest.test(
                     Javalin.create { cfg ->
-                        cfg.router.mount(Annotated) {
-                            it.registerEndpoints(
+                        cfg.routes(Annotated) {
+                            registerEndpoints(
                                 @Endpoints("/test")
                                 object {
                                     // formatter:off
@@ -162,8 +163,8 @@ class AnnotatedRoutingTest {
         @Test
         fun `should sanitize repeated path separators`() {
             val app = Javalin.create { cfg ->
-                cfg.router.mount(Annotated) {
-                    it.registerEndpoints(
+                cfg.routes(Annotated) {
+                    registerEndpoints(
                         @Endpoints("/test/")
                         object {
                             @Get("/with")
@@ -180,7 +181,7 @@ class AnnotatedRoutingTest {
                 }
             }
 
-            val matcher = app.unsafeConfig().pvt.internalRouter
+            val matcher = app.unsafe.internalRouter
 
             assertThat(matcher.findHttpHandlerEntries(HandlerType.GET, "/test/with"))
                 .hasSize(1)
@@ -195,8 +196,8 @@ class AnnotatedRoutingTest {
         fun `should skip methods in endpoint class that are not annotated`() {
             assertDoesNotThrow {
                 Javalin.create { cfg ->
-                    cfg.router.mount(Annotated) {
-                        it.registerEndpoints(
+                    cfg.routes(Annotated) {
+                        registerEndpoints(
                             @Endpoints
                             object {
                                 fun regularMethod() {}
@@ -215,8 +216,8 @@ class AnnotatedRoutingTest {
         fun `should inject all supported properties from context`() =
             JavalinTest.test(
                 Javalin.create { cfg ->
-                    cfg.router.mount(Annotated) {
-                        it.registerEndpoints(
+                    cfg.routes(Annotated) {
+                        registerEndpoints(
                             @Endpoints
                             object {
                                 @Post("/test/{param}")
@@ -261,8 +262,8 @@ class AnnotatedRoutingTest {
         fun `should respond with bad request if property cannot be mapped into parameter`() =
             JavalinTest.test(
                 Javalin.create { cfg ->
-                    cfg.router.mount(Annotated) {
-                        it.registerEndpoints(
+                    cfg.routes(Annotated) {
+                        registerEndpoints(
                             @Endpoints
                             object {
                                 @Get("/test/{param}")
@@ -280,8 +281,8 @@ class AnnotatedRoutingTest {
         @Test
         fun `should throw exception if route has unsupported parameter in signature`() {
             assertThatThrownBy {
-                Javalin.create().unsafeConfig().router.mount(Annotated) {
-                    it.registerEndpoints(
+                Javalin.create().unsafe.routes(Annotated) {
+                    registerEndpoints(
                         @Endpoints
                         object {
                             @Get("/test") fun test(ctx: Context, unsupported: String) {}
@@ -289,8 +290,8 @@ class AnnotatedRoutingTest {
                     )
                 }
             }
-                .isExactlyInstanceOf(IllegalArgumentException::class.java)
-                .hasMessageContaining("Unsupported parameter type")
+            .isExactlyInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Unsupported parameter type")
         }
 
     }
@@ -303,8 +304,8 @@ class AnnotatedRoutingTest {
         fun `should throw if two routes with the same versions are found`() {
             assertThatThrownBy {
                 Javalin.create {
-                    it.router.mount(Annotated) {
-                        it.registerEndpoints(
+                    it.routes(Annotated) {
+                        registerEndpoints(
                             @Endpoints("/api/users")
                             object {
                                 @Version("1")
@@ -333,8 +334,8 @@ class AnnotatedRoutingTest {
         fun `should properly serve versioned routes`() =
             JavalinTest.test(
                 Javalin.create { cfg ->
-                    cfg.router.mount(Annotated) {
-                        it.registerEndpoints(
+                    cfg.routes(Annotated) {
+                        registerEndpoints(
                             @Endpoints("/api/users")
                             object {
                                 @Version("1")
@@ -373,8 +374,8 @@ class AnnotatedRoutingTest {
         fun `should run async method in async context`() {
             JavalinTest.test(
                 Javalin.create { cfg ->
-                    cfg.router.mount(Annotated) {
-                        it.registerEndpoints(
+                    cfg.routes(Annotated) {
+                        registerEndpoints(
                             @Endpoints
                             object {
                                 // formatter:off
@@ -407,7 +408,7 @@ class AnnotatedRoutingTest {
         fun `should properly handle exceptions`() =
             JavalinTest.test(
                 Javalin.create {
-                    it.router.mount(Annotated) { cfg ->
+                    it.routes(Annotated) { cfg ->
                         cfg.registerEndpoints(object {
                             @Get("/throwing")
                             fun throwing(ctx: Context): Nothing = throw IllegalStateException("This is a test")
@@ -434,7 +435,7 @@ class AnnotatedRoutingTest {
 
             JavalinTest.test(
                 Javalin.create {
-                    it.router.mount(Annotated) { cfg ->
+                    it.routes(Annotated) { cfg ->
                         cfg.registerEndpoints(object {
                             @LifecycleEventHandler(SERVER_STARTED)
                             fun onStart() {
@@ -457,8 +458,8 @@ class AnnotatedRoutingTest {
         fun `should use status code from annotation`() =
             JavalinTest.test(
                 Javalin.create { cfg ->
-                    cfg.router.mount(Annotated) {
-                        it.registerEndpoints(
+                    cfg.routes(Annotated) {
+                        registerEndpoints(
                             object {
                                 @Get("/test")
                                 @Status(success = HttpStatus.IM_A_TEAPOT)
@@ -475,7 +476,7 @@ class AnnotatedRoutingTest {
         fun `should throw for unsupported return types`() {
             assertThatThrownBy {
                 Javalin.create {
-                    it.router.mount(Annotated) { cfg ->
+                    it.routes(Annotated) { cfg ->
                         cfg.registerEndpoints(
                             object {
                                 @Get("/unsupported")
@@ -497,12 +498,12 @@ class AnnotatedRoutingTest {
         fun `should properly handle inheritance`() =
             JavalinTest.test(
                 Javalin.create { cfg ->
-                    cfg.router.mount(Annotated) {
-                        it.registerResultHandler<Animal> { ctx, _ -> ctx.result("Animal") }
-                        it.registerResultHandler<RedPanda> { ctx, _ -> ctx.result("RedPanda") }
-                        it.registerResultHandler<Panda> { ctx, _ -> ctx.result("Panda") }
+                    cfg.routes(Annotated) {
+                        registerResultHandler<Animal> { ctx, _ -> ctx.result("Animal") }
+                        registerResultHandler<RedPanda> { ctx, _ -> ctx.result("RedPanda") }
+                        registerResultHandler<Panda> { ctx, _ -> ctx.result("Panda") }
 
-                        it.registerEndpoints(
+                        registerEndpoints(
                             object {
                                 @Get("/base")
                                 fun base(ctx: Context): Animal = Animal()
@@ -526,18 +527,18 @@ class AnnotatedRoutingTest {
         fun `should throw if result handler matched multiple classes`() {
             assertThatThrownBy {
                 Javalin.create { cfg ->
-                    cfg.router.mount(Annotated) {
-                        it.registerResultHandler<Panda> { ctx, _ -> ctx.result("Panda") }
-                        it.registerResultHandler<Closeable> { ctx, _ -> ctx.result("Closeable") }
-                        it.registerEndpoints(object {
+                    cfg.routes(Annotated) {
+                        registerResultHandler<Panda> { ctx, _ -> ctx.result("Panda") }
+                        registerResultHandler<Closeable> { ctx, _ -> ctx.result("Closeable") }
+                        registerEndpoints(object {
                             @Get("/test")
                             fun test(ctx: Context): GiantPanda = GiantPanda()
                         })
                     }
                 }
             }
-                .isInstanceOf(IllegalStateException::class.java)
-                .hasMessageContaining("Unable to determine handler for type class")
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("Unable to determine handler for type class")
         }
 
     }

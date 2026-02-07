@@ -1,12 +1,13 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-    kotlin("jvm") version "1.9.22"
-    kotlin("kapt") version "1.9.22"
+    kotlin("jvm") version "2.2.20"
+    kotlin("kapt") version "2.2.20"
     jacoco
     signing
     `maven-publish`
-    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 description = "Javalin Routing Extensions Parent | Parent project for Javalin Routing Extensions"
@@ -18,7 +19,7 @@ allprojects {
     apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "6.7.0"
+    version = "7.0.0-beta.1"
 
     repositories {
         mavenCentral()
@@ -87,8 +88,8 @@ allprojects {
     }
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
 
         withJavadocJar()
         withSourcesJar()
@@ -100,15 +101,11 @@ allprojects {
         )
     }
 
-    tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions {
-            jvmTarget = JavaVersion.VERSION_11.toString()
-            languageVersion = "1.9"
-            javaParameters = true
-            freeCompilerArgs = listOf(
-                "-Xjvm-default=all", // For generating default methods in interfaces
-                // "-Xcontext-receivers" not yet :<
-            )
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+            languageVersion.set(KotlinVersion.KOTLIN_2_2)
+            javaParameters.set(true)
         }
     }
 }
@@ -117,12 +114,12 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     dependencies {
-        val javalin = "6.7.0"
+        val javalin = "7.0.0-beta.1"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin-testtools:$javalin")
 
-        val openapi = "6.7.0"
+        val openapi = "7.0.0-beta.1"
         kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$openapi")
         testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$openapi")
 
@@ -138,6 +135,7 @@ subprojects {
         testImplementation("org.junit.jupiter:junit-jupiter-params:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$junit")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
         testImplementation("org.assertj:assertj-core:3.24.2")
 
         val assertj = "3.24.2"

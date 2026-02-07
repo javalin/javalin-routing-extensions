@@ -19,16 +19,16 @@ class JavalinRoutesTest {
 
         // when: routes are registered
         val app = Javalin.create()
-        app.unsafeConfig().pvt.internalRouter.apply { routes.forEach { route -> registerRoute(route.first, "/", route.second) } }
+        app.unsafe.internalRouter.apply { routes.forEach { route -> registerRoute(route.first, "/", route.second) } }
 
         // then: all routes are registered by as proper HandlerType
         routes.forEach { (method, handler) ->
-            val endpoint = app.unsafeConfig()
-                    .pvt
-                    .internalRouter
-                    .findHttpHandlerEntries(HandlerType.findByName(method.name), "/")
-                    .firstOrNull()
-                    ?.endpoint
+            val endpoint = app
+                .unsafe
+                .internalRouter
+                .findHttpHandlerEntries(HandlerType.values().first { it.name == method.name }, "/")
+                .firstOrNull()
+                ?.endpoint
 
             assertThat(endpoint?.method?.name).isEqualTo(method.name)
             assertThat(endpoint?.path).isEqualTo("/")
@@ -37,15 +37,17 @@ class JavalinRoutesTest {
 
     @Test
     fun `should register routes`() {
-        val app = JavalinRoutingExtensions(Javalin.create())
+        val application = JavalinRoutingExtensions(Javalin.create())
             .addRoute(GET, "/") { it.result("Hello World!") }
             .addRoute(PUT, "/") { it.result("Hello World!") }
             .register()
 
-        listOf("GET", "PUT").forEach { method ->
+        listOf("GET", "PUT").forEach { methodName ->
             assertThat(
-                app.unsafeConfig().pvt.internalRouter
-                    .findHttpHandlerEntries(HandlerType.findByName(method), "/")
+                application
+                    .unsafe
+                    .internalRouter
+                    .findHttpHandlerEntries(HandlerType.values().first { it.name == methodName }, "/")
                     .firstOrNull()
             ).isNotNull
         }
@@ -54,7 +56,7 @@ class JavalinRoutesTest {
     @Test
     fun `should enable sam receiver for mount`() {
         Javalin.create { cfg ->
-            cfg.router.mount {
+            cfg.routes {
                 get("/") { it.result("Hello World!") }
             }
         }

@@ -3,15 +3,16 @@ package io.javalin.community.routing.dsl
 import io.javalin.Javalin
 import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.dsl.DslRouting.Companion.Dsl
-import io.javalin.community.routing.dsl.defaults.DefaultRoutes
+import io.javalin.community.routing.dsl.defaults.DefaultRouting
 import io.javalin.community.routing.dsl.specification.TestSpecification
+import io.javalin.community.routing.routes
 import io.javalin.testtools.JavalinTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class PropertyRoutingDslTest : TestSpecification() {
 
-    private class ValidTestEndpoints : DefaultRoutes() {
+    private class ValidTestEndpoints : DefaultRouting() {
 
         override fun routes() = setOf(
             route(GET, "/test") { result("test") },
@@ -28,8 +29,10 @@ class PropertyRoutingDslTest : TestSpecification() {
     fun `should register valid route in javalin instance`() =
         JavalinTest.test(
             Javalin.create { cfg ->
-                cfg.router.mount(Dsl) {
-                    it.routes(ValidTestEndpoints())
+                cfg.routes(Dsl) {
+                    register(
+                        ValidTestEndpoints()
+                    )
                 }
             },
             defaultConfig
