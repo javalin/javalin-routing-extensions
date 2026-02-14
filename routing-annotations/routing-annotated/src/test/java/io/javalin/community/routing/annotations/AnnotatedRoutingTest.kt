@@ -216,14 +216,20 @@ class AnnotatedRoutingTest {
         fun `should inject all supported properties from context`() =
             JavalinTest.test(
                 Javalin.create { cfg ->
+                    cfg.validation.register(UUID::class.java) { value ->
+                        runCatching { UUID.fromString(value) }.getOrNull()
+                    }
+
                     cfg.routes(Annotated) {
                         registerEndpoints(
                             @Endpoints
                             object {
-                                @Post("/test/{param}")
+                                @Post("/test/{param}/{param2}/{param3}")
                                 fun test(
                                     ctx: Context,
                                     @Param param: Int,
+                                    @Param("param2") param2: UUID,
+                                    @Param("param3") optionalParam: Optional<UUID>,
                                     @Header header: Int,
                                     @Header optionalHeader: Optional<String>,
                                     @Query query: Int,
@@ -231,6 +237,8 @@ class AnnotatedRoutingTest {
                                     @Body body: Int,
                                 ) {
                                     ctx.header("param", param.toString())
+                                    ctx.header("param2", param2.toString())
+                                    ctx.header("optionalParam", optionalParam.orElse(null)?.toString() ?: "null")
                                     ctx.header("header", header.toString())
                                     ctx.header("optionalHeader", optionalHeader.orElse("default"))
                                     ctx.header("query", query.toString())
@@ -242,15 +250,18 @@ class AnnotatedRoutingTest {
                     }
                 }
             ) { _, client ->
-                val responseHeaders = Unirest.post("${client.origin}/test/1")
+                val response = Unirest.post("${client.origin}/test/1/00000000-0000-0000-0000-000000000000/bad-value")
                     .header("header", "2")
                     .queryString("query", "3")
                     .cookie("cookie", "4")
                     .body("5")
                     .asEmpty()
-                    .headers
+                assertThat(response.status).isEqualTo(200)
 
+                val responseHeaders = response.headers
                 assertThat(responseHeaders.getFirst("param")).isEqualTo("1")
+                assertThat(responseHeaders.getFirst("param2")).isEqualTo("00000000-0000-0000-0000-000000000000")
+                assertThat(responseHeaders.getFirst("optionalParam")).isEqualTo("null")
                 assertThat(responseHeaders.getFirst("header")).isEqualTo("2")
                 assertThat(responseHeaders.getFirst("optionalHeader")).isEqualTo("default")
                 assertThat(responseHeaders.getFirst("query")).isEqualTo("3")
