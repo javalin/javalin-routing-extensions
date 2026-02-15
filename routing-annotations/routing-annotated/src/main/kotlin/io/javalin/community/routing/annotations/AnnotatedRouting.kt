@@ -20,6 +20,7 @@ import io.javalin.event.JavalinLifecycleEvent.SERVER_STOP_FAILED
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.http.Handler
+import io.javalin.websocket.WsHandlerType
 
 fun interface HandlerResultConsumer<T> {
     fun handle(ctx: Context, value: T)
@@ -73,6 +74,7 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
         val registeredEventListeners = mutableMapOf<JavalinLifecycleEvent, AnnotatedEvent>()
         val registeredRoutes = mutableListOf<AnnotatedRoute>()
         val registeredExceptionHandlers = mutableListOf<AnnotatedException>()
+        val registeredWsRoutes = mutableListOf<AnnotatedWsRoute>()
 
         configuration.registeredRoutes.forEach {
             val detectedEventListeners = loader.loadEventHandlers(it)
@@ -83,6 +85,9 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
 
             val detectedExceptionHandlers = loader.loadExceptionHandlers(it)
             registeredExceptionHandlers.addAll(detectedExceptionHandlers)
+
+            val detectedWsRoutes = loader.loadWsHandlers(it)
+            registeredWsRoutes.addAll(detectedWsRoutes)
         }
 
         registeredEventListeners.forEach { (key, event) ->
@@ -117,6 +122,10 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
             state.internalRouter.addHttpExceptionHandler(annotatedException.type.java) { exception, ctx ->
                 annotatedException.handler.invoke(ctx, exception)
             }
+        }
+
+        registeredWsRoutes.forEach { wsRoute ->
+            state.internalRouter.addWsHandler(WsHandlerType.WEBSOCKET, wsRoute.path, wsRoute.wsConfig)
         }
     }
 

@@ -124,6 +124,28 @@ static final class ExampleEndpoints {
         ctx.status(500).result("Something went wrong: " + e.getClass());
     }
 
+    // register websocket endpoints with @Ws annotation
+    // method must return WsHandler, keeping all WS event listeners grouped together
+    @Ws("/events")
+    WsHandler websocketEvents() {
+        return new WsHandler() {
+            @Override
+            public void onConnect(WsConnectContext ctx) {
+                System.out.println("WebSocket connected: " + ctx.sessionId());
+            }
+
+            @Override
+            public void onMessage(WsMessageContext ctx) {
+                ctx.send("Echo: " + ctx.message());
+            }
+
+            @Override
+            public void onClose(WsCloseContext ctx) {
+                System.out.println("WebSocket closed: " + ctx.sessionId());
+            }
+        };
+    }
+
 }
 
 public static void main(String[] args) {

@@ -11,6 +11,8 @@ import io.javalin.http.HttpStatus
 import io.javalin.router.Endpoint
 import io.javalin.testtools.HttpClient
 import io.javalin.testtools.JavalinTest
+import io.javalin.websocket.WsConnectContext
+import io.javalin.websocket.WsMessageContext
 import kong.unirest.Unirest
 import kong.unirest.Unirest.request
 import org.assertj.core.api.Assertions.assertThat
@@ -19,7 +21,14 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.Closeable
+import java.net.URI
+import java.net.http.HttpClient as JdkHttpClient
+import java.net.http.WebSocket as JdkWebSocket
 import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionStage
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.TimeUnit
 
 class AnnotatedRoutingTest {
 
@@ -550,6 +559,81 @@ class AnnotatedRoutingTest {
             }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("Unable to determine handler for type class")
+        }
+
+    }
+
+    @Nested
+    inner class WebSockets {
+
+        @Test
+        fun `should register and handle websocket endpoint`() {
+            val log = ConcurrentLinkedQueue<String>()
+
+            val app = Javalin.create { cfg ->
+                cfg.routes(Annotated) {
+                    registerEndpoints(
+                        @Endpoints("/ws")
+                        object {
+                            @Ws("/echo")
+                            fun echo(): WsHandler = object : WsHandler {
+                                override fun onConnect(ctx: WsConnectContext) {
+                                    log.add("connected")
+                                }
+                                override fun onMessage(ctx: WsMessageContext) {
+                                    log.add("received: ${ctx.message()}")
+                                    ctx.send("echo: ${ctx.message()}")
+                                }
+                            }
+                        }
+                    )
+                }
+            }.start(0)
+
+            try {
+                val received = CompletableFuture<String>()
+
+                val wsClient = JdkHttpClient.newHttpClient().newWebSocketBuilder()
+                    .buildAsync(
+                        URI.create("ws://localhost:${app.port()}/ws/echo"),
+                        object : JdkWebSocket.Listener {
+                            override fun onText(webSocket: JdkWebSocket, data: CharSequence, last: Boolean): CompletionStage<*> {
+                                received.complete(data.toString())
+                                return CompletableFuture.completedFuture(null)
+                            }
+                        }
+                    )
+                    .get(2, TimeUnit.SECONDS)
+
+                wsClient.sendText("hello", true).get(2, TimeUnit.SECONDS)
+                val response = received.get(2, TimeUnit.SECONDS)
+
+                assertThat(response).isEqualTo("echo: hello")
+                assertThat(log).contains("connected", "received: hello")
+
+                wsClient.sendClose(JdkWebSocket.NORMAL_CLOSURE, "done").get(2, TimeUnit.SECONDS)
+            } finally {
+                app.stop()
+            }
+        }
+
+        @Test
+        fun `should throw if @Ws method does not return WsHandler`() {
+            assertThatThrownBy {
+                Javalin.create { cfg ->
+                    cfg.routes(Annotated) {
+                        registerEndpoints(
+                            @Endpoints
+                            object {
+                                @Ws("/bad")
+                                fun bad(): String = "not a WsHandler"
+                            }
+                        )
+                    }
+                }
+            }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("must return WsHandler")
         }
 
     }

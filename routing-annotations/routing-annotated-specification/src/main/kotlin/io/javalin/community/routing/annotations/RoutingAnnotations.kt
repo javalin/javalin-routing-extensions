@@ -2,6 +2,11 @@ package io.javalin.community.routing.annotations
 
 import io.javalin.event.JavalinLifecycleEvent
 import io.javalin.http.HttpStatus
+import io.javalin.websocket.WsBinaryMessageContext
+import io.javalin.websocket.WsCloseContext
+import io.javalin.websocket.WsConnectContext
+import io.javalin.websocket.WsErrorContext
+import io.javalin.websocket.WsMessageContext
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.CLASS
 import kotlin.annotation.AnnotationTarget.FUNCTION
@@ -98,3 +103,15 @@ annotation class Form(val value: String = "")
 @Retention(RUNTIME)
 @Target(VALUE_PARAMETER)
 annotation class Cookie(val value: String = "")
+
+@Retention(RUNTIME)
+@Target(FUNCTION)
+annotation class Ws(val value: String = "")
+
+interface WsHandler {
+    fun onConnect(ctx: WsConnectContext) {}
+    fun onError(ctx: WsErrorContext) {}
+    fun onClose(ctx: WsCloseContext) {}
+    fun onMessage(ctx: WsMessageContext) {}
+    fun onBinaryMessage(ctx: WsBinaryMessageContext) {}
+}

@@ -12,17 +12,21 @@ import io.javalin.router.InternalRouter
 import io.javalin.util.Util.firstOrNull
 import io.javalin.validation.Validation
 import io.javalin.validation.Validator
+import io.javalin.websocket.WsConfig
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.*
+import java.util.function.Consumer
 import kotlin.reflect.KClass
 
 typealias AnnotatedRoute = DefaultDslRoute<Context, Unit>
 typealias AnnotatedException = DefaultDslException<Context, Exception, Unit>
 typealias AnnotatedEvent = () -> Unit
+
+data class AnnotatedWsRoute(val path: String, val wsConfig: Consumer<WsConfig>)
 
 internal class ReflectiveEndpointLoader(
     private val internalRouter: InternalRouter,
@@ -162,6 +166,44 @@ internal class ReflectiveEndpointLoader(
         }
 
         return dslEvents
+    }
+
+    fun loadWsHandlers(endpoint: Any): List<AnnotatedWsRoute> {
+        val endpointClass = endpoint::class.java
+
+        val endpointPath = endpointClass.getAnnotation<Endpoints>()
+            ?.value
+            ?: ""
+
+        val wsRoutes = mutableListOf<AnnotatedWsRoute>()
+
+        getAllDeclaredMethods(endpointClass).forEach { method ->
+            val wsAnnotation = method.getAnnotation<Ws>() ?: return@forEach
+
+            require(method.trySetAccessible()) {
+                "Unable to access method $method in class $endpointClass"
+            }
+
+            require(WsHandler::class.java.isAssignableFrom(method.returnType)) {
+                "Method $method annotated with @Ws must return WsHandler"
+            }
+
+            val path = "/$endpointPath/${wsAnnotation.value}".replace(repeatedPathSeparatorRegex, "/").dropLastWhile { it == '/' }
+
+            wsRoutes.add(AnnotatedWsRoute(
+                path = path,
+                wsConfig = { wsConfig ->
+                    val handler = method.invoke(endpoint) as WsHandler
+                    wsConfig.onConnect { handler.onConnect(it) }
+                    wsConfig.onError { handler.onError(it) }
+                    wsConfig.onClose { handler.onClose(it) }
+                    wsConfig.onMessage { handler.onMessage(it) }
+                    wsConfig.onBinaryMessage { handler.onBinaryMessage(it) }
+                }
+            ))
+        }
+
+        return wsRoutes
     }
 
     @Suppress("UNCHECKED_CAST")

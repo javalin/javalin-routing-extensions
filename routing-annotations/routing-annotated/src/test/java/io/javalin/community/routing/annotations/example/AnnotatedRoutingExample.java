@@ -8,15 +8,16 @@ import io.javalin.openapi.OpenApiContent;
 import io.javalin.openapi.OpenApiParam;
 import io.javalin.openapi.OpenApiResponse;
 import io.javalin.router.Endpoint;
+import io.javalin.websocket.WsConnectContext;
+import io.javalin.websocket.WsCloseContext;
+import io.javalin.websocket.WsMessageContext;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-import static io.javalin.community.routing.annotations.AnnotatedRouting.Annotated;
 import static io.javalin.http.Header.AUTHORIZATION;
 import static io.javalin.openapi.HttpMethod.GET;
 
@@ -100,6 +101,28 @@ public final class AnnotatedRoutingExample {
         @ExceptionHandler(Exception.class)
         void defaultExceptionHandler(Exception e, Context ctx) {
             ctx.status(500).result("Something went wrong: " + e.getClass());
+        }
+
+        // register websocket endpoints with @Ws annotation
+        // method must return WsHandler, keeping all WS event listeners grouped together
+        @Ws("/events")
+        WsHandler websocketEvents() {
+            return new WsHandler() {
+                @Override
+                public void onConnect(WsConnectContext ctx) {
+                    System.out.println("WebSocket connected: " + ctx.sessionId());
+                }
+
+                @Override
+                public void onMessage(WsMessageContext ctx) {
+                    ctx.send("Echo: " + ctx.message());
+                }
+
+                @Override
+                public void onClose(WsCloseContext ctx) {
+                    System.out.println("WebSocket closed: " + ctx.sessionId());
+                }
+            };
         }
 
     }

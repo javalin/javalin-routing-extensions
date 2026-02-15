@@ -98,7 +98,7 @@ fun <SETUP> JavalinConfig.routes(
     initializer: RoutingApiInitializer<SETUP>,
     setup: Consumer<SETUP>,
 ): JavalinConfig = also {
-    initializer.initialize(state = JavalinConfigUnsafe.getState(this)) {
+    initializer.initialize(state = this.unsafe) {
         setup.accept(this)
     }
 }
