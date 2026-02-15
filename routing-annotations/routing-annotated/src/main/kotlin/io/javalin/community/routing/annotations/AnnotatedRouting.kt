@@ -21,6 +21,7 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.http.Handler
 import io.javalin.websocket.WsHandlerType
+import org.slf4j.LoggerFactory
 
 fun interface HandlerResultConsumer<T> {
     fun handle(ctx: Context, value: T)
@@ -51,6 +52,8 @@ class AnnotatedRoutingConfig {
 }
 
 object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
+
+    private val logger = LoggerFactory.getLogger(AnnotatedRouting::class.java)
 
     @JvmField val Annotated = this
 
@@ -103,6 +106,11 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
 
         registeredRoutes
             .sortRoutes()
+            .also { routes ->
+                findPathClashes(routes).forEach { (route, paths) ->
+                    logger.warn("Detected clashing $route handler paths: $paths. These paths match the same requests.")
+                }
+            }
             .groupBy { RouteIdentifier(it.method, it.path) }
             .map { (id, routes) ->
                 id to when (routes.size) {
@@ -127,6 +135,77 @@ object AnnotatedRouting : RoutingApiInitializer<AnnotatedRoutingConfig> {
         registeredWsRoutes.forEach { wsRoute ->
             state.internalRouter.addWsHandler(WsHandlerType.WEBSOCKET, wsRoute.path, wsRoute.wsConfig)
         }
+    }
+
+    internal sealed class PathSegment {
+        data class Static(val value: String) : PathSegment()
+        data object SlashIgnoring : PathSegment()
+        data object SlashAccepting : PathSegment()
+    }
+
+    internal fun parseSegments(path: String): List<PathSegment> =
+        path.split("/").filter { it.isNotEmpty() }.map { segment ->
+            when {
+                segment.startsWith("{") && segment.endsWith("}") -> PathSegment.SlashIgnoring
+                segment.startsWith("<") && segment.endsWith(">") -> PathSegment.SlashAccepting
+                else -> PathSegment.Static(segment)
+            }
+        }
+
+    internal fun canPathsClash(pathA: String, pathB: String): Boolean =
+        canSegmentsOverlap(parseSegments(pathA), parseSegments(pathB))
+
+    private fun canSegmentsOverlap(a: List<PathSegment>, b: List<PathSegment>): Boolean {
+        if (a.isEmpty() && b.isEmpty()) return true
+        if (a.isEmpty() || b.isEmpty()) return false
+
+        val headA = a.first()
+        val headB = b.first()
+        val tailA = a.drop(1)
+        val tailB = b.drop(1)
+
+        if (headA is PathSegment.SlashAccepting) {
+            // SlashAccepting consumes 1+ URL segments
+            // Consume one and stop: both advance
+            if (canSegmentsOverlap(tailA, tailB)) return true
+            // Consume one and continue: A stays, B advances
+            if (canSegmentsOverlap(a, tailB)) return true
+            return false
+        }
+
+        if (headB is PathSegment.SlashAccepting) {
+            // Symmetric
+            if (canSegmentsOverlap(tailA, tailB)) return true
+            if (canSegmentsOverlap(tailA, b)) return true
+            return false
+        }
+
+        // Both are single-segment matchers
+        val compatible = when {
+            headA is PathSegment.Static && headB is PathSegment.Static -> headA.value == headB.value
+            else -> true
+        }
+        return compatible && canSegmentsOverlap(tailA, tailB)
+    }
+
+    internal fun findPathClashes(routes: List<AnnotatedRoute>): Map<Route, Set<String>> {
+        val clashes = mutableMapOf<Route, MutableSet<String>>()
+
+        routes
+            .filter { !it.method.isHttpMethod }
+            .groupBy { it.method }
+            .forEach { (routeType, group) ->
+                val paths = group.map { it.path }.distinct()
+                for (i in paths.indices) {
+                    for (j in i + 1 until paths.size) {
+                        if (paths[i] != paths[j] && canPathsClash(paths[i], paths[j])) {
+                            clashes.getOrPut(routeType) { mutableSetOf() }.addAll(listOf(paths[i], paths[j]))
+                        }
+                    }
+                }
+            }
+
+        return clashes
     }
 
     private fun createVersionedRoute(apiVersionHeader: String, id: RouteIdentifier, routes: List<DslRoute<Context, Unit>>): Handler {

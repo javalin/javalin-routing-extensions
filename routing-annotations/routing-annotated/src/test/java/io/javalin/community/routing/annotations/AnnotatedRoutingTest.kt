@@ -3,6 +3,7 @@ package io.javalin.community.routing.annotations
 import io.javalin.Javalin
 import io.javalin.community.routing.Route
 import io.javalin.community.routing.annotations.AnnotatedRouting.Annotated
+import io.javalin.community.routing.dsl.DefaultDslRoute
 import io.javalin.community.routing.routes
 import io.javalin.event.JavalinLifecycleEvent.SERVER_STARTED
 import io.javalin.http.Context
@@ -559,6 +560,93 @@ class AnnotatedRoutingTest {
             }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("Unable to determine handler for type class")
+        }
+
+    }
+
+    @Nested
+    inner class PathClashWarnings {
+
+        private fun route(method: Route, path: String): AnnotatedRoute =
+            DefaultDslRoute(method = method, path = path, handler = {})
+
+        @Test
+        fun `should detect clash between curly and angle bracket param syntax`() {
+            assertThat(AnnotatedRouting.canPathsClash("/test/{arg1}", "/test/<arg1>")).isTrue()
+        }
+
+        @Test
+        fun `should detect clash between different param names`() {
+            assertThat(AnnotatedRouting.canPathsClash("/test/{arg1}", "/test/{arg2}")).isTrue()
+        }
+
+        @Test
+        fun `should detect clash with multiple path segments`() {
+            assertThat(AnnotatedRouting.canPathsClash("/api/{version}/users/{id}", "/api/<version>/users/<id>")).isTrue()
+        }
+
+        @Test
+        fun `should detect clash between slash-accepting param and deeper path`() {
+            assertThat(AnnotatedRouting.canPathsClash("/a/b/{arg1}", "/a/<wildcard>")).isTrue()
+        }
+
+        @Test
+        fun `should detect clash between slash-accepting param and multi-level deeper path`() {
+            assertThat(AnnotatedRouting.canPathsClash("/a/b/c/d", "/a/<wildcard>")).isTrue()
+        }
+
+        @Test
+        fun `should detect clash between two slash-accepting params at different depths`() {
+            assertThat(AnnotatedRouting.canPathsClash("/a/<x>/c", "/a/b/<y>")).isTrue()
+        }
+
+        @Test
+        fun `should not report clash for identical paths`() {
+            val clashes = AnnotatedRouting.findPathClashes(listOf(
+                route(Route.BEFORE, "/test/{arg1}"),
+                route(Route.BEFORE, "/test/{arg1}"),
+            ))
+
+            assertThat(clashes).isEmpty()
+        }
+
+        @Test
+        fun `should not report clash for different static paths`() {
+            assertThat(AnnotatedRouting.canPathsClash("/test/{arg1}", "/other/{arg1}")).isFalse()
+        }
+
+        @Test
+        fun `should not report clash for different path depths without slash-accepting`() {
+            assertThat(AnnotatedRouting.canPathsClash("/a/b/{arg1}", "/a/{arg1}")).isFalse()
+        }
+
+        @Test
+        fun `should not report clash when slash-accepting root differs`() {
+            assertThat(AnnotatedRouting.canPathsClash("/a/b/{arg1}", "/x/<wildcard>")).isFalse()
+        }
+
+        @Test
+        fun `should not report clash for http method routes`() {
+            val clashes = AnnotatedRouting.findPathClashes(listOf(
+                route(Route.GET, "/test/{arg1}"),
+                route(Route.GET, "/test/{arg2}"),
+            ))
+
+            assertThat(clashes).isEmpty()
+        }
+
+        @Test
+        fun `should report clashes per route type independently`() {
+            val clashes = AnnotatedRouting.findPathClashes(listOf(
+                route(Route.BEFORE, "/test/{arg1}"),
+                route(Route.BEFORE, "/test/<arg1>"),
+                route(Route.AFTER, "/test/{x}"),
+                route(Route.AFTER, "/test/{y}"),
+            ))
+
+            assertThat(clashes).hasSize(2)
+            assertThat(clashes).containsKey(Route.BEFORE)
+            assertThat(clashes).containsKey(Route.AFTER)
         }
 
     }
