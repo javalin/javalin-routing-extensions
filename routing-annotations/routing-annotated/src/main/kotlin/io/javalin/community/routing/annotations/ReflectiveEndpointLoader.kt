@@ -13,6 +13,9 @@ import io.javalin.util.Util.firstOrNull
 import io.javalin.validation.Validation
 import io.javalin.validation.Validator
 import io.javalin.websocket.WsConfig
+import kotlin.metadata.KmFunction
+import kotlin.metadata.isNullable
+import kotlin.metadata.jvm.KotlinClassMetadata
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
@@ -66,7 +69,7 @@ internal class ReflectiveEndpointLoader(
 
             val types = method.genericParameterTypes
             val argumentSuppliers = method.parameters.mapIndexed { idx, parameter ->
-                createArgumentSupplier<Unit>(parameter, types[idx]) ?: throw IllegalArgumentException("Unsupported parameter type: $parameter")
+                createArgumentSupplier<Unit>(parameter, types[idx], method, idx) ?: throw IllegalArgumentException("Unsupported parameter type: $parameter")
             }
 
             val status = method.getAnnotation<Status>()
@@ -117,7 +120,7 @@ internal class ReflectiveEndpointLoader(
 
             val types = method.genericParameterTypes
             val argumentSuppliers = method.parameters.mapIndexed { idx, parameter ->
-                createArgumentSupplier<Exception>(parameter, types[idx]) ?: throw IllegalArgumentException("Unsupported parameter type: $parameter")
+                createArgumentSupplier<Exception>(parameter, types[idx], method, idx) ?: throw IllegalArgumentException("Unsupported parameter type: $parameter")
             }
 
             val status = method.getAnnotation<Status>()
@@ -246,9 +249,12 @@ internal class ReflectiveEndpointLoader(
     private inline fun <reified CUSTOM : Any> createArgumentSupplier(
         parameter: Parameter,
         parameterType: Type,
+        method: Method,
+        parameterIndex: Int,
         noinline custom: (Context, CUSTOM) -> Any? = { _, self -> self }
     ): ((Context, CUSTOM) -> Any?)? {
         val isOptional = parameter.type.isAssignableFrom(Optional::class.java)
+        val isNullable = !isOptional && isKotlinNullableParameter(method, parameterIndex)
 
         val expectedType = when {
             isOptional -> (parameterType as ParameterizedType).actualTypeArguments[0]
@@ -278,35 +284,35 @@ internal class ReflectiveEndpointLoader(
                         .value
                         .ifEmpty { name }
                         .let { ctx.pathParamAsClass(it, expectedTypeAsClass) }
-                        .getValidatorValue(optional = isOptional)
+                        .getValidatorValue(optional = isOptional, nullable = isNullable)
                 }
                 isAnnotationPresent<Header>() -> { ctx, _ ->
                     getAnnotationOrThrow<Header>()
                         .value
                         .ifEmpty { name }
                         .let { ctx.headerAsClass(it, expectedTypeAsClass) }
-                        .getValidatorValue(optional = isOptional)
+                        .getValidatorValue(optional = isOptional, nullable = isNullable)
                 }
                 isAnnotationPresent<Query>() -> { ctx, _ ->
                     getAnnotationOrThrow<Query>()
                         .value
                         .ifEmpty { name }
                         .let { ctx.queryParamAsClass(it, expectedTypeAsClass) }
-                        .getValidatorValue(optional = isOptional)
+                        .getValidatorValue(optional = isOptional, nullable = isNullable)
                 }
                 isAnnotationPresent<Form>() -> { ctx, _ ->
                     getAnnotationOrThrow<Form>()
                         .value
                         .ifEmpty { name }
                         .let { ctx.formParamAsClass(it, expectedTypeAsClass) }
-                        .getValidatorValue(optional = isOptional)
+                        .getValidatorValue(optional = isOptional, nullable = isNullable)
                 }
                 isAnnotationPresent<Cookie>() -> { ctx, _ ->
                     getAnnotationOrThrow<Cookie>()
                         .value
                         .ifEmpty { name }
                         .let { Validation().validator(it, expectedTypeAsClass, ctx.cookie(it)) }
-                        .getValidatorValue(optional = isOptional)
+                        .getValidatorValue(optional = isOptional, nullable = isNullable)
                 }
                 isAnnotationPresent<Body>() -> { ctx, _ ->
                     ctx.bodyAsClass(parameter.parameterizedType)
@@ -316,9 +322,10 @@ internal class ReflectiveEndpointLoader(
         }
     }
 
-    private fun <T : Any> Validator<T?>.getValidatorValue(optional: Boolean): Any =
+    private fun <T : Any> Validator<T?>.getValidatorValue(optional: Boolean, nullable: Boolean): Any? =
         when {
             optional -> Optional.ofNullable(this.getOrNull())
+            nullable -> this.getOrNull()
             else -> get()
         }
 
@@ -339,6 +346,19 @@ internal class ReflectiveEndpointLoader(
             currentClass = currentClass?.superclass
         }
         return methods
+    }
+
+    private fun isKotlinNullableParameter(method: Method, parameterIndex: Int): Boolean {
+        val metadata = method.declaringClass.getAnnotation(Metadata::class.java) ?: return false
+        val kmFunctions: List<KmFunction> =
+            when (val classMetadata = KotlinClassMetadata.readStrict(metadata)) {
+                is KotlinClassMetadata.Class -> classMetadata.kmClass.functions
+                is KotlinClassMetadata.FileFacade -> classMetadata.kmPackage.functions
+                else -> return false
+            }
+        val kmFunction = kmFunctions.firstOrNull { it.name == method.name } ?: return false
+        val kmParam = kmFunction.valueParameters.getOrNull(parameterIndex) ?: return false
+        return kmParam.type.isNullable
     }
 
 }

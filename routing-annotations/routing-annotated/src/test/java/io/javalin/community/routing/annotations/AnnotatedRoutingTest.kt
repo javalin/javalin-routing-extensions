@@ -300,6 +300,41 @@ class AnnotatedRoutingTest {
 
 
         @Test
+        fun `should support Kotlin nullable parameters without Optional`() =
+            JavalinTest.test(
+                Javalin.create { cfg ->
+                    cfg.routes(Annotated) {
+                        registerEndpoints(
+                            @Endpoints
+                            object {
+                                @Get("/nullable")
+                                fun test(
+                                    ctx: Context,
+                                    @Query query: String?,
+                                    @Header header: String?,
+                                ) {
+                                    ctx.header("query", query ?: "null")
+                                    ctx.header("header", header ?: "null")
+                                }
+                            }
+                        )
+                    }
+                }
+            ) { _, client ->
+                val absent = Unirest.get("${client.origin}/nullable").asEmpty()
+                assertThat(absent.status).isEqualTo(200)
+                assertThat(absent.headers.getFirst("query")).isEqualTo("null")
+                assertThat(absent.headers.getFirst("header")).isEqualTo("null")
+
+                val present = Unirest.get("${client.origin}/nullable")
+                    .queryString("query", "hello")
+                    .asEmpty()
+                assertThat(present.status).isEqualTo(200)
+                assertThat(present.headers.getFirst("query")).isEqualTo("hello")
+                assertThat(present.headers.getFirst("header")).isEqualTo("null")
+            }
+
+        @Test
         fun `should throw exception if route has unsupported parameter in signature`() {
             assertThatThrownBy {
                 Javalin.create().unsafe.routes(Annotated) {

@@ -4,5 +4,5 @@ dependencies {
     api(project(":routing-dsl"))
     api(project(":routing-annotations:routing-annotated-specification"))
 
-    implementation(kotlin("reflect"))
+    implementation("org.jetbrains.kotlin:kotlin-metadata-jvm:2.2.20")
 }
