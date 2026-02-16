@@ -18,15 +18,6 @@ Register handlers for custom return types:
 
 ::: code-group
 
-```java [Java]
-AnnotatedRouting.install(config, routing -> {
-    routing.registerResultHandler(User.class, (ctx, user) -> {
-        ctx.json(user);
-    });
-    routing.registerEndpoints(new UserEndpoints());
-});
-```
-
 ```kotlin [Kotlin]
 config.routes(Annotated) {
     registerResultHandler<User> { ctx, user ->
@@ -34,6 +25,15 @@ config.routes(Annotated) {
     }
     registerEndpoints(UserEndpoints())
 }
+```
+
+```java [Java]
+AnnotatedRouting.install(config, routing -> {
+    routing.registerResultHandler(User.class, (ctx, user) -> {
+        ctx.json(user);
+    });
+    routing.registerEndpoints(new UserEndpoints());
+});
 ```
 
 :::

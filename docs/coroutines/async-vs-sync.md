@@ -42,6 +42,7 @@ class CustomScope(val ctx: Context) : Context by ctx {
     // Blocks the thread despite being in a coroutine
     fun blockingDelay(message: String): String =
         Thread.sleep(2000L).let { message }
+
 }
 
 class ExampleEndpoint : AppRoutes() {
@@ -57,6 +58,7 @@ class ExampleEndpoint : AppRoutes() {
     }
 
     override fun routes() = setOf(nonBlocking, blocking)
+
 }
 ```
 

@@ -26,6 +26,7 @@ class UserEndpoints {
     void handleGeneral(Exception e, Context ctx) {
         ctx.status(500).result("Internal error: " + e.getClass().getSimpleName());
     }
+
 }
 ```
 

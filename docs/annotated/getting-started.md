@@ -8,32 +8,7 @@ Create a class annotated with `@Endpoints` and add methods with HTTP method anno
 
 ::: code-group
 
-```java [Java]
-import static io.javalin.community.routing.annotations.AnnotatedRouting.Annotated;
-
-@Endpoints("/api")
-public class UserEndpoints {
-
-    @Get("/users")
-    void getAllUsers(Context ctx) {
-        ctx.result("All users");
-    }
-
-    @Get("/users/{id}")
-    void getUserById(Context ctx, @Param int id) {
-        ctx.result("User: " + id);
-    }
-
-    @Post("/users")
-    void createUser(Context ctx, @Body UserDto user) {
-        ctx.json(user);
-    }
-}
-```
-
 ```kotlin [Kotlin]
-import io.javalin.community.routing.annotations.AnnotatedRouting.Annotated
-
 @Endpoints("/api")
 class UserEndpoints {
 
@@ -51,6 +26,29 @@ class UserEndpoints {
     fun createUser(ctx: Context, @Body user: UserDto) {
         ctx.json(user)
     }
+
+}
+```
+
+```java [Java]
+@Endpoints("/api")
+public class UserEndpoints {
+
+    @Get("/users")
+    void getAllUsers(Context ctx) {
+        ctx.result("All users");
+    }
+
+    @Get("/users/{id}")
+    void getUserById(Context ctx, @Param int id) {
+        ctx.result("User: " + id);
+    }
+
+    @Post("/users")
+    void createUser(Context ctx, @Body UserDto user) {
+        ctx.json(user);
+    }
+
 }
 ```
 
@@ -62,20 +60,20 @@ Register your endpoints during Javalin configuration:
 
 ::: code-group
 
-```java [Java]
-Javalin.create(config -> {
-    AnnotatedRouting.install(config, routing -> {
-        routing.registerEndpoints(new UserEndpoints());
-    });
-}).start(8080);
-```
-
 ```kotlin [Kotlin]
 Javalin.create { config ->
     config.routes(Annotated) {
         registerEndpoints(UserEndpoints())
     }
 }.start(8080)
+```
+
+```java [Java]
+Javalin.create(config -> {
+    AnnotatedRouting.install(config, routing -> {
+        routing.registerEndpoints(new UserEndpoints());
+    });
+}).start(8080);
 ```
 
 :::
@@ -120,6 +118,7 @@ class UserEndpoints {
     void getUser(Context ctx, @Param int id) {
         ctx.json(userService.findById(id));
     }
+
 }
 ```
 
@@ -178,6 +177,7 @@ static final class ExampleEndpoints {
             }
         };
     }
+
 }
 ```
 

@@ -21,6 +21,7 @@ class UserEndpoints {
     void getUserV2(Context ctx, @Param String name) {
         ctx.json(Map.of("version", "2", "name", name));
     }
+
 }
 ```
 
@@ -41,18 +42,18 @@ Configure a custom header name during setup:
 
 ::: code-group
 
-```java [Java]
-AnnotatedRouting.install(config, routing -> {
-    routing.apiVersionHeader = "X-Custom-Version";
-    routing.registerEndpoints(new UserEndpoints());
-});
-```
-
 ```kotlin [Kotlin]
 config.routes(Annotated) {
     apiVersionHeader = "X-Custom-Version"
     registerEndpoints(UserEndpoints())
 }
+```
+
+```java [Java]
+AnnotatedRouting.install(config, routing -> {
+    routing.apiVersionHeader = "X-Custom-Version";
+    routing.registerEndpoints(new UserEndpoints());
+});
 ```
 
 :::

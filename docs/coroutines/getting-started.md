@@ -42,6 +42,7 @@ import io.javalin.community.routing.Route.*
 class CustomScope(val ctx: Context) : Context by ctx {
     suspend fun fetchAsync(message: String): String =
         delay(1000L).let { message }
+
 }
 
 // 2. Create a base class for your routes
@@ -56,6 +57,7 @@ class UserEndpoint : AppRoutes() {
     }
 
     override fun routes() = setOf(getUser)
+
 }
 
 // 4. Configure and start

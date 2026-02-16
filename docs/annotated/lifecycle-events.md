@@ -17,6 +17,7 @@ class AppEndpoints {
     void onServerStopping() {
         System.out.println("Server is shutting down...");
     }
+
 }
 ```
 

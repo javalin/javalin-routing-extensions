@@ -38,6 +38,7 @@ class UserEndpoints {
     void getUser(Context ctx, @Param int id) {
         ctx.result("User: " + id);
     }
+
 }
 ```
 

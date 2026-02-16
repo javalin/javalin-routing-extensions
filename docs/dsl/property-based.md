@@ -32,6 +32,7 @@ class UserRoutes(private val userService: UserService) : DefaultRouting() {
     }
 
     override fun routes() = setOf(findAll, findById, create, delete)
+
 }
 ```
 
@@ -76,6 +77,7 @@ class UserRoutes(private val userService: UserService) : DefaultRouting() {
 
     override fun routes() = setOf(findById)
     override fun exceptionHandlers() = setOf(notFoundHandler, fallbackHandler)
+
 }
 ```
 
@@ -95,6 +97,7 @@ class AnimalEndpoints(private val animalService: AnimalService) : DefaultRouting
     }
 
     override fun routes() = setOf(findByName, save)
+
 }
 ```
 
@@ -114,6 +117,7 @@ class AnimalEndpoints(private val animalService: AnimalService) : DefaultRouting
     }
 
     override fun routes() = setOf(findByName)
+
 }
 ```
 

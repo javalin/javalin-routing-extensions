@@ -28,6 +28,7 @@ class UserEndpoints {
     void getUsers(Context ctx) {
         ctx.result("Users");
     }
+
 }
 ```
 
@@ -124,5 +125,6 @@ class SecuredEndpoints {
         long duration = System.currentTimeMillis() - start;
         System.out.println("Request took: " + duration + "ms");
     }
+
 }
 ```

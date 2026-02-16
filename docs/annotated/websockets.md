@@ -32,6 +32,7 @@ class ChatEndpoints {
             }
         };
     }
+
 }
 ```
 
@@ -94,6 +95,7 @@ class ChatEndpoints {
             ctx.send("Echo: ${ctx.message()}")
         }
     }
+
 }
 ```
 

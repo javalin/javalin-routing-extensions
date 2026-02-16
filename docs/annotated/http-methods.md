@@ -60,6 +60,7 @@ class UserEndpoints {
     void options(Context ctx) {
         ctx.header("Allow", "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS");
     }
+
 }
 ```
 

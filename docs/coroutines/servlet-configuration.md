@@ -106,6 +106,7 @@ class CustomScope(val ctx: Context) : Context by ctx {
 
     fun blockingDelay(message: String): String =
         Thread.sleep(2000L).let { message }
+
 }
 
 abstract class ExampleRoutes :
@@ -122,6 +123,7 @@ class ExampleEndpoint(private val service: ExampleService) : ExampleRoutes() {
     }
 
     override fun routes() = setOf(async, sync)
+
 }
 
 fun main() {
