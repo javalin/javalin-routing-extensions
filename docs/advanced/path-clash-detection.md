@@ -19,13 +19,12 @@ Two paths can clash when:
 
 - They have different parameter names at the same depth (e.g., `/users/{id}` vs `/users/{userId}`)
 - A wildcard parameter `<param>` overlaps with specific paths
-- Curly braces `{param}` and angle brackets `<param>` are used interchangeably at the same position
+- Curly braces `{param}` and angle brackets `<param>` at the same position (note: `<param>` is more permissive as it matches across slashes)
 
 ## Example Warning
 
 ```
-[WARN] Potential path clash detected for BEFORE routes:
-  Path "/api/*" is registered 2 times
+[WARN] Detected clashing BEFORE handler paths: [/api/*]. These paths match the same requests.
 ```
 
 ## How It Works Internally
@@ -39,6 +38,5 @@ The path clash detection uses an internal `canPathsClash` function to determine 
 At startup, the plugin scans all interceptor routes and logs warnings for any paths that appear more than once for the same route type:
 
 ```
-[WARN] Potential path clash detected for BEFORE routes:
-  Path "/api/*" is registered 2 times
+[WARN] Detected clashing BEFORE handler paths: [/api/*]. These paths match the same requests.
 ```

@@ -23,8 +23,8 @@ open class CustomScope(override val ctx: Context) : DefaultContextScope, Context
 
     fun currentUser(): User = ctx.attribute("user")!!
 
-    fun endpoint(): HandlerEntry =
-        ctx.attribute<HandlerEntry>("javalin-handler-entry")!!
+    fun endpoint(): Endpoint =
+        ctx.endpoint()
 
 }
 ```

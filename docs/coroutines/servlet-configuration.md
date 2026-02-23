@@ -76,9 +76,9 @@ config.events.also {
 }
 ```
 
-### DispatcherWithShutdown
+### ExclusiveDispatcherWithShutdown
 
-Internally, the servlet uses `DispatcherWithShutdown` which wraps the executor service:
+Internally, the servlet uses `ExclusiveDispatcherWithShutdown` which wraps the executor service:
 
 - During normal operation, requests are dispatched to the main executor
 - During `prepareShutdown()`, new requests use a fallback thread pool

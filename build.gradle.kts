@@ -114,16 +114,16 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     dependencies {
-        val javalin = "7.0.0-beta.3"
+        val javalin = "7.0.0"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin-testtools:$javalin")
 
-        val openapi = "7.0.0-beta.1"
+        val openapi = "7.0.0"
         kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$openapi")
         testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$openapi")
 
-        val jackson = "2.15.3"
+        val jackson = "2.21.0"
         testImplementation("com.fasterxml.jackson.core:jackson-databind:$jackson")
         testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson")
         testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson")
@@ -131,20 +131,19 @@ subprojects {
         val unirest = "3.14.5"
         testImplementation("com.konghq:unirest-java:$unirest")
 
-        val junit = "5.10.1"
+        val junit = "5.14.3"
         testImplementation("org.junit.jupiter:junit-jupiter-params:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")
         testImplementation("org.junit.jupiter:junit-jupiter-engine:$junit")
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-        testImplementation("org.assertj:assertj-core:3.24.2")
 
-        val assertj = "3.24.2"
+        val assertj = "3.27.6"
         testImplementation("org.assertj:assertj-core:$assertj")
 
-        val logback = "1.4.11"
+        val logback = "1.5.32"
         testImplementation("ch.qos.logback:logback-core:$logback")
         testImplementation("ch.qos.logback:logback-classic:$logback")
-        testImplementation("org.slf4j:slf4j-api:2.0.9")
+        testImplementation("org.slf4j:slf4j-api:2.0.17")
     }
 
     tasks.test {
@@ -191,7 +190,7 @@ subprojects {
 }
 
 jacoco {
-    toolVersion = "0.8.11"
+    toolVersion = "0.8.14"
 }
 
 nexusPublishing {

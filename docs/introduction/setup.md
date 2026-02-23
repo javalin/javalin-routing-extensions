@@ -17,12 +17,8 @@ repositories {
 }
 
 dependencies {
-    val routingExtensions = "7.0.0-beta.1"
+    val routingExtensions = "7.0.0"
 
-    // Core (required by all modules)
-    implementation(
-        "io.javalin.community.routing:routing-core:$routingExtensions"
-    )
     // Annotated routing (Java & Kotlin)
     implementation(
         "io.javalin.community.routing:routing-annotated:$routingExtensions"
@@ -44,9 +40,8 @@ repositories {
 }
 
 dependencies {
-    def routingExtensions = "7.0.0-beta.1"
+    def routingExtensions = "7.0.0"
 
-    implementation "io.javalin.community.routing:routing-core:$routingExtensions"
     implementation "io.javalin.community.routing:routing-annotated:$routingExtensions"
     implementation "io.javalin.community.routing:routing-dsl:$routingExtensions"
     implementation "io.javalin.community.routing:routing-coroutines:$routingExtensions"
@@ -55,29 +50,23 @@ dependencies {
 
 ```xml [Maven]
 <dependencies>
-    <!-- Core (required by all modules) -->
-    <dependency>
-        <groupId>io.javalin.community.routing</groupId>
-        <artifactId>routing-core</artifactId>
-        <version>7.0.0-beta.1</version>
-    </dependency>
     <!-- Annotated routing (Java & Kotlin) -->
     <dependency>
         <groupId>io.javalin.community.routing</groupId>
         <artifactId>routing-annotated</artifactId>
-        <version>7.0.0-beta.1</version>
+        <version>7.0.0</version>
     </dependency>
     <!-- DSL routing (Kotlin) -->
     <dependency>
         <groupId>io.javalin.community.routing</groupId>
         <artifactId>routing-dsl</artifactId>
-        <version>7.0.0-beta.1</version>
+        <version>7.0.0</version>
     </dependency>
     <!-- Coroutines routing (Kotlin) -->
     <dependency>
         <groupId>io.javalin.community.routing</groupId>
         <artifactId>routing-coroutines</artifactId>
-        <version>7.0.0-beta.1</version>
+        <version>7.0.0</version>
     </dependency>
 </dependencies>
 ```

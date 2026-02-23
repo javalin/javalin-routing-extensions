@@ -6,7 +6,6 @@ export default defineConfig({
   base: '/javalin-routing-extensions/',
   appearance: 'dark',
   themeConfig: {
-    siteTitle: 'Javalin Routing Extensions',
     nav: [
       { text: 'Documentation', link: '/introduction/setup' },
       {
@@ -23,11 +22,11 @@ export default defineConfig({
         items: [
           { text: 'Setup', link: '/introduction/setup' },
           { text: 'Overview', link: '/introduction/overview' },
+          { text: 'Migration from 6.x', link: '/introduction/migration' },
         ],
       },
       {
         text: 'Annotated Routing',
-        collapsed: false,
         items: [
           { text: 'Getting Started', link: '/annotated/getting-started' },
           { text: 'HTTP Methods', link: '/annotated/http-methods' },
@@ -43,7 +42,6 @@ export default defineConfig({
       },
       {
         text: 'DSL Routing',
-        collapsed: false,
         items: [
           { text: 'Getting Started', link: '/dsl/getting-started' },
           { text: 'In-Place DSL', link: '/dsl/in-place' },
@@ -54,7 +52,6 @@ export default defineConfig({
       },
       {
         text: 'Coroutines Routing',
-        collapsed: false,
         items: [
           { text: 'Getting Started', link: '/coroutines/getting-started' },
           { text: 'Async vs Sync', link: '/coroutines/async-vs-sync' },
@@ -63,7 +60,6 @@ export default defineConfig({
       },
       {
         text: 'Advanced',
-        collapsed: false,
         items: [
           { text: 'Route Comparator', link: '/advanced/route-comparator' },
           { text: 'Path Clash Detection', link: '/advanced/path-clash-detection' },
@@ -80,8 +76,7 @@ export default defineConfig({
       provider: 'local',
     },
     footer: {
-      message: 'Released under the Apache 2.0 License.',
-      copyright: 'Part of the Javalin ecosystem',
+      message: 'Created by <a href="https://github.com/dzikoysk">dzikoysk</a> · Part of the <a href="https://javalin.io">Javalin</a> ecosystem',
     },
     editLink: {
       pattern: 'https://github.com/javalin/javalin-routing-extensions/edit/main/docs/:path',

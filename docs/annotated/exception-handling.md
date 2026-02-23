@@ -52,7 +52,7 @@ void handle(Context ctx, Exception e) {
 
 ## Multiple Handlers
 
-You can register handlers for different exception types. More specific handlers take priority over general ones:
+You can register handlers for different exception types. Javalin resolves which handler to invoke based on the exception class hierarchy:
 
 ```java
 @ExceptionHandler(ValidationException.class)

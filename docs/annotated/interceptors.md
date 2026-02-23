@@ -93,7 +93,7 @@ void asyncBefore(Context ctx) {
 
 ## Ordering
 
-Interceptors defined in the same `@Endpoints` class execute in declaration order. The plugin also detects potential conflicts when multiple `@Before` or `@After` handlers share the same path and warns you at startup.
+Interceptors are sorted using `RouteComparator` alongside all other routes, which determines their final execution order based on path specificity. The plugin also detects potential conflicts when multiple `@Before` or `@After` handlers share the same path and warns you at startup.
 
 ## Example: Authentication + Logging
 

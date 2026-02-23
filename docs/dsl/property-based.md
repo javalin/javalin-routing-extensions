@@ -129,15 +129,18 @@ class AnimalEndpoints(private val animalService: AnimalService) : DefaultRouting
 interface DslContainer<ROUTE : DslRoute<CONTEXT, RESPONSE>, CONTEXT, RESPONSE : Any>
     : Routes<ROUTE, CONTEXT, RESPONSE> {
 
-    fun exceptionHandlers(): Collection<DslException<CONTEXT, Exception, RESPONSE>>
+    fun exceptionHandlers(): Collection<DslException<CONTEXT, Exception, RESPONSE>> =
+        emptySet()
 
     fun route(method: Route, path: String,
-              handler: CONTEXT.() -> RESPONSE): DslRoute<CONTEXT, RESPONSE>
+              handler: CONTEXT.() -> RESPONSE): DslRoute<CONTEXT, RESPONSE> =
+        DefaultDslRoute(method = method, path = path, handler = handler)
 
     fun <E : Exception> exceptionHandler(type: KClass<E>,
               handler: DslExceptionHandler<CONTEXT, E, RESPONSE>
-    ): DslException<CONTEXT, Exception, RESPONSE>
+    ): DslException<CONTEXT, Exception, RESPONSE> =
+        DefaultDslException(type = type, handler = handler)
 }
 ```
 
-You can implement this interface directly for more control over the route container behavior.
+All three methods have default implementations, so you only need to override `routes()`. Implement this interface directly for more control over the route container behavior.

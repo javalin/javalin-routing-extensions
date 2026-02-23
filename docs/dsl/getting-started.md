@@ -10,7 +10,7 @@ Add the DSL module to your dependencies:
 
 ```kotlin [Gradle (Kotlin)]
 dependencies {
-    implementation("io.javalin.community.routing:routing-dsl:7.0.0-beta.1")
+    implementation("io.javalin.community.routing:routing-dsl:7.0.0")
 }
 ```
 
@@ -18,7 +18,7 @@ dependencies {
 <dependency>
     <groupId>io.javalin.community.routing</groupId>
     <artifactId>routing-dsl</artifactId>
-    <version>7.0.0-beta.1</version>
+    <version>7.0.0</version>
 </dependency>
 ```
 
@@ -70,7 +70,7 @@ Javalin.create { config ->
 - Custom DSL extensions for project-specific patterns
 - Exception handlers
 - Interceptors (before/after)
-- No reflection required (optional)
+- No reflection required (except for `@Path` type-safe paths which use `kotlin-reflect`)
 
 ## Next Steps
 

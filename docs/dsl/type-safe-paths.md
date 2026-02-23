@@ -62,7 +62,7 @@ Path parameters are converted to the declared Kotlin type. Supported types inclu
 data class PandaPath(val age: Int)
 
 Javalin.create { config ->
-    config.routes(DslRouting(ExampleDsl)) {
+    config.routes(DslRouting(CustomDsl)) {
         before {
             result("Called endpoint: ${endpoint().path}")
         }

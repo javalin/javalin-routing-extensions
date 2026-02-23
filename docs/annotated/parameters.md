@@ -122,7 +122,7 @@ In interceptors, you can inject the matched `Endpoint` to inspect route metadata
 ```kotlin
 @BeforeMatched
 fun beforeEachMatched(ctx: Context, endpoint: Endpoint) {
-    println("Matched: ${endpoint.method()} ${endpoint.path()}")
+    println("Matched: ${endpoint.method} ${endpoint.path}")
 }
 ```
 
