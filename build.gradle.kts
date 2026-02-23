@@ -19,7 +19,7 @@ allprojects {
     apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "7.0.0-beta.1"
+    version = "7.0.0"
 
     repositories {
         mavenCentral()
