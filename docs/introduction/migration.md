@@ -179,30 +179,8 @@ Endpoint(
     method = HandlerType.GET,
     path = "/api",
     handler = handler,
-    metadata = if (roles.isNotEmpty()) setOf(Roles(roles.toSet())) else emptySet()
+    metadata =
+        if (roles.isNotEmpty()) setOf(Roles(roles.toSet()))
+        else emptySet()
 )
 ```
-
-## Javalin Internal API Access
-
-If you access Javalin internals directly:
-
-```kotlin
-// 6.x
-javalin.unsafeConfig().pvt.internalRouter
-
-// 7.x
-javalin.unsafe.internalRouter
-```
-
-## Migration Checklist
-
-- [ ] Update Java target to 17+
-- [ ] Update Kotlin version to 2.2+
-- [ ] Update Javalin dependency to 7.x
-- [ ] Update routing extensions dependency to 7.x
-- [ ] Replace `config.router.mount()` with `config.routes()` (Kotlin) or `install()` (Java)
-- [ ] Rename DSL `routes()` calls to `register()`
-- [ ] Update any custom `RoutingApiInitializer` implementations to accept `JavalinState`
-- [ ] Replace `Endpoint(roles = ...)` with `Endpoint(metadata = ...)`
-- [ ] Replace `unsafeConfig().pvt` with `unsafe` if used
