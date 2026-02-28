@@ -17,23 +17,23 @@ Update your dependency version:
 ::: code-group
 ```kotlin [Gradle Kotlin DSL]
 dependencies {
-    implementation("io.javalin.community.routing:routing-annotated:7.0.0") // was 6.x
+    implementation("io.javalin.community.routing:routing-annotated:7.0.1") // was 6.x
     // or
-    implementation("io.javalin.community.routing:routing-dsl:7.0.0")
+    implementation("io.javalin.community.routing:routing-dsl:7.0.1")
     // or
-    implementation("io.javalin.community.routing:routing-coroutines:7.0.0")
+    implementation("io.javalin.community.routing:routing-coroutines:7.0.1")
 }
 ```
 ```groovy [Gradle Groovy DSL]
 dependencies {
-    implementation 'io.javalin.community.routing:routing-annotated:7.0.0' // was 6.x
+    implementation 'io.javalin.community.routing:routing-annotated:7.0.1' // was 6.x
 }
 ```
 ```xml [Maven]
 <dependency>
     <groupId>io.javalin.community.routing</groupId>
     <artifactId>routing-annotated</artifactId>
-    <version>7.0.0</version> <!-- was 6.x -->
+    <version>7.0.1</version> <!-- was 6.x -->
 </dependency>
 ```
 :::

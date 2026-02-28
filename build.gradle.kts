@@ -19,7 +19,7 @@ allprojects {
     apply(plugin = "signing")
 
     group = "io.javalin.community.routing"
-    version = "7.0.0"
+    version = "7.0.1"
 
     repositories {
         mavenCentral()
@@ -114,12 +114,12 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.kapt")
 
     dependencies {
-        val javalin = "7.0.0"
+        val javalin = "7.0.1"
         compileOnly("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin:$javalin")
         testImplementation("io.javalin:javalin-testtools:$javalin")
 
-        val openapi = "7.0.0"
+        val openapi = "7.0.1"
         kaptTest("io.javalin.community.openapi:openapi-annotation-processor:$openapi")
         testImplementation("io.javalin.community.openapi:javalin-openapi-plugin:$openapi")
 
