@@ -14,7 +14,7 @@ Add the coroutines module to your dependencies:
 
 ```kotlin [Gradle (Kotlin)]
 dependencies {
-    implementation("io.javalin.community.routing:routing-coroutines:7.1.0")
+    implementation("io.javalin.community.routing:routing-coroutines:7.2.0")
 }
 ```
 
@@ -22,7 +22,7 @@ dependencies {
 <dependency>
     <groupId>io.javalin.community.routing</groupId>
     <artifactId>routing-coroutines</artifactId>
-    <version>7.1.0</version>
+    <version>7.2.0</version>
 </dependency>
 ```
 

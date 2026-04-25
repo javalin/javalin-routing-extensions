@@ -9,7 +9,6 @@ import io.javalin.http.Context
 import io.javalin.http.HttpStatus
 import io.javalin.router.Endpoint
 import io.javalin.router.InternalRouter
-import io.javalin.util.Util.firstOrNull
 import io.javalin.validation.Validation
 import io.javalin.validation.Validator
 import io.javalin.websocket.WsConfig
