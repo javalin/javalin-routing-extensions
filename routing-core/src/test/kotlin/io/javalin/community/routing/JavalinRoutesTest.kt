@@ -5,7 +5,6 @@ import io.javalin.community.routing.Route.GET
 import io.javalin.community.routing.Route.PUT
 import io.javalin.http.Handler
 import io.javalin.http.HandlerType
-import io.javalin.util.Util.firstOrNull
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
