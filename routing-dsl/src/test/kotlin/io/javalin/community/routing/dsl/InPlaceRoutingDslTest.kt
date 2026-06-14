@@ -326,6 +326,11 @@ class InPlaceRoutingDslTest : TestSpecification() {
             config.routes(Dsl) {
                 get { result("root-get") }
                 post { result("root-post") }
+                put { result("root-put") }
+                delete { result("root-delete") }
+                patch { result("root-patch") }
+                head { header("x-head", "root-head") }
+                options { result("root-options") }
             }
         },
         defaultConfig
@@ -333,6 +338,11 @@ class InPlaceRoutingDslTest : TestSpecification() {
         // then: the methods are mapped to the root path
         assertThat(get(client.origin).asString().body).isEqualTo("root-get")
         assertThat(request("POST", client.origin).asString().body).isEqualTo("root-post")
+        assertThat(request("PUT", client.origin).asString().body).isEqualTo("root-put")
+        assertThat(request("DELETE", client.origin).asString().body).isEqualTo("root-delete")
+        assertThat(request("PATCH", client.origin).asString().body).isEqualTo("root-patch")
+        assertThat(request("HEAD", client.origin).asEmpty().headers.getFirst("x-head")).isEqualTo("root-head")
+        assertThat(request("OPTIONS", client.origin).asString().body).isEqualTo("root-options")
     }
 
     @Test
