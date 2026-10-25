@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    val routingExtensions = "7.2.3"
+    val routingExtensions = "7.2.4"
 
     // Annotated routing (Java & Kotlin)
     implementation(
@@ -40,7 +40,7 @@ repositories {
 }
 
 dependencies {
-    def routingExtensions = "7.2.3"
+    def routingExtensions = "7.2.4"
 
     implementation "io.javalin.community.routing:routing-annotated:$routingExtensions"
     implementation "io.javalin.community.routing:routing-dsl:$routingExtensions"
@@ -54,19 +54,19 @@ dependencies {
     <dependency>
         <groupId>io.javalin.community.routing</groupId>
         <artifactId>routing-annotated</artifactId>
-        <version>7.2.3</version>
+        <version>7.2.4</version>
     </dependency>
     <!-- DSL routing (Kotlin) -->
     <dependency>
         <groupId>io.javalin.community.routing</groupId>
         <artifactId>routing-dsl</artifactId>
-        <version>7.2.3</version>
+        <version>7.2.4</version>
     </dependency>
     <!-- Coroutines routing (Kotlin) -->
     <dependency>
         <groupId>io.javalin.community.routing</groupId>
         <artifactId>routing-coroutines</artifactId>
-        <version>7.2.3</version>
+        <version>7.2.4</version>
     </dependency>
 </dependencies>
 ```
