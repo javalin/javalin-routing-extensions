@@ -10,7 +10,7 @@ Add the DSL module to your dependencies:
 
 ```kotlin [Gradle (Kotlin)]
 dependencies {
-    implementation("io.javalin.community.routing:routing-dsl:7.2.4")
+    implementation("io.javalin.community.routing:routing-dsl:7.3.0")
 }
 ```
 
@@ -18,7 +18,7 @@ dependencies {
 <dependency>
     <groupId>io.javalin.community.routing</groupId>
     <artifactId>routing-dsl</artifactId>
-    <version>7.2.4</version>
+    <version>7.3.0</version>
 </dependency>
 ```
 
